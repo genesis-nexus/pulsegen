@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LayoutDashboard, FileText, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, FileText, LogOut, Sparkles } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
@@ -39,6 +39,13 @@ export default function DashboardLayout() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <Link
+                to="/settings/ai"
+                className="inline-flex items-center text-sm text-gray-700 hover:text-gray-900"
+              >
+                <Sparkles className="w-4 h-4 mr-1" />
+                AI Settings
+              </Link>
               <span className="text-sm text-gray-700">
                 {user?.firstName || user?.email}
               </span>

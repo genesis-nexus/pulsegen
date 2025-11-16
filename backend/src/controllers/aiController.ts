@@ -10,6 +10,7 @@ export class AIController {
       const data = generateSurveySchema.parse(req.body);
 
       const generated = await AIService.generateSurvey({
+        userId: req.user!.id,
         prompt: data.prompt,
         questionCount: data.questionCount,
         includeLogic: data.includeLogic,
@@ -30,11 +31,14 @@ export class AIController {
 
       const survey = await SurveyService.findById(surveyId, req.user!.id);
 
-      const suggestions = await AIService.suggestQuestions({
-        surveyTitle: survey.title,
-        existingQuestions: survey.questions.map((q) => q.text),
-        targetAudience: req.body.targetAudience,
-      });
+      const suggestions = await AIService.suggestQuestions(
+        req.user!.id,
+        {
+          surveyTitle: survey.title,
+          existingQuestions: survey.questions.map((q) => q.text),
+          targetAudience: req.body.targetAudience,
+        }
+      );
 
       res.json({
         success: true,
@@ -50,11 +54,14 @@ export class AIController {
       const { questionId } = req.params;
       const { text, type, options } = req.body;
 
-      const optimized = await AIService.optimizeQuestion({
-        text,
-        type,
-        options,
-      });
+      const optimized = await AIService.optimizeQuestion(
+        req.user!.id,
+        {
+          text,
+          type,
+          options,
+        }
+      );
 
       res.json({
         success: true,
@@ -76,7 +83,7 @@ export class AIController {
         });
       }
 
-      const sentiment = await AIService.analyzeSentiment(text);
+      const sentiment = await AIService.analyzeSentiment(req.user!.id, text);
 
       res.json({
         success: true,
@@ -95,11 +102,14 @@ export class AIController {
       const analytics = await AnalyticsService.getSummary(surveyId, req.user!.id);
       const insights = await AnalyticsService.getInsights(surveyId, req.user!.id);
 
-      const report = await AIService.generateReport({
-        surveyTitle: survey.title,
-        analytics,
-        insights,
-      });
+      const report = await AIService.generateReport(
+        req.user!.id,
+        {
+          surveyTitle: survey.title,
+          analytics,
+          insights,
+        }
+      );
 
       res.json({
         success: true,

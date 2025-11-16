@@ -26,6 +26,7 @@ A comprehensive, self-hosted survey platform with AI-powered insights that rival
 - **Sentiment Analysis**: AI-powered sentiment detection in text responses
 
 ### AI Capabilities (Enhanced Beyond SurveyMonkey)
+- **Bring Your Own AI**: Support for multiple AI providers - OpenAI (GPT-4), Anthropic (Claude), Google (Gemini), and more
 - **Survey Generation**: AI-powered survey creation from prompts
 - **Question Recommendations**: Intelligent question suggestions
 - **Response Analysis**: Automated insights from survey data
@@ -34,6 +35,7 @@ A comprehensive, self-hosted survey platform with AI-powered insights that rival
 - **Smart Summaries**: Automatic executive summaries
 - **Sentiment Analysis**: Understand respondent emotions
 - **Recommendation Engine**: Action items based on feedback
+- **Flexible Provider Selection**: Choose your preferred AI provider per task or set a default
 
 ### Customization & Branding
 - **Theme Customization**: Full control over colors, fonts, and styling
@@ -74,7 +76,7 @@ A comprehensive, self-hosted survey platform with AI-powered insights that rival
 - **Prisma ORM** for database management
 - **JWT** for authentication
 - **Zod** for validation
-- **Anthropic Claude API** for AI features
+- **Multi-AI Provider Support**: OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI
 - **Nodemailer** for email distribution
 - **Bull** for job queues
 
@@ -93,7 +95,11 @@ A comprehensive, self-hosted survey platform with AI-powered insights that rival
 - Node.js 18+ and npm
 - PostgreSQL 14+
 - Redis 7+
-- Anthropic API key (for AI features)
+- AI Provider API key (optional - for AI features):
+  - OpenAI API key (recommended: gpt-4-turbo-preview)
+  - OR Anthropic API key (recommended: claude-sonnet-4)
+  - OR Google AI API key (recommended: gemini-pro)
+  - Users can add their own API keys through the UI
 
 ### Quick Start with Docker
 

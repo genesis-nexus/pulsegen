@@ -13,6 +13,7 @@ import SurveyList from './pages/surveys/SurveyList';
 import SurveyBuilder from './pages/surveys/SurveyBuilder';
 import SurveyAnalytics from './pages/surveys/SurveyAnalytics';
 import SurveyTake from './pages/public/SurveyTake';
+import AISettings from './pages/settings/AISettings';
 import NotFound from './pages/NotFound';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ function App() {
         <Route path="/surveys/new" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/edit" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/analytics" element={<SurveyAnalytics />} />
+        <Route path="/settings/ai" element={<AISettings />} />
       </Route>
 
       {/* 404 */}

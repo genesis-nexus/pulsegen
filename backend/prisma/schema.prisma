@@ -56,6 +56,16 @@ enum ExportFormat {
   JSON
 }
 
+enum AIProvider {
+  OPENAI
+  ANTHROPIC
+  GOOGLE
+  AZURE_OPENAI
+  COHERE
+  HUGGINGFACE
+  CUSTOM
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -75,8 +85,29 @@ model User {
   sessions          Session[]
   activityLogs      ActivityLog[]
   createdTemplates  SurveyTemplate[]
+  aiProviders       UserAIProvider[]
 
   @@index([email])
+}
+
+model UserAIProvider {
+  id          String     @id @default(cuid())
+  userId      String
+  provider    AIProvider
+  apiKey      String     // Encrypted
+  modelName   String?    // e.g., "gpt-4", "claude-3-opus", "gemini-pro"
+  endpoint    String?    // For custom providers
+  isDefault   Boolean    @default(false)
+  isActive    Boolean    @default(true)
+  settings    Json?      // Provider-specific settings
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([isDefault])
 }
 
 model Session {
@@ -318,6 +349,8 @@ model SurveyAnalytics {
 model AiInsight {
   id          String   @id @default(cuid())
   surveyId    String
+  provider    String   // AI provider used
+  model       String?  // Model name
   type        String   // 'summary', 'sentiment', 'themes', 'recommendations'
   insight     String
   confidence  Float?
