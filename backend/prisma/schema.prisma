@@ -1,0 +1,415 @@
+// Prisma Schema for PulseGen Survey Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum SurveyStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  CHECKBOXES
+  DROPDOWN
+  RATING_SCALE
+  MATRIX
+  RANKING
+  SHORT_TEXT
+  LONG_TEXT
+  EMAIL
+  NUMBER
+  DATE
+  TIME
+  FILE_UPLOAD
+  SLIDER
+  YES_NO
+  NPS
+  LIKERT_SCALE
+}
+
+enum LogicType {
+  SKIP_LOGIC
+  BRANCHING
+  PIPING
+  DISPLAY_LOGIC
+}
+
+enum ExportFormat {
+  CSV
+  EXCEL
+  PDF
+  JSON
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  firstName     String?
+  lastName      String?
+  role          UserRole  @default(VIEWER)
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  surveys           Survey[]
+  workspaces        WorkspaceMember[]
+  apiKeys           ApiKey[]
+  sessions          Session[]
+  activityLogs      ActivityLog[]
+  createdTemplates  SurveyTemplate[]
+
+  @@index([email])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  key       String   @unique
+  isActive  Boolean  @default(true)
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members WorkspaceMember[]
+  surveys Survey[]
+
+  @@index([name])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        UserRole @default(VIEWER)
+  joinedAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model Survey {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  status        SurveyStatus @default(DRAFT)
+  workspaceId   String?
+  createdBy     String
+  isAnonymous   Boolean      @default(false)
+  isPublic      Boolean      @default(true)
+  allowMultiple Boolean      @default(false)
+  responseLimit Int?
+  closeDate     DateTime?
+  welcomeText   String?
+  thankYouText  String?
+  slug          String       @unique
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  publishedAt   DateTime?
+
+  // Relations
+  creator       User             @relation(fields: [createdBy], references: [id])
+  workspace     Workspace?       @relation(fields: [workspaceId], references: [id])
+  pages         SurveyPage[]
+  questions     Question[]
+  responses     Response[]
+  theme         SurveyTheme?
+  analytics     SurveyAnalytics?
+  aiInsights    AiInsight[]
+  distributions Distribution[]
+  exports       Export[]
+
+  @@index([createdBy])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([slug])
+}
+
+model SurveyPage {
+  id          String  @id @default(cuid())
+  surveyId    String
+  title       String?
+  description String?
+  order       Int
+
+  survey    Survey     @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([surveyId])
+  @@index([order])
+}
+
+model Question {
+  id           String       @id @default(cuid())
+  surveyId     String
+  pageId       String?
+  type         QuestionType
+  text         String
+  description  String?
+  order        Int
+  isRequired   Boolean      @default(false)
+  isRandomized Boolean      @default(false)
+
+  // Question-specific settings (stored as JSON)
+  settings     Json?        // Flexible field for type-specific settings
+  validation   Json?        // Validation rules
+
+  survey  Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  page    SurveyPage?  @relation(fields: [pageId], references: [id])
+  options QuestionOption[]
+  answers Answer[]
+  logic   SurveyLogic[]    @relation("SourceQuestion")
+  targets SurveyLogic[]    @relation("TargetQuestion")
+
+  @@index([surveyId])
+  @@index([pageId])
+  @@index([order])
+}
+
+model QuestionOption {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  value      String
+  order      Int
+  imageUrl   String?
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  Answer[]
+
+  @@index([questionId])
+  @@index([order])
+}
+
+model SurveyLogic {
+  id              String    @id @default(cuid())
+  surveyId        String
+  sourceQuestionId String
+  targetQuestionId String?
+  type            LogicType
+  conditions      Json      // Array of conditions
+  actions         Json      // Actions to perform
+
+  survey         Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  sourceQuestion Question @relation("SourceQuestion", fields: [sourceQuestionId], references: [id], onDelete: Cascade)
+  targetQuestion Question? @relation("TargetQuestion", fields: [targetQuestionId], references: [id])
+
+  @@index([surveyId])
+  @@index([sourceQuestionId])
+}
+
+model SurveyTheme {
+  id               String  @id @default(cuid())
+  surveyId         String  @unique
+  primaryColor     String  @default("#3B82F6")
+  secondaryColor   String  @default("#6B7280")
+  backgroundColor  String  @default("#FFFFFF")
+  textColor        String  @default("#1F2937")
+  fontFamily       String  @default("Inter")
+  logoUrl          String?
+  customCss        String?
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+}
+
+model Response {
+  id          String   @id @default(cuid())
+  surveyId    String
+  ipAddress   String?
+  userAgent   String?
+  location    Json?    // Geo location data
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  duration    Int?     // Duration in seconds
+  isComplete  Boolean  @default(false)
+  metadata    Json?    // Additional metadata
+
+  survey  Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@index([surveyId])
+  @@index([completedAt])
+  @@index([isComplete])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  responseId String
+  questionId String
+  optionId   String?
+  textValue  String?
+  numberValue Float?
+  dateValue  DateTime?
+  fileUrl    String?
+  metadata   Json?    // For complex answer types
+  createdAt  DateTime @default(now())
+
+  response Response        @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  question Question        @relation(fields: [questionId], references: [id])
+  option   QuestionOption? @relation(fields: [optionId], references: [id])
+
+  @@index([responseId])
+  @@index([questionId])
+}
+
+model SurveyAnalytics {
+  id                String   @id @default(cuid())
+  surveyId          String   @unique
+  totalResponses    Int      @default(0)
+  completeResponses Int      @default(0)
+  averageDuration   Float?
+  completionRate    Float?
+  dropoffRate       Float?
+  analyticsData     Json?    // Cached analytics
+  lastCalculated    DateTime @default(now())
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+}
+
+model AiInsight {
+  id          String   @id @default(cuid())
+  surveyId    String
+  type        String   // 'summary', 'sentiment', 'themes', 'recommendations'
+  insight     String
+  confidence  Float?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+  @@index([type])
+}
+
+model Distribution {
+  id           String   @id @default(cuid())
+  surveyId     String
+  type         String   // 'email', 'link', 'embed', 'qr'
+  recipientEmail String?
+  sentAt       DateTime?
+  openedAt     DateTime?
+  respondedAt  DateTime?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+  @@index([recipientEmail])
+}
+
+model Export {
+  id          String       @id @default(cuid())
+  surveyId    String
+  format      ExportFormat
+  fileUrl     String?
+  status      String       @default("pending") // 'pending', 'processing', 'completed', 'failed'
+  errorMessage String?
+  createdAt   DateTime     @default(now())
+  completedAt DateTime?
+
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+  @@index([status])
+}
+
+model SurveyTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  imageUrl    String?
+  content     Json     // Full survey structure
+  isPublic    Boolean  @default(true)
+  usageCount  Int      @default(0)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator User? @relation(fields: [createdBy], references: [id])
+
+  @@index([category])
+  @@index([isPublic])
+}
+
+model QuestionBank {
+  id          String       @id @default(cuid())
+  category    String
+  type        QuestionType
+  text        String
+  description String?
+  options     Json?        // For choice questions
+  usageCount  Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  @@index([category])
+  @@index([type])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  resource  String
+  resourceId String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
