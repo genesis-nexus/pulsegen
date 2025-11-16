@@ -14,6 +14,9 @@ import SurveyBuilder from './pages/surveys/SurveyBuilder';
 import SurveyAnalytics from './pages/surveys/SurveyAnalytics';
 import SurveyTake from './pages/public/SurveyTake';
 import AISettings from './pages/settings/AISettings';
+import SSOSettings from './pages/settings/SSOSettings';
+import SMTPSettings from './pages/settings/SMTPSettings';
+import BrandingSettings from './pages/settings/BrandingSettings';
 import NotFound from './pages/NotFound';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +48,9 @@ function App() {
         <Route path="/surveys/:id/edit" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/analytics" element={<SurveyAnalytics />} />
         <Route path="/settings/ai" element={<AISettings />} />
+        <Route path="/settings/sso" element={<SSOSettings />} />
+        <Route path="/settings/smtp" element={<SMTPSettings />} />
+        <Route path="/settings/branding" element={<BrandingSettings />} />
       </Route>
 
       {/* 404 */}

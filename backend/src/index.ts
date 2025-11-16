@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import passport from 'passport';
+import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { rateLimiter } from './middleware/rateLimiter';
@@ -10,6 +12,7 @@ import routes from './routes';
 import { prisma } from './config/database';
 import { redis } from './config/redis';
 import logger from './utils/logger';
+import { configurePassport } from './config/passport';
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +33,12 @@ app.use(morgan('combined', {
     write: (message) => logger.info(message.trim()),
   },
 }));
+
+// Initialize passport
+app.use(passport.initialize());
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Rate limiting
 app.use(rateLimiter);
@@ -78,6 +87,10 @@ const startServer = async () => {
     // Test Redis connection
     await redis.ping();
     logger.info('Redis connected successfully');
+
+    // Configure passport strategies
+    await configurePassport();
+    logger.info('Passport configured successfully');
 
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);

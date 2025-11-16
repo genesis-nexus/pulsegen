@@ -66,15 +66,38 @@ enum AIProvider {
   CUSTOM
 }
 
+enum IdentityProvider {
+  LOCAL
+  GOOGLE
+  MICROSOFT
+  GITHUB
+  GITLAB
+  OKTA
+  AUTH0
+  SAML
+  OIDC
+  CUSTOM
+}
+
+enum SurveyVisibility {
+  PUBLIC
+  PRIVATE
+  PASSWORD_PROTECTED
+  UNLISTED
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  password      String
+  password      String?   // Nullable for SSO users
   firstName     String?
   lastName      String?
+  avatar        String?
   role          UserRole  @default(VIEWER)
   isActive      Boolean   @default(true)
   emailVerified Boolean   @default(false)
+  provider      IdentityProvider @default(LOCAL)
+  providerId    String?   // ID from SSO provider
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -88,6 +111,7 @@ model User {
   aiProviders       UserAIProvider[]
 
   @@index([email])
+  @@index([provider, providerId])
 }
 
 model UserAIProvider {
@@ -169,22 +193,26 @@ model WorkspaceMember {
 }
 
 model Survey {
-  id            String       @id @default(cuid())
+  id            String           @id @default(cuid())
   title         String
   description   String?
-  status        SurveyStatus @default(DRAFT)
+  status        SurveyStatus     @default(DRAFT)
+  visibility    SurveyVisibility @default(PUBLIC)
+  password      String?          // For password-protected surveys
   workspaceId   String?
   createdBy     String
-  isAnonymous   Boolean      @default(false)
-  isPublic      Boolean      @default(true)
-  allowMultiple Boolean      @default(false)
+  isAnonymous   Boolean          @default(false)
+  allowMultiple Boolean          @default(false)
   responseLimit Int?
   closeDate     DateTime?
   welcomeText   String?
   thankYouText  String?
-  slug          String       @unique
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  slug          String           @unique
+  shareableLink String?          // Custom shareable link
+  embedCode     String?          // Embed code for websites
+  qrCode        String?          // QR code URL
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   publishedAt   DateTime?
 
   // Relations
@@ -203,6 +231,7 @@ model Survey {
   @@index([workspaceId])
   @@index([status])
   @@index([slug])
+  @@index([visibility])
 }
 
 model SurveyPage {
@@ -446,3 +475,64 @@ model ActivityLog {
   @@index([action])
   @@index([createdAt])
 }
+
+model IdentityProviderConfig {
+  id          String           @id @default(cuid())
+  provider    IdentityProvider
+  name        String           // Display name
+  clientId    String
+  clientSecret String          // Encrypted
+  issuer      String?          // For OIDC/SAML
+  authUrl     String?
+  tokenUrl    String?
+  userInfoUrl String?
+  callbackUrl String?
+  scopes      String[]         // OAuth scopes
+  isEnabled   Boolean          @default(false)
+  isDefault   Boolean          @default(false)
+  metadata    Json?            // Provider-specific config
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([provider])
+  @@index([isEnabled])
+}
+
+model SMTPConfig {
+  id        String   @id @default(cuid())
+  host      String
+  port      Int
+  secure    Boolean  @default(false)
+  username  String
+  password  String   // Encrypted
+  fromEmail String
+  fromName  String?
+  replyTo   String?
+  isActive  Boolean  @default(true)
+  isDefault Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model PlatformBranding {
+  id              String   @id @default(cuid())
+  platformName    String   @default("PulseGen")
+  logoUrl         String?  // Main logo
+  faviconUrl      String?  // Favicon
+  loginBgUrl      String?  // Login page background
+  primaryColor    String   @default("#3B82F6")
+  secondaryColor  String   @default("#6B7280")
+  accentColor     String   @default("#10B981")
+  customCss       String?  @db.Text
+  customJs        String?  @db.Text
+  footerText      String?
+  supportEmail    String?
+  termsUrl        String?
+  privacyUrl      String?
+  showPoweredBy   Boolean  @default(true) // "Powered by PulseGen"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+

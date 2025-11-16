@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LayoutDashboard, FileText, LogOut, Sparkles } from 'lucide-react';
+import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -39,13 +41,53 @@ export default function DashboardLayout() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
-                to="/settings/ai"
-                className="inline-flex items-center text-sm text-gray-700 hover:text-gray-900"
-              >
-                <Sparkles className="w-4 h-4 mr-1" />
-                AI Settings
-              </Link>
+              <div className="relative">
+                <button
+                  onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                  className="inline-flex items-center text-sm text-gray-700 hover:text-gray-900"
+                >
+                  <Settings className="w-4 h-4 mr-1" />
+                  Settings
+                </button>
+                {showSettingsMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      <Link
+                        to="/settings/ai"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        AI Providers
+                      </Link>
+                      <Link
+                        to="/settings/sso"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <Lock className="w-4 h-4 mr-2" />
+                        SSO & Identity
+                      </Link>
+                      <Link
+                        to="/settings/smtp"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <Mail className="w-4 h-4 mr-2" />
+                        Email (SMTP)
+                      </Link>
+                      <Link
+                        to="/settings/branding"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <Palette className="w-4 h-4 mr-2" />
+                        Branding
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
               <span className="text-sm text-gray-700">
                 {user?.firstName || user?.email}
               </span>
