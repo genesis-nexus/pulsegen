@@ -201,18 +201,24 @@ Once running, API documentation is available at:
 
 ## Key Features Comparison
 
-| Feature | PulseGen | SurveyMonkey |
-|---------|----------|--------------|
-| Question Types | 15+ | 15+ |
-| AI Insights | ✅ Advanced | ❌ |
-| Self-Hosted | ✅ | ❌ |
-| White Label | ✅ | ✅ (Enterprise) |
-| Real-time Analytics | ✅ | ✅ |
-| Survey Logic | ✅ | ✅ |
-| API Access | ✅ Full Access | ✅ Limited |
-| Custom Branding | ✅ | ✅ |
-| Data Ownership | ✅ Full | ❌ |
-| Cost | Free (Self-hosted) | Subscription |
+| Feature | PulseGen Community | PulseGen Enterprise | SurveyMonkey |
+|---------|-------------------|---------------------|--------------|
+| **Pricing** | Free | $99-999+/month | $25-99+/month |
+| **Hosting** | Self-hosted | Self-hosted or Managed | Cloud only |
+| **Question Types** | 15+ | 15+ | 15+ |
+| **AI Insights** | ✅ Basic (BYOK) | ✅ Advanced | ❌ |
+| **Self-Hosted** | ✅ | ✅ | ❌ |
+| **SSO Integration** | ❌ | ✅ | ✅ (Enterprise) |
+| **White Label** | ⚠️ Basic | ✅ Advanced | ✅ (Enterprise) |
+| **Real-time Analytics** | ✅ | ✅ Advanced | ✅ |
+| **Survey Logic** | ✅ | ✅ | ✅ |
+| **API Access** | ✅ Full | ✅ Full | ⚠️ Limited |
+| **Custom Branding** | ⚠️ Limited | ✅ Full | ✅ |
+| **Data Ownership** | ✅ Full | ✅ Full | ❌ |
+| **Support** | Community | Professional SLA | Email/Chat |
+| **Source Code Access** | ✅ | ✅ | ❌ |
+| **Compliance Tools** | ❌ | ✅ | ✅ (Enterprise) |
+| **Response Limits** | Unlimited | Unlimited | ⚠️ Limited by plan |
 
 ## AI-Powered Features
 
@@ -247,23 +253,83 @@ Once running, API documentation is available at:
 - **Password hashing with bcrypt**
 - **API key management**
 
+## Commercial Offerings
+
+PulseGen is available in two editions:
+
+### Community Edition (Free)
+- **Open Source**: Full source code access under MIT License
+- **Self-Hosted**: Deploy on your infrastructure
+- **Core Features**: All essential survey functionality
+- **Community Support**: GitHub issues and community forum
+- **Perfect for**: Personal projects, startups, small teams
+
+**Get started**: Clone this repository and follow the Quick Start guide above
+
+### Enterprise Edition (Paid)
+- **Everything in Community Edition**
+- **Professional Support**: Email, video, and phone support with SLA
+- **Enterprise Features**:
+  - Single Sign-On (SSO) - SAML, OAuth2, LDAP
+  - Advanced white-labeling and custom branding
+  - Priority security patches and updates
+  - Compliance assistance (SOC2, HIPAA, GDPR)
+  - Dedicated customer success manager
+- **One-Click Installation**: Automated setup script
+- **Training & Onboarding**: Guided setup and best practices
+- **Perfect for**: Commercial use, enterprises, teams needing support
+
+**Pricing**:
+- **Starter**: $99/month - Up to 5 users, email support
+- **Professional**: $299/month - Up to 50 users, SSO, priority support
+- **Enterprise**: Custom pricing - Unlimited users, 24/7 support, SLA, custom development
+
+**Learn more**: See [COMMERCIALIZATION_STRATEGY.md](./COMMERCIALIZATION_STRATEGY.md) for detailed comparison
+
+**Get Enterprise**: Contact sales@pulsegen.com or visit https://pulsegen.com/enterprise
+
+---
+
 ## Deployment
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+For Enterprise customers, see [CUSTOMER_SETUP_GUIDE.md](./CUSTOMER_SETUP_GUIDE.md) for streamlined setup.
 
 ## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
-## License
+## Licensing
 
-MIT License - see [LICENSE](./LICENSE) for details.
+PulseGen uses a **dual-licensing model**:
+
+- **Community Edition**: MIT License - Free for everyone
+- **Enterprise Edition**: Commercial License - Paid subscription with support and enterprise features
+
+Both editions use the same codebase. Enterprise features are unlocked via license key.
+
+**Details**: See [LICENSING_GUIDE.md](./LICENSING_GUIDE.md) for complete licensing information
+
+**MIT License**: See [LICENSE](./LICENSE) for the Community Edition license text
 
 ## Support
 
-For issues and questions:
-- GitHub Issues: <repository-url>/issues
-- Documentation: See docs/ folder
+### Community Support (Free)
+- **GitHub Issues**: <repository-url>/issues
+- **Documentation**: See docs/ folder
+- **Community Forum**: https://community.pulsegen.com
+- **Discord**: https://discord.gg/pulsegen
+
+### Enterprise Support (Paid)
+- **Email Support**: support@pulsegen.com (SLA guaranteed)
+- **Customer Portal**: https://portal.pulsegen.com
+- **Video Calls**: Scheduled support sessions
+- **Phone Support**: 24/7 for Enterprise tier customers
+- **Dedicated Slack**: Private channel for your team
+- **Training**: Onboarding and best practices
+
+**Need enterprise support?** Visit https://pulsegen.com/enterprise
 
 ## Roadmap
 
