@@ -109,6 +109,7 @@ model User {
   activityLogs      ActivityLog[]
   createdTemplates  SurveyTemplate[]
   aiProviders       UserAIProvider[]
+  mlModels          MLModel[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -226,6 +227,8 @@ model Survey {
   aiInsights    AiInsight[]
   distributions Distribution[]
   exports       Export[]
+  mlModels      MLModel[]
+  predictions   Prediction[]
 
   @@index([createdBy])
   @@index([workspaceId])
@@ -333,8 +336,9 @@ model Response {
   isComplete  Boolean  @default(false)
   metadata    Json?    // Additional metadata
 
-  survey  Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  answers Answer[]
+  survey      Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  answers     Answer[]
+  predictions Prediction[]
 
   @@index([surveyId])
   @@index([completedAt])
@@ -536,3 +540,90 @@ model PlatformBranding {
   updatedAt       DateTime @updatedAt
 }
 
+enum AIToolType {
+  MINDSDB
+  TENSORFLOW
+  PYTORCH
+  HUGGINGFACE
+  CUSTOM
+}
+
+enum ModelStatus {
+  TRAINING
+  READY
+  FAILED
+  ARCHIVED
+}
+
+model AIToolConfig {
+  id          String      @id @default(cuid())
+  type        AIToolType
+  name        String      // Display name
+  endpoint    String      // API endpoint or connection string
+  apiKey      String?     // Encrypted API key
+  username    String?     // For DB-style connections
+  password    String?     // Encrypted password
+  database    String?     // Database name (for MindsDB)
+  settings    Json?       // Tool-specific configuration
+  isEnabled   Boolean     @default(false)
+  isDefault   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  models      MLModel[]
+
+  @@unique([type, name])
+  @@index([isEnabled])
+  @@index([type])
+}
+
+model MLModel {
+  id            String      @id @default(cuid())
+  toolConfigId  String
+  name          String
+  displayName   String?
+  description   String?     @db.Text
+  modelType     String      // regression, classification, time_series, nlp, etc.
+  targetColumn  String?     // What the model predicts
+  features      String[]    // Input features/columns
+  status        ModelStatus @default(TRAINING)
+  accuracy      Float?      // Model accuracy/score
+  metadata      Json?       // Training params, metrics, etc.
+  query         String?     @db.Text // SQL query or config used to create
+  surveyId      String?     // Associated survey if applicable
+  createdBy     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastUsedAt    DateTime?
+
+  toolConfig    AIToolConfig @relation(fields: [toolConfigId], references: [id], onDelete: Cascade)
+  creator       User         @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  survey        Survey?      @relation(fields: [surveyId], references: [id], onDelete: SetNull)
+  predictions   Prediction[]
+
+  @@index([toolConfigId])
+  @@index([status])
+  @@index([surveyId])
+  @@index([createdBy])
+}
+
+model Prediction {
+  id          String   @id @default(cuid())
+  modelId     String
+  surveyId    String?
+  responseId  String?
+  input       Json     // Input data used for prediction
+  output      Json     // Prediction result
+  confidence  Float?   // Confidence score
+  metadata    Json?    // Additional prediction metadata
+  createdAt   DateTime @default(now())
+
+  model       MLModel   @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  survey      Survey?   @relation(fields: [surveyId], references: [id], onDelete: SetNull)
+  response    Response? @relation(fields: [responseId], references: [id], onDelete: SetNull)
+
+  @@index([modelId])
+  @@index([surveyId])
+  @@index([responseId])
+  @@index([createdAt])
+}
