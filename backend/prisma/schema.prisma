@@ -664,6 +664,50 @@ enum ModelStatus {
   ARCHIVED
 }
 
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  INVITED
+}
+
+// Download Access Request (for pre-monetization audience building)
+model DownloadAccessRequest {
+  id                    String              @id @default(cuid())
+  email                 String
+  githubUsername        String              // To invite to private repo
+  fullName              String?
+
+  // Social media verification
+  youtubeSubscribed     Boolean             @default(false)
+  instagramFollowed     Boolean             @default(false)
+  proofScreenshotUrl    String?             // Optional: Screenshot proof
+
+  // Status
+  status                AccessRequestStatus @default(PENDING)
+  statusNote            String?             // Admin notes
+
+  // GitHub invitation
+  githubInviteSent      Boolean             @default(false)
+  githubInvitedAt       DateTime?
+  githubInviteAccepted  Boolean             @default(false)
+
+  // Metadata
+  ipAddress             String?
+  userAgent             String?
+  referralSource        String?             // Where they found PulseGen
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  reviewedAt            DateTime?
+  reviewedBy            String?             // Admin user ID who reviewed
+
+  @@index([email])
+  @@index([githubUsername])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model AIToolConfig {
   id          String      @id @default(cuid())
   type        AIToolType
