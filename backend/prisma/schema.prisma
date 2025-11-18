@@ -135,6 +135,88 @@ model UserAIProvider {
   @@index([isDefault])
 }
 
+// License Management
+enum LicenseTier {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  SUSPENDED
+}
+
+model License {
+  id                String        @id @default(cuid())
+  licenseKey        String        @unique // Full encrypted license key
+  customerId        String        // Customer identifier from license payload
+  email             String
+  companyName       String
+  tier              LicenseTier
+  status            LicenseStatus @default(ACTIVE)
+
+  // License validity
+  issuedAt          DateTime
+  expiresAt         DateTime
+  activatedAt       DateTime?     // When customer first activated the license
+  lastVerifiedAt    DateTime      @default(now()) // Last successful verification
+
+  // Limits (from license payload)
+  maxUsers          Int           @default(-1) // -1 means unlimited
+  maxSurveys        Int           @default(-1)
+  maxResponses      Int           @default(-1)
+
+  // Features (JSON array of feature flags)
+  features          Json          // ["sso", "white_label", "api_access", etc.]
+
+  // Instance binding (optional - ties license to specific installation)
+  instanceId        String?       @unique
+  instanceFingerprint String?     // Machine/server fingerprint
+
+  // Usage tracking
+  currentUsers      Int           @default(0)
+  currentSurveys    Int           @default(0)
+  currentResponses  Int           @default(0) // Monthly counter, resets each month
+  lastUsageUpdate   DateTime      @default(now())
+
+  // Grace period for offline operation
+  gracePeriodDays   Int           @default(30)
+  offlineSince      DateTime?     // When license verification last failed
+
+  // Metadata
+  notes             String?       // Internal notes
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  verificationLogs  LicenseVerificationLog[]
+
+  @@index([licenseKey])
+  @@index([email])
+  @@index([customerId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// License verification audit log
+model LicenseVerificationLog {
+  id            String    @id @default(cuid())
+  licenseId     String
+  success       Boolean
+  errorMessage  String?
+  verifiedAt    DateTime  @default(now())
+  ipAddress     String?
+  userAgent     String?
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@index([licenseId])
+  @@index([verifiedAt])
+}
+
 model Session {
   id           String   @id @default(cuid())
   userId       String

@@ -1,146 +1,173 @@
-# PulseGen Commercialization Strategy
+# PulseGen Commercialization Strategy (Updated)
 
 ## Overview
 
-PulseGen follows a **"Source Available with Commercial Support"** model - the software remains open source and self-hosted, but commercial customers pay for support, updates, and premium features. This combines the benefits of open source (transparency, security, community) with sustainable revenue.
+PulseGen follows a **"Self-Hosted with License Key"** model - the software must be self-hosted and requires a valid license key to operate. All customers receive the same codebase with features unlocked via cryptographically signed license keys.
 
-## Business Model: Open Core + Commercial Support
+## Business Model: License-Based Self-Hosted Software
 
 ### Philosophy
-- **Free Tier**: Core platform remains free and open source (MIT License)
-- **Paid Tier**: Commercial customers pay for:
-  - Priority support & SLA guarantees
-  - Professional setup assistance
-  - Automatic updates & security patches
-  - Premium features (SSO, advanced analytics, white-labeling)
-  - Compliance certifications (SOC2, HIPAA, GDPR)
-  - Training & consulting
+- **No SaaS Option**: Only self-hosted deployment
+- **License Required**: Valid license key required to run the application
+- **Tiered Licensing**: Features and limits based on license tier
+- **Cryptographic Security**: RSA-2048 signed licenses prevent unauthorized use
+- **Support Included**: All paid tiers include professional support
 
-## Delivery Models for Paid Customers
+### Why This Model?
 
-### 1. **Self-Managed with Support** (Recommended for Most Customers)
-**Price**: $99-499/month based on tier
+✅ **Customer Ownership**: Data stays on customer's servers
+✅ **Predictable Revenue**: Recurring license subscriptions
+✅ **Scalable Delivery**: Automated license generation and activation
+✅ **Security**: Customers can audit source code
+✅ **No Hosting Costs**: Customers provide infrastructure
 
-**What you deliver:**
-- Access to private customer portal
-- One-click installation script
-- Pre-configured Docker images from private registry
-- Premium documentation & video tutorials
-- Email/ticket support (response time based on tier)
-- Monthly security updates & patches
-- Quarterly feature updates
+## Delivery Model: Licensed Self-Hosted
 
-**Setup process:**
-1. Customer purchases subscription
-2. You send welcome email with credentials to customer portal
-3. Customer downloads automated installer
-4. Script handles entire setup (10-15 minutes)
-5. You provide setup verification & health check
+### How It Works
 
-**Technical delivery:**
+**1. Customer Purchase:**
+- Customer purchases subscription via Stripe/Paddle
+- Webhook triggers license generation
+- License key automatically generated and emailed
+
+**2. License Generation (Automated):**
 ```bash
-# Customer receives a custom installer
-curl -fsSL https://install.pulsegen.com/install.sh | bash -s -- --license-key=CUSTOMER_KEY
-
-# Or Docker-based
-docker run -d \
-  -e LICENSE_KEY=customer_key_here \
-  -v pulsegen_data:/data \
-  pulsegen/enterprise:latest
+# Your system automatically runs:
+ts-node scripts/generate-license.ts \
+  --email customer@example.com \
+  --company "Customer Inc" \
+  --tier professional \
+  --duration 365
 ```
 
+**3. Customer Receives Email:**
+```
+Subject: Your PulseGen License Key
+
+Thank you for purchasing PulseGen!
+
+Your License Key:
+─────────────────────────────────────
+[CRYPTOGRAPHICALLY_SIGNED_LICENSE_KEY]
+─────────────────────────────────────
+
+Tier: Professional
+Expires: January 15, 2026
+Max Users: 50
+Max Surveys: 100
+Max Responses: 10,000/month
+
+Installation:
+1. Download installer: https://install.pulsegen.com/install.sh
+2. Run: ./install.sh --license-key YOUR_KEY
+3. Access: http://your-server:3000
+
+Need help? support@pulsegen.com
+```
+
+**4. Customer Installation:**
+```bash
+# One-command installation
+curl -fsSL https://install.pulsegen.com/install.sh | bash -s -- --license-key [KEY]
+
+# Installer handles:
+# - System checks
+# - Docker installation
+# - PulseGen setup
+# - License activation
+# - SSL configuration
+# - First admin account
+```
+
+**5. License Activation:**
+- Customer visits `/settings/license`
+- Pastes license key
+- System validates cryptographic signature
+- Features unlocked based on tier
+- Usage tracking begins
+
+**6. Ongoing Operation:**
+- License verified on app startup
+- Checked hourly during operation
+- 30-day grace period for offline operation
+- Automatic usage limit enforcement
+- Renewal reminders 30 days before expiry
+
 **Advantages:**
-- Scalable - minimal manual work per customer
-- Professional - automated, consistent setup
-- Customer maintains full control & data ownership
-- You can track active installations via license verification
+- ✅ **Fully Automated**: License generation to delivery
+- ✅ **No Manual Work**: Scales from 1 to 10,000 customers
+- ✅ **Secure**: Cryptographic signing prevents piracy
+- ✅ **Customer Control**: They host, they own data
+- ✅ **Recurring Revenue**: Annual/monthly subscriptions
 
 ---
 
-### 2. **Managed Installation Service**
-**Price**: $999 one-time + $199/month support
+## License Security Implementation
 
-**What you deliver:**
-- Dedicated onboarding call (60 min)
-- You perform installation on customer's infrastructure
-- Custom configuration (SMTP, SSO, branding)
-- Performance tuning & optimization
-- Knowledge transfer session
-- 30-day white-glove support
+### Cryptographic Approach
 
-**Setup process:**
-1. Customer purchases managed installation
-2. Schedule kickoff call (gather requirements)
-3. Customer provides server access (SSH/VPN)
-4. You perform installation & configuration (2-4 hours)
-5. Demo & training session
-6. Handoff documentation & support transition
+**RSA-2048 Asymmetric Encryption:**
+```
+1. You generate RSA key pair (one-time)
+   - Private key: Kept secret, used to sign licenses
+   - Public key: Embedded in app, validates licenses
 
-**Advantages:**
-- Higher price point
-- Great for enterprise customers
-- Builds strong customer relationships
-- Upsell opportunity for consulting
+2. License Generation:
+   - Customer data + tier + expiry → JSON payload
+   - Payload signed with private key → Signature
+   - License key = BASE64(payload).BASE64(signature)
 
----
+3. License Validation:
+   - App receives license key
+   - Splits into payload + signature
+   - Validates signature using embedded public key
+   - If valid: Decode payload, unlock features
+   - If invalid: Reject license
 
-### 3. **Fully Managed Hosting** (SaaS-like)
-**Price**: $299-999/month based on usage
+4. Anti-Tampering:
+   - Multiple validation points in code
+   - Integrity checks on validation code
+   - Grace period for offline operation
+   - Audit logging of all verifications
+```
 
-**What you deliver:**
-- You host PulseGen on your infrastructure
-- Customer gets dedicated instance (subdomain)
-- Automatic backups & disaster recovery
-- 99.9% uptime SLA
-- Managed updates & maintenance
-- Premium support included
+**Security Features:**
+- ✅ **Cannot forge licenses** without private key
+- ✅ **Cannot modify** license data (breaks signature)
+- ✅ **Cannot share easily** (instance binding optional)
+- ✅ **Difficult to crack** (requires code modification)
+- ✅ **Audit trail** of all validation attempts
 
-**Setup process:**
-1. Customer signs up via web form
-2. Automated provisioning (Terraform/Kubernetes)
-3. Instance ready in 5-10 minutes
-4. Customer receives login credentials
-5. Optional onboarding call
+**What it prevents:**
+- Using app without license
+- Creating fake licenses
+- Using expired licenses
+- Exceeding tier limits
 
-**Technical implementation:**
-- Multi-tenant Kubernetes cluster
-- Automatic provisioning with Terraform
-- Per-customer database & Redis instance
-- Automated backup to S3/B2
-
-**Advantages:**
-- Recurring revenue
-- Easiest for customers
-- You control the infrastructure
-- Higher margins at scale
+**Important Note:**
+No system is 100% uncrackable with source code access. However:
+- Requires technical expertise to bypass
+- Time-consuming and annoying to crack
+- Each update can re-add checks
+- Deters casual piracy effectively
+- Standard for commercial open-source (GitLab, Sentry, etc.)
 
 ---
 
-### 4. **Enterprise Private Cloud**
-**Price**: Custom (typically $2,000-10,000/month)
+## Optional: Managed Setup Service
+
+For customers who want help, offer managed setup as an add-on:
+
+**Price**: +$499 one-time
 
 **What you deliver:**
-- Deployed in customer's private cloud (AWS/Azure/GCP)
-- Infrastructure-as-code templates
-- CI/CD pipeline setup
-- Custom integrations
-- Dedicated success manager
-- SLA with penalties
-- Compliance assistance (SOC2, HIPAA)
+- 60-minute kickoff call
+- You handle full installation
+- Custom configuration (SMTP, SSO, SSL)
+- Knowledge transfer
+- 30-day priority support
 
-**Setup process:**
-1. Sales call & requirements gathering
-2. Custom proposal & SOW (Statement of Work)
-3. Dedicated implementation team
-4. 4-8 week implementation timeline
-5. Training & documentation
-6. Ongoing strategic support
-
-**Advantages:**
-- Highest revenue per customer
-- Long-term contracts (1-3 years)
-- Strategic partnerships
-- Reference customers for case studies
+**Advantage**: Higher revenue per customer, builds relationships
 
 ---
 
