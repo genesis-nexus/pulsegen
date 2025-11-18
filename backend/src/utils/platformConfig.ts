@@ -31,7 +31,9 @@ export async function getPlatformConfig(): Promise<PlatformConfigData> {
     if (!config) {
       config = await prisma.platformConfig.create({
         data: {
-          licenseEnforced: process.env.LICENSE_ENFORCED === 'true' || false,
+          // SECURITY: Never use process.env - always default to false
+          // Remote config will update this if licensing should be enforced
+          licenseEnforced: false,
           licenseGracePeriod: true,
           analyticsEnabled: false,
           telemetryEnabled: false
@@ -101,14 +103,16 @@ export async function updatePlatformConfig(
 
 /**
  * Check if license enforcement is enabled
+ *
+ * SECURITY NOTE: Does NOT check .env variables
+ * Only uses database config which is controlled by remote config
+ * This prevents self-hosted customers from bypassing licensing
  */
 export async function isLicenseEnforcementEnabled(): Promise<boolean> {
-  // Check environment variable first (takes precedence)
-  if (process.env.LICENSE_ENFORCED !== undefined) {
-    return process.env.LICENSE_ENFORCED === 'true';
-  }
+  // IMPORTANT: Do NOT check process.env.LICENSE_ENFORCED
+  // This would allow self-hosted customers to bypass licensing
+  // Only use database config which is updated by remote config service
 
-  // Check database config
   const config = await getPlatformConfig();
   return config.licenseEnforced;
 }

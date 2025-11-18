@@ -105,8 +105,13 @@ class ConfigService {
 
   /**
    * Check if license enforcement is enabled
+   *
+   * IMPORTANT: Always uses remote config value
+   * Local .env overrides are NOT allowed for security
    */
   isLicenseEnforced(): boolean {
+    // SECURITY: Never check .env variables
+    // Always use remote config to prevent self-hosted bypasses
     return this.config?.licensing.enforced ?? false;
   }
 

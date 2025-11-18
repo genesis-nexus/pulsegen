@@ -1,14 +1,22 @@
 /**
  * Remote Configuration Management
  *
- * Fetches configuration from a private Git repository
+ * Fetches encrypted configuration from a private Git repository
  * This allows centralized control of licensing, features, and settings
  * across all PulseGen instances without code changes
+ *
+ * Security Model:
+ * - Configuration is encrypted with AES-256-GCM
+ * - Decryption keys are embedded in application (not in .env)
+ * - Configuration is signed to prevent tampering
+ * - No local overrides possible for critical settings
  */
 
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import { decryptConfig, validateEncryptedConfig, EncryptedConfig } from './configCrypto';
+import { getDecryptionKeyWithFallback } from './embeddedKeys';
 
 export interface RemoteConfig {
   version: string;
@@ -75,37 +83,91 @@ const DEFAULT_CONFIG: RemoteConfig = {
   }
 };
 
-// Cache file path
+// Cache file paths
 const CACHE_FILE = path.join(__dirname, '../../.config-cache.json');
+const ENCRYPTED_CACHE_FILE = path.join(__dirname, '../../.config-encrypted-cache.json');
 
 /**
- * Fetch configuration from GitHub private repository
+ * Embedded Git repository credentials
+ * These are hardcoded to prevent customers from modifying .env
  *
- * Setup:
- * 1. Create private repo: e.g., 'genesis-nexus/pulsegen-config'
- * 2. Create config.json in repo
- * 3. Generate Personal Access Token with 'repo' scope
- * 4. Set environment variables:
- *    - REMOTE_CONFIG_REPO=genesis-nexus/pulsegen-config
- *    - REMOTE_CONFIG_TOKEN=ghp_xxxxx
- *    - REMOTE_CONFIG_FILE=config.json (or instances/production.json)
+ * VENDOR NOTE: Replace these with your actual repository details
+ * before building for production
+ */
+const EMBEDDED_GIT_CONFIG = {
+  // GitHub configuration (default)
+  github: {
+    repo: 'genesis-nexus/pulsegen-config',
+    token: 'Z2hwX3h4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4', // Base64 encoded token
+    branch: 'main',
+    file: 'config.encrypted.json'
+  },
+  // GitLab configuration (alternative)
+  gitlab: {
+    projectId: '',
+    token: '',
+    branch: 'main',
+    file: 'config.encrypted.json'
+  },
+  // Raw URL configuration (alternative)
+  raw: {
+    url: ''
+  }
+};
+
+/**
+ * Decode embedded token
+ * Obfuscated to prevent simple string extraction
+ */
+function getEmbeddedToken(): string {
+  try {
+    // Decode from base64
+    const encoded = EMBEDDED_GIT_CONFIG.github.token;
+    const decoded = Buffer.from(encoded, 'base64').toString('utf-8');
+    return decoded;
+  } catch (error) {
+    console.error('❌ Failed to decode embedded token');
+    return '';
+  }
+}
+
+/**
+ * Get repository configuration
+ * Uses embedded values, ignores .env for security
+ */
+function getRepoConfig() {
+  // IMPORTANT: Always use embedded config, never .env
+  // This prevents self-hosted customers from bypassing remote config
+  return {
+    repo: EMBEDDED_GIT_CONFIG.github.repo,
+    token: getEmbeddedToken(),
+    branch: EMBEDDED_GIT_CONFIG.github.branch,
+    file: EMBEDDED_GIT_CONFIG.github.file
+  };
+}
+
+/**
+ * Fetch encrypted configuration from GitHub private repository
+ *
+ * Security:
+ * - Uses embedded credentials (not .env)
+ * - Fetches encrypted config from Git
+ * - Decrypts using embedded keys
+ * - Verifies signature to prevent tampering
  */
 export async function fetchRemoteConfig(): Promise<RemoteConfig | null> {
   try {
-    const repoUrl = process.env.REMOTE_CONFIG_REPO;
-    const token = process.env.REMOTE_CONFIG_TOKEN;
-    const configFile = process.env.REMOTE_CONFIG_FILE || 'config.json';
-    const branch = process.env.REMOTE_CONFIG_BRANCH || 'main';
+    const { repo, token, branch, file } = getRepoConfig();
 
-    if (!repoUrl || !token) {
-      console.log('ℹ️  Remote config not configured (REMOTE_CONFIG_REPO and REMOTE_CONFIG_TOKEN required)');
+    if (!repo || !token) {
+      console.error('❌ Embedded Git config not properly configured');
       return null;
     }
 
     // Fetch from GitHub API
-    const url = `https://api.github.com/repos/${repoUrl}/contents/${configFile}?ref=${branch}`;
+    const url = `https://api.github.com/repos/${repo}/contents/${file}?ref=${branch}`;
 
-    console.log(`🔄 Fetching remote config from: ${repoUrl}/${configFile}`);
+    console.log(`🔄 Fetching encrypted config from: ${repo}/${file}`);
 
     const response = await axios.get(url, {
       headers: {
@@ -118,16 +180,32 @@ export async function fetchRemoteConfig(): Promise<RemoteConfig | null> {
     if (response.data.encoding === 'base64') {
       // Decode base64 content
       const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
-      const config: RemoteConfig = JSON.parse(content);
+      const encryptedConfig = JSON.parse(content);
 
-      // Validate config structure
-      if (!config.version || !config.licensing || !config.features) {
-        throw new Error('Invalid config structure');
+      // Validate encrypted config structure
+      if (!validateEncryptedConfig(encryptedConfig)) {
+        throw new Error('Invalid encrypted config structure');
       }
 
-      console.log(`✅ Remote config fetched successfully (version: ${config.version})`);
+      console.log('🔓 Decrypting configuration...');
 
-      // Cache the config locally
+      // Get embedded decryption key
+      const decryptionKey = getDecryptionKeyWithFallback();
+
+      // Decrypt config
+      const config: RemoteConfig = decryptConfig(encryptedConfig, decryptionKey);
+
+      // Validate decrypted config structure
+      if (!config.version || !config.licensing || !config.features) {
+        throw new Error('Invalid decrypted config structure');
+      }
+
+      console.log(`✅ Remote config fetched and decrypted successfully (version: ${config.version})`);
+
+      // Cache the encrypted config (for fallback)
+      cacheEncryptedConfig(encryptedConfig);
+
+      // Cache the decrypted config (for quick access)
       cacheConfig(config);
 
       return config;
@@ -136,11 +214,11 @@ export async function fetchRemoteConfig(): Promise<RemoteConfig | null> {
     throw new Error('Unexpected response format from GitHub');
   } catch (error: any) {
     if (error.response?.status === 404) {
-      console.error('❌ Remote config file not found. Check REMOTE_CONFIG_REPO and REMOTE_CONFIG_FILE');
+      console.error('❌ Remote config file not found. Check embedded repository configuration');
     } else if (error.response?.status === 401) {
-      console.error('❌ Remote config authentication failed. Check REMOTE_CONFIG_TOKEN');
+      console.error('❌ Remote config authentication failed. Check embedded token');
     } else {
-      console.error('❌ Failed to fetch remote config:', error.message);
+      console.error('❌ Failed to fetch/decrypt remote config:', error.message);
     }
     return null;
   }
@@ -215,26 +293,69 @@ export async function fetchRemoteConfigRaw(): Promise<RemoteConfig | null> {
 }
 
 /**
- * Cache configuration to local file
+ * Cache encrypted configuration to local file
+ */
+function cacheEncryptedConfig(encryptedConfig: EncryptedConfig): void {
+  try {
+    fs.writeFileSync(ENCRYPTED_CACHE_FILE, JSON.stringify(encryptedConfig, null, 2), 'utf-8');
+    console.log('💾 Encrypted config cached locally');
+  } catch (error) {
+    console.error('⚠️  Failed to cache encrypted config:', error);
+  }
+}
+
+/**
+ * Cache decrypted configuration to local file (for quick access)
  */
 function cacheConfig(config: RemoteConfig): void {
   try {
     fs.writeFileSync(CACHE_FILE, JSON.stringify(config, null, 2), 'utf-8');
-    console.log('💾 Config cached locally');
+    console.log('💾 Decrypted config cached locally');
   } catch (error) {
     console.error('⚠️  Failed to cache config:', error);
   }
 }
 
 /**
- * Load cached configuration
+ * Load cached encrypted configuration and decrypt it
+ */
+export function loadCachedEncryptedConfig(): RemoteConfig | null {
+  try {
+    if (fs.existsSync(ENCRYPTED_CACHE_FILE)) {
+      const content = fs.readFileSync(ENCRYPTED_CACHE_FILE, 'utf-8');
+      const encryptedConfig = JSON.parse(content);
+
+      if (!validateEncryptedConfig(encryptedConfig)) {
+        console.error('⚠️  Cached encrypted config has invalid structure');
+        return null;
+      }
+
+      console.log('🔓 Decrypting cached configuration...');
+
+      // Get embedded decryption key
+      const decryptionKey = getDecryptionKeyWithFallback();
+
+      // Decrypt config
+      const config: RemoteConfig = decryptConfig(encryptedConfig, decryptionKey);
+
+      console.log(`📁 Loaded and decrypted cached config (version: ${config.version})`);
+      return config;
+    }
+  } catch (error) {
+    console.error('⚠️  Failed to load/decrypt cached config:', error);
+  }
+  return null;
+}
+
+/**
+ * Load cached decrypted configuration (quick access)
  */
 export function loadCachedConfig(): RemoteConfig | null {
   try {
     if (fs.existsSync(CACHE_FILE)) {
       const content = fs.readFileSync(CACHE_FILE, 'utf-8');
       const config: RemoteConfig = JSON.parse(content);
-      console.log(`📁 Loaded cached config (version: ${config.version})`);
+      console.log(`📁 Loaded cached decrypted config (version: ${config.version})`);
       return config;
     }
   } catch (error) {
@@ -245,32 +366,38 @@ export function loadCachedConfig(): RemoteConfig | null {
 
 /**
  * Get configuration (try remote, fall back to cache, then default)
+ *
+ * Priority:
+ * 1. Fetch encrypted config from Git
+ * 2. Load encrypted cache and decrypt
+ * 3. Load decrypted cache (quick fallback)
+ * 4. Use default config
+ *
+ * IMPORTANT: No .env overrides allowed for security
  */
 export async function getRemoteConfig(): Promise<RemoteConfig> {
-  // Try to fetch from remote
+  // Try to fetch encrypted config from remote
   let config = await fetchRemoteConfig();
 
-  // Try GitLab if GitHub failed
-  if (!config && process.env.REMOTE_CONFIG_GITLAB_PROJECT_ID) {
-    config = await fetchRemoteConfigGitLab();
-  }
-
-  // Try raw URL if other methods failed
-  if (!config && process.env.REMOTE_CONFIG_RAW_URL) {
-    config = await fetchRemoteConfigRaw();
-  }
-
-  // Fall back to cached config
+  // Fall back to cached encrypted config
   if (!config) {
-    config = loadCachedConfig();
+    config = loadCachedEncryptedConfig();
     if (config) {
-      console.log('⚠️  Using cached config (remote unavailable)');
+      console.log('⚠️  Using cached encrypted config (remote unavailable)');
     }
   }
 
-  // Fall back to default config
+  // Fall back to cached decrypted config (faster but less secure)
   if (!config) {
-    console.log('⚠️  Using default config (remote and cache unavailable)');
+    config = loadCachedConfig();
+    if (config) {
+      console.log('⚠️  Using cached decrypted config (encrypted cache unavailable)');
+    }
+  }
+
+  // Fall back to default config (last resort)
+  if (!config) {
+    console.log('⚠️  Using default config (all remote/cache sources unavailable)');
     config = DEFAULT_CONFIG;
   }
 
@@ -307,9 +434,13 @@ function mergeConfig(base: RemoteConfig, override: Partial<RemoteConfig>): Remot
 export function getConfigMetadata(): {
   hasRemoteConfig: boolean;
   hasCachedConfig: boolean;
+  hasEncryptedCache: boolean;
   cacheAge?: number;
+  encryptedCacheAge?: number;
 } {
-  const hasRemoteConfig = !!(process.env.REMOTE_CONFIG_REPO && process.env.REMOTE_CONFIG_TOKEN);
+  // Remote config is always configured (embedded credentials)
+  const { repo, token } = getRepoConfig();
+  const hasRemoteConfig = !!(repo && token);
 
   let hasCachedConfig = false;
   let cacheAge: number | undefined;
@@ -320,21 +451,45 @@ export function getConfigMetadata(): {
     cacheAge = Date.now() - stats.mtimeMs;
   }
 
+  let hasEncryptedCache = false;
+  let encryptedCacheAge: number | undefined;
+
+  if (fs.existsSync(ENCRYPTED_CACHE_FILE)) {
+    hasEncryptedCache = true;
+    const stats = fs.statSync(ENCRYPTED_CACHE_FILE);
+    encryptedCacheAge = Date.now() - stats.mtimeMs;
+  }
+
   return {
     hasRemoteConfig,
     hasCachedConfig,
-    cacheAge
+    hasEncryptedCache,
+    cacheAge,
+    encryptedCacheAge
   };
 }
 
 /**
- * Clear cached config
+ * Clear cached configs (both encrypted and decrypted)
  */
 export function clearConfigCache(): void {
   try {
+    let cleared = false;
+
     if (fs.existsSync(CACHE_FILE)) {
       fs.unlinkSync(CACHE_FILE);
-      console.log('🗑️  Config cache cleared');
+      console.log('🗑️  Decrypted config cache cleared');
+      cleared = true;
+    }
+
+    if (fs.existsSync(ENCRYPTED_CACHE_FILE)) {
+      fs.unlinkSync(ENCRYPTED_CACHE_FILE);
+      console.log('🗑️  Encrypted config cache cleared');
+      cleared = true;
+    }
+
+    if (!cleared) {
+      console.log('ℹ️  No config caches to clear');
     }
   } catch (error) {
     console.error('⚠️  Failed to clear config cache:', error);
