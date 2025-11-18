@@ -17,6 +17,7 @@ import {
   LicensePayload
 } from '../utils/license';
 import { isLicenseEnforcementEnabled, getPlatformConfig } from '../utils/platformConfig';
+import { configService } from '../services/configService';
 
 const prisma = new PrismaClient();
 
@@ -34,17 +35,23 @@ const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
  */
 export async function initializeLicense(): Promise<boolean> {
   try {
-    // Check if license enforcement is enabled
-    const enforcementEnabled = await isLicenseEnforcementEnabled();
+    // Check remote config first (if configured), then fall back to platform config
+    let enforcementEnabled = configService.isLicenseEnforced();
+
+    // If remote config not available, check platform config
+    if (enforcementEnabled === false && !configService.getConfig()) {
+      enforcementEnabled = await isLicenseEnforcementEnabled();
+    }
 
     if (!enforcementEnabled) {
       console.log('ℹ️  License enforcement is DISABLED');
       console.log('   PulseGen is running in free mode');
-      console.log('   Enable licensing in Platform Settings when ready');
+      console.log('   Enable licensing in Platform Settings or Remote Config');
       return true; // Allow app to run without license
     }
 
-    console.log('🔒 License enforcement is ENABLED');
+    console.log('🔒 License enforcement is ENABLED (via ' +
+      (configService.getConfig() ? 'remote config' : 'platform config') + ')');
 
     // Perform security checks
     if (!performSecurityChecks()) {
@@ -141,16 +148,22 @@ export async function initializeLicense(): Promise<boolean> {
  */
 export async function requireLicense(req: Request, res: Response, next: NextFunction) {
   try {
-    // Skip license check for license and config endpoints
+    // Skip license check for license, config, and platform endpoints
     if (req.path === '/api/license/activate' ||
         req.path === '/api/license/status' ||
         req.path === '/api/platform/config' ||
-        req.path.startsWith('/api/platform/')) {
+        req.path.startsWith('/api/platform/') ||
+        req.path.startsWith('/api/config/')) {
       return next();
     }
 
-    // Check if license enforcement is enabled
-    const enforcementEnabled = await isLicenseEnforcementEnabled();
+    // Check remote config first, then fall back to platform config
+    let enforcementEnabled = configService.isLicenseEnforced();
+
+    // If remote config not available, check platform config
+    if (enforcementEnabled === false && !configService.getConfig()) {
+      enforcementEnabled = await isLicenseEnforcementEnabled();
+    }
 
     if (!enforcementEnabled) {
       // License not enforced, allow all requests
