@@ -217,6 +217,33 @@ model LicenseVerificationLog {
   @@index([verifiedAt])
 }
 
+// Platform configuration (for license enforcement, analytics, etc.)
+model PlatformConfig {
+  id                      String   @id @default(cuid())
+
+  // License enforcement
+  licenseEnforced         Boolean  @default(false)  // Toggle license requirement
+  licenseGracePeriod      Boolean  @default(true)   // Allow grace period
+
+  // Analytics
+  analyticsEnabled        Boolean  @default(false)
+  googleAnalyticsId       String?  // GA4 Measurement ID (e.g., G-XXXXXXXXXX)
+
+  // Telemetry
+  telemetryEnabled        Boolean  @default(false)  // Anonymous usage stats
+
+  // Instance info
+  instanceName            String?
+  instanceDescription     String?
+  adminEmail              String?
+
+  // Metadata
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("platform_config")
+}
+
 model Session {
   id           String   @id @default(cuid())
   userId       String

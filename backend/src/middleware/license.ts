@@ -16,6 +16,7 @@ import {
   performSecurityChecks,
   LicensePayload
 } from '../utils/license';
+import { isLicenseEnforcementEnabled, getPlatformConfig } from '../utils/platformConfig';
 
 const prisma = new PrismaClient();
 
@@ -33,6 +34,18 @@ const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
  */
 export async function initializeLicense(): Promise<boolean> {
   try {
+    // Check if license enforcement is enabled
+    const enforcementEnabled = await isLicenseEnforcementEnabled();
+
+    if (!enforcementEnabled) {
+      console.log('ℹ️  License enforcement is DISABLED');
+      console.log('   PulseGen is running in free mode');
+      console.log('   Enable licensing in Platform Settings when ready');
+      return true; // Allow app to run without license
+    }
+
+    console.log('🔒 License enforcement is ENABLED');
+
     // Perform security checks
     if (!performSecurityChecks()) {
       console.error('❌ SECURITY: License system integrity check failed');
@@ -48,7 +61,7 @@ export async function initializeLicense(): Promise<boolean> {
     if (!license) {
       console.error('❌ LICENSE: No active license found');
       console.error('   Please register a valid license key to use PulseGen');
-      console.error('   Visit: http://localhost:3000/admin/license');
+      console.error('   Visit: http://localhost:3000/settings/license');
       return false;
     }
 
@@ -128,8 +141,19 @@ export async function initializeLicense(): Promise<boolean> {
  */
 export async function requireLicense(req: Request, res: Response, next: NextFunction) {
   try {
-    // Skip license check for license registration endpoint
-    if (req.path === '/api/license/activate' || req.path === '/api/license/status') {
+    // Skip license check for license and config endpoints
+    if (req.path === '/api/license/activate' ||
+        req.path === '/api/license/status' ||
+        req.path === '/api/platform/config' ||
+        req.path.startsWith('/api/platform/')) {
+      return next();
+    }
+
+    // Check if license enforcement is enabled
+    const enforcementEnabled = await isLicenseEnforcementEnabled();
+
+    if (!enforcementEnabled) {
+      // License not enforced, allow all requests
       return next();
     }
 
