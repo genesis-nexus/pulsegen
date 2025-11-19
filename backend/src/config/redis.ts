@@ -1,30 +1,12 @@
-import Redis from 'ioredis';
-import logger from '../utils/logger';
+/**
+ * Redis/Cache Configuration
+ * NOTE: This file now uses the cache abstraction layer
+ * Redis is optional - falls back to in-memory cache if unavailable
+ */
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+import { cache } from '../lib/cache';
 
-export const redis = new Redis(REDIS_URL, {
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-  reconnectOnError(err) {
-    logger.error('Redis connection error:', err);
-    return true;
-  },
-});
-
-redis.on('connect', () => {
-  logger.info('Redis connected');
-});
-
-redis.on('error', (error) => {
-  logger.error('Redis error:', error);
-});
-
-redis.on('close', () => {
-  logger.warn('Redis connection closed');
-});
-
-export default redis;
+// Export cache instance for backward compatibility
+// Services using 'redis.get/set' will now use the cache abstraction
+export const redis = cache;
+export default cache;

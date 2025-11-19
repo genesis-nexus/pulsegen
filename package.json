@@ -1,0 +1,36 @@
+{
+  "name": "pulsegen",
+  "version": "1.0.0",
+  "description": "Modern survey platform with AI capabilities",
+  "scripts": {
+    "setup": "tsx scripts/setup.ts",
+    "quick-setup": "./scripts/quick-setup.sh",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:automation": "cd automation-tool && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "docker:up": "docker-compose up -d",
+    "docker:up:redis": "docker-compose --profile with-redis up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "db:migrate": "cd backend && npx prisma migrate dev",
+    "db:seed": "cd backend && npm run prisma:seed",
+    "db:studio": "cd backend && npx prisma studio",
+    "db:reset": "cd backend && npx prisma migrate reset"
+  },
+  "keywords": [
+    "survey",
+    "platform",
+    "ai",
+    "analytics"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "tsx": "^4.7.0"
+  }
+}
