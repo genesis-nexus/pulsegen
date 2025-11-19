@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-18T00:00:00Z",
+  "description": "PulseGen Remote Configuration - Example",
+
+  "licensing": {
+    "enforced": false,
+    "gracePeriodDays": 30,
+    "allowOffline": true,
+    "comment": "Set enforced to true to require license keys"
+  },
+
+  "analytics": {
+    "enabled": false,
+    "googleAnalyticsId": null,
+    "comment": "Set enabled to true and add GA4 Measurement ID (G-XXXXXXXXXX)"
+  },
+
+  "features": {
+    "aiGeneration": true,
+    "ssoEnabled": false,
+    "whiteLabel": true,
+    "advancedAnalytics": true,
+    "customIntegrations": true,
+    "auditLogs": true,
+    "comment": "Feature flags - toggle features on/off globally"
+  },
+
+  "limits": {
+    "maxSurveysPerUser": 1000,
+    "maxResponsesPerSurvey": 100000,
+    "maxFileSize": 10485760,
+    "comment": "Global limits applied to all instances"
+  },
+
+  "maintenance": {
+    "enabled": false,
+    "message": "System is under maintenance. Please try again later.",
+    "allowedIPs": [],
+    "comment": "Enable maintenance mode to show maintenance page to all users except allowed IPs"
+  },
+
+  "instanceSpecific": {
+    "production": {
+      "licensing": {
+        "enforced": true,
+        "gracePeriodDays": 7
+      },
+      "analytics": {
+        "enabled": true,
+        "googleAnalyticsId": "G-PROD123456"
+      }
+    },
+    "staging": {
+      "licensing": {
+        "enforced": false
+      },
+      "analytics": {
+        "enabled": true,
+        "googleAnalyticsId": "G-STAGING123"
+      }
+    },
+    "development": {
+      "licensing": {
+        "enforced": false
+      },
+      "analytics": {
+        "enabled": false
+      }
+    }
+  },
+
+  "_meta": {
+    "comment": "This configuration is fetched from Git on startup and refreshed periodically",
+    "repository": "genesis-nexus/pulsegen-config",
+    "documentation": "See REMOTE_CONFIG_GUIDE.md for setup instructions"
+  }
+}
