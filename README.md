@@ -1,277 +1,647 @@
-# PulseGen - Advanced Survey Platform
+# PulseGen
 
-A comprehensive, self-hosted survey platform with AI-powered insights that rivals SurveyMonkey.
+A self-hosted survey platform with AI-powered analytics. Create surveys, collect responses, and get intelligent insights—all on your own infrastructure.
 
-## Features
+## Why PulseGen?
 
-### Core Survey Features
-- **15+ Question Types**: Multiple choice, checkboxes, dropdowns, rating scales, matrix, ranking, text, email, number, date, file upload, and more
-- **Advanced Survey Logic**: Skip logic, branching, piping, randomization, and quotas
-- **Drag-and-Drop Builder**: Intuitive interface for creating surveys
-- **Survey Templates**: Pre-built templates for common use cases
-- **Question Bank**: Reusable question library
+- **Self-Hosted**: Full control of your data
+- **AI-Powered**: Bring your own AI (OpenAI, Anthropic, Google) for smart analysis
+- **No Vendor Lock-in**: Export everything, run anywhere
+- **Automation Ready**: Built-in automation tool for testing and demos
+- **Modern Stack**: React, TypeScript, PostgreSQL, Prisma
 
-### Distribution & Collection
-- **Multiple Distribution Channels**: Email invitations, web links, QR codes, embeds, and social sharing
-- **Response Management**: Real-time tracking, anonymous responses, IP blocking, response limits
-- **Data Validation**: Built-in validation rules for quality responses
-- **Mobile Optimized**: Fully responsive design for all devices
+## Quick Start
 
-### Analytics & Insights
-- **Real-time Analytics**: Live dashboard with response tracking
-- **AI-Powered Insights**: Claude AI integration for intelligent analysis
-- **Advanced Reporting**: Charts, graphs, cross-tabulation, trend analysis
-- **Data Export**: CSV, Excel, PDF, JSON formats
-- **Custom Filters**: Filter and segment responses
-- **Sentiment Analysis**: AI-powered sentiment detection in text responses
-
-### AI Capabilities (Enhanced Beyond SurveyMonkey)
-- **Bring Your Own AI**: Support for multiple AI providers - OpenAI (GPT-4), Anthropic (Claude), Google (Gemini), and more
-- **Survey Generation**: AI-powered survey creation from prompts
-- **Question Recommendations**: Intelligent question suggestions
-- **Response Analysis**: Automated insights from survey data
-- **Trend Detection**: Identify patterns and anomalies
-- **Predictive Analytics**: Forecast response trends
-- **Smart Summaries**: Automatic executive summaries
-- **Sentiment Analysis**: Understand respondent emotions
-- **Recommendation Engine**: Action items based on feedback
-- **Flexible Provider Selection**: Choose your preferred AI provider per task or set a default
-
-### Customization & Branding
-- **Theme Customization**: Full control over colors, fonts, and styling
-- **White Labeling**: Remove branding for enterprise use
-- **Custom Domains**: Use your own domain
-- **Multi-language Support**: Create surveys in multiple languages
-- **Custom CSS**: Advanced styling options
-
-### Collaboration & Management
-- **User Roles**: Admin, Manager, Viewer with granular permissions
-- **Team Collaboration**: Share surveys with team members
-- **Comment System**: Internal notes and discussions
-- **Audit Logs**: Track all changes and access
-- **Workspace Management**: Organize surveys by projects
-
-### Self-Hosted Solution
-- **Full Data Control**: Your data stays on your servers
-- **Docker Support**: Easy deployment with Docker Compose
-- **Scalable Architecture**: Designed for growth
-- **API Access**: Comprehensive REST API
-- **Webhook Support**: Real-time event notifications
-
-## Technology Stack
-
-### Frontend
-- **React 18** with TypeScript
-- **Vite** for blazing fast builds
-- **Tailwind CSS** for styling
-- **React Query** for data fetching
-- **Zustand** for state management
-- **React DnD** for drag-and-drop
-- **Recharts** for data visualization
-- **React Hook Form** for form management
-
-### Backend
-- **Node.js** with Express
-- **TypeScript** for type safety
-- **Prisma ORM** for database management
-- **JWT** for authentication
-- **Zod** for validation
-- **Multi-AI Provider Support**: OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI
-- **Nodemailer** for email distribution
-- **Bull** for job queues
-
-### Database
-- **PostgreSQL** for relational data
-- **Redis** for caching and queues
-
-### Infrastructure
-- **Docker** for containerization
-- **Nginx** for reverse proxy
-- **Let's Encrypt** for SSL
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+ and npm
-- PostgreSQL 14+
-- Redis 7+
-- AI Provider API key (optional - for AI features):
-  - OpenAI API key (recommended: gpt-4-turbo-preview)
-  - OR Anthropic API key (recommended: claude-sonnet-4)
-  - OR Google AI API key (recommended: gemini-pro)
-  - Users can add their own API keys through the UI
-
-### Quick Start with Docker
+### Option 1: Fastest Setup (Bash Script)
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone <your-repo-url>
 cd pulsegen
+./scripts/quick-setup.sh
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your settings
+# Create database
+createdb pulsegen
 
-# Start with Docker Compose
+# Initialize database
+cd backend
+npx prisma migrate dev --name init
+npm run prisma:seed
+
+# Start development
+npm run dev  # Terminal 1: Backend
+cd ../frontend && npm run dev  # Terminal 2: Frontend
+```
+
+**Access:** http://localhost:3000
+**Login:** admin@example.com / admin123
+
+### Option 2: Interactive Setup (Guided)
+
+```bash
+npm run setup
+```
+
+Choose Docker or local, configure options interactively, and let the script handle everything.
+
+### Option 3: Docker (Production-like)
+
+```bash
+# Without Redis (faster startup)
 docker-compose up -d
 
-# Access the application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:5000
+# With Redis (better performance)
+docker-compose --profile with-redis up -d
 ```
 
-### Manual Setup
+**See [SETUP.md](SETUP.md) for detailed setup options.**
 
-#### Backend Setup
+---
+
+## Using PulseGen
+
+### 1. Create Your First Survey
+
+**Via UI:**
+1. Login → Click "New Survey"
+2. Add questions using the builder
+3. Configure settings (anonymous, limit responses, etc.)
+4. Click "Publish"
+5. Share the link: `http://localhost:3000/s/your-survey-slug`
+
+**Via API:**
 ```bash
-cd backend
-npm install
-cp .env.example .env
-# Edit .env with your database and API keys
-npx prisma migrate dev
-npx prisma generate
-npm run dev
+# Login to get token
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"admin123"}'
+
+# Create survey
+curl -X POST http://localhost:5000/api/surveys \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Customer Satisfaction Survey",
+    "description": "Tell us how we did",
+    "status": "ACTIVE",
+    "isAnonymous": true
+  }'
 ```
 
-#### Frontend Setup
+### 2. Add Questions
+
+**Question Types Available:**
+- `MULTIPLE_CHOICE` - Radio buttons
+- `CHECKBOXES` - Multi-select
+- `RATING_SCALE` - 1-5 stars
+- `NPS` - Net Promoter Score (0-10)
+- `LONG_TEXT` - Open-ended feedback
+- `SHORT_TEXT` - Brief answers
+- `EMAIL` - Email validation
+- `YES_NO` - Boolean choice
+- Plus: Date, Number, Slider, Matrix, Ranking, File Upload
+
+**Example: Add NPS Question**
 ```bash
-cd frontend
-npm install
-cp .env.example .env
-# Edit .env with API URL
-npm run dev
+curl -X POST http://localhost:5000/api/surveys/SURVEY_ID/questions \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "NPS",
+    "text": "How likely are you to recommend us?",
+    "isRequired": true,
+    "order": 0,
+    "settings": {
+      "minValue": 0,
+      "maxValue": 10,
+      "minLabel": "Not likely",
+      "maxLabel": "Very likely"
+    }
+  }'
 ```
 
-## Environment Variables
+### 3. Collect Responses
 
-### Backend (.env)
+**Public Survey (No Auth Required):**
+```bash
+curl -X POST http://localhost:5000/api/responses/surveys/SURVEY_ID/submit \
+  -H "Content-Type: application/json" \
+  -d '{
+    "answers": [
+      {
+        "questionId": "QUESTION_ID",
+        "numberValue": 9
+      }
+    ]
+  }'
 ```
-DATABASE_URL=postgresql://user:password@localhost:5432/pulsegen
+
+**Share Options:**
+- Direct Link: `/s/survey-slug`
+- QR Code: Generated automatically
+- Email: Configure SMTP in settings
+- Embed: Use iframe code
+
+### 4. View Analytics
+
+**Via UI:**
+- Dashboard → Select Survey → Analytics Tab
+- Real-time charts, response counts, completion rates
+- Download CSV/Excel/PDF exports
+
+**Via API:**
+```bash
+curl http://localhost:5000/api/analytics/surveys/SURVEY_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Response:**
+```json
+{
+  "totalResponses": 156,
+  "completionRate": 87.5,
+  "averageDuration": 180,
+  "questionStats": [
+    {
+      "questionId": "...",
+      "type": "NPS",
+      "averageValue": 8.3,
+      "distribution": {...}
+    }
+  ]
+}
+```
+
+### 5. AI-Powered Insights
+
+**Setup AI Provider:**
+1. Settings → AI Providers → Add Provider
+2. Choose: OpenAI, Anthropic, or Google
+3. Enter your API key
+4. Set as default (optional)
+
+**Generate Insights:**
+```bash
+curl -X POST http://localhost:5000/api/ai/surveys/SURVEY_ID/report \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "anthropic",
+    "includeRecommendations": true
+  }'
+```
+
+**AI Features:**
+- **Survey Generation**: "Create a customer satisfaction survey for a SaaS product"
+- **Question Optimization**: Improve existing questions for clarity
+- **Sentiment Analysis**: Analyze text responses
+- **Smart Summaries**: Executive summary of results
+- **Action Items**: Recommended next steps from feedback
+
+**Example: AI Generate Survey**
+```bash
+curl -X POST http://localhost:5000/api/ai/generate-survey \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Create an employee engagement survey with 8 questions",
+    "questionCount": 8,
+    "includeLogic": false
+  }'
+```
+
+---
+
+## Automation Tool
+
+Quickly populate surveys with realistic test data for demos and development.
+
+**Access:** http://localhost:3001
+
+**Features:**
+- 10 industry personas (Healthcare, Retail, Tech, etc.)
+- Auto-creates surveys with industry-specific questions
+- Generates 20 realistic user responses
+- Full analytics ready immediately
+
+**Example Usage:**
+1. Start automation tool: `cd automation-tool && npm run dev`
+2. Login with same credentials
+3. Select persona (e.g., "Healthcare - Patient Satisfaction")
+4. Click "Run Automation"
+5. View results with 20 pre-filled responses
+
+**Programmatic:**
+```bash
+curl -X POST http://localhost:5000/api/automation/run \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "personaId": "healthcare-patient-satisfaction",
+    "scenarioCount": 20
+  }'
+```
+
+**See [AUTOMATION_TOOL.md](AUTOMATION_TOOL.md) for details.**
+
+---
+
+## Common Workflows
+
+### Workflow 1: Employee Feedback Survey
+
+```bash
+# 1. Create survey
+POST /api/surveys
+{
+  "title": "Q4 Team Feedback",
+  "visibility": "PRIVATE",  # Only accessible via link
+  "isAnonymous": true
+}
+
+# 2. Add Likert scale questions
+POST /api/surveys/{id}/questions
+{
+  "type": "LIKERT_SCALE",
+  "text": "I feel valued and appreciated at work",
+  "options": [
+    {"text": "Strongly Disagree", "order": 0},
+    {"text": "Disagree", "order": 1},
+    {"text": "Neutral", "order": 2},
+    {"text": "Agree", "order": 3},
+    {"text": "Strongly Agree", "order": 4}
+  ]
+}
+
+# 3. Add open feedback
+POST /api/surveys/{id}/questions
+{
+  "type": "LONG_TEXT",
+  "text": "What would improve your work experience?",
+  "isRequired": false
+}
+
+# 4. Publish and share link
+PUT /api/surveys/{id}
+{"status": "ACTIVE"}
+
+# 5. After responses, get AI insights
+POST /api/ai/surveys/{id}/report
+{"includeRecommendations": true}
+```
+
+### Workflow 2: Customer Satisfaction with Logic
+
+```bash
+# 1. Create NPS question
+POST /api/surveys/{id}/questions
+{
+  "type": "NPS",
+  "text": "How likely are you to recommend us?"
+}
+
+# 2. Add conditional follow-up
+POST /api/surveys/{id}/logic
+{
+  "sourceQuestionId": "NPS_QUESTION_ID",
+  "type": "SKIP_LOGIC",
+  "conditions": [
+    {"operator": "less_than", "value": 7}
+  ],
+  "actions": [
+    {"type": "show_question", "targetQuestionId": "DETRACTOR_QUESTION_ID"}
+  ]
+}
+
+# Logic: If NPS < 7, show "What went wrong?"
+# If NPS >= 9, show "What did we do well?"
+```
+
+### Workflow 3: Multi-Language Survey
+
+```bash
+# Create base survey in English
+POST /api/surveys {...}
+
+# Add Spanish version (coming soon - currently single language)
+# Translation workflow in development
+```
+
+---
+
+## Configuration
+
+### Required Environment Variables
+
+```env
+# Database (required)
+DATABASE_URL=postgresql://postgres:password@localhost:5432/pulsegen
+
+# Security (required - generate with: openssl rand -hex 32)
+JWT_SECRET=<64-char-hex>
+JWT_REFRESH_SECRET=<64-char-hex>
+ENCRYPTION_KEY=<64-char-hex>
+
+# Admin user (required for initial setup)
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=your-secure-password
+```
+
+### Optional Features
+
+```env
+# Caching (optional - improves performance)
 REDIS_URL=redis://localhost:6379
-JWT_SECRET=your-secret-key
-JWT_REFRESH_SECRET=your-refresh-secret
-ANTHROPIC_API_KEY=your-anthropic-key
-SMTP_HOST=smtp.example.com
+USE_CACHE=true  # false to disable caching entirely
+
+# Email (optional - for survey distribution)
+SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your-email
-SMTP_PASS=your-password
-APP_URL=http://localhost:3000
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# AI (optional - users can add their own in UI)
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=...
 ```
 
-### Frontend (.env)
+**No Redis?** App works fine with in-memory caching for development.
+
+---
+
+## Architecture
+
 ```
-VITE_API_URL=http://localhost:5000
+┌─────────────┐      ┌─────────────┐      ┌──────────────┐
+│   React     │─────▶│   Express   │─────▶│  PostgreSQL  │
+│  Frontend   │      │   Backend   │      │   Database   │
+│  (Port 3000)│      │  (Port 5000)│      │  (Port 5432) │
+└─────────────┘      └─────────────┘      └──────────────┘
+                            │
+                            ▼
+                     ┌─────────────┐
+                     │    Redis    │
+                     │   (Cache)   │
+                     │ (Optional)  │
+                     └─────────────┘
 ```
 
-## Project Structure
+**Key Components:**
+- **Prisma ORM**: Type-safe database queries
+- **JWT Auth**: Secure token-based authentication
+- **Zustand**: Lightweight state management
+- **Cache Layer**: Pluggable (Redis or in-memory)
+
+**Database Schema:**
+- 30 tables covering surveys, questions, responses, analytics
+- Supports complex logic, branching, and custom themes
+- See: `backend/prisma/schema.prisma`
+
+---
+
+## Development
+
+### Project Structure
 
 ```
 pulsegen/
-├── backend/
+├── backend/              # Node.js + Express API
 │   ├── src/
-│   │   ├── controllers/      # Request handlers
-│   │   ├── services/         # Business logic
-│   │   ├── models/           # Database models
-│   │   ├── middleware/       # Express middleware
-│   │   ├── routes/           # API routes
-│   │   ├── utils/            # Utilities
-│   │   ├── validators/       # Request validation
-│   │   └── ai/               # AI integration
-│   ├── prisma/
-│   │   └── schema.prisma     # Database schema
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/       # React components
-│   │   ├── pages/            # Page components
-│   │   ├── hooks/            # Custom hooks
-│   │   ├── stores/           # State management
-│   │   ├── services/         # API services
-│   │   ├── utils/            # Utilities
-│   │   └── types/            # TypeScript types
-│   └── package.json
-├── docker-compose.yml
-└── README.md
+│   │   ├── routes/       # API endpoints
+│   │   ├── services/     # Business logic
+│   │   ├── lib/cache/    # Cache abstraction
+│   │   └── data/         # Persona definitions
+│   └── prisma/
+│       ├── schema.prisma # Database schema
+│       └── seed.ts       # Initial data
+│
+├── frontend/             # React + TypeScript UI
+│   └── src/
+│       ├── pages/        # Route pages
+│       ├── stores/       # State management
+│       └── lib/          # API client
+│
+├── automation-tool/      # Separate testing UI
+│   └── src/
+│       └── pages/        # Automation workflows
+│
+└── scripts/              # Setup automation
+    ├── setup.ts          # Interactive CLI
+    └── quick-setup.sh    # Bash script
 ```
 
-## API Documentation
+### Database Migrations
 
-Once running, API documentation is available at:
-- Swagger UI: http://localhost:5000/api-docs
+```bash
+# Create migration
+cd backend
+npx prisma migrate dev --name your_migration_name
 
-## Key Features Comparison
+# View database in browser
+npx prisma studio
 
-| Feature | PulseGen | SurveyMonkey |
-|---------|----------|--------------|
-| Question Types | 15+ | 15+ |
-| AI Insights | ✅ Advanced | ❌ |
-| Self-Hosted | ✅ | ❌ |
-| White Label | ✅ | ✅ (Enterprise) |
-| Real-time Analytics | ✅ | ✅ |
-| Survey Logic | ✅ | ✅ |
-| API Access | ✅ Full Access | ✅ Limited |
-| Custom Branding | ✅ | ✅ |
-| Data Ownership | ✅ Full | ❌ |
-| Cost | Free (Self-hosted) | Subscription |
+# Reset database (WARNING: deletes all data)
+npx prisma migrate reset
 
-## AI-Powered Features
+# Seed with sample data
+npm run prisma:seed
+```
 
-### Survey Intelligence
-- **Auto-generate surveys** from natural language descriptions
-- **Optimize questions** for better response rates
-- **Suggest follow-up questions** based on previous answers
+### API Testing
 
-### Response Analysis
-- **Automated insights** from survey results
-- **Sentiment analysis** on text responses
-- **Theme extraction** from open-ended questions
-- **Anomaly detection** in response patterns
-- **Predictive modeling** for future trends
+```bash
+# Health check
+curl http://localhost:5000/api/health
 
-### Smart Recommendations
-- **Action items** generated from feedback
-- **Priority ranking** of issues
-- **Trend forecasting** and predictions
-- **Comparative analysis** across surveys
+# Login
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"admin123"}'
 
-## Security Features
+# Create survey (use token from login)
+curl -X POST http://localhost:5000/api/surveys \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test Survey","status":"DRAFT"}'
+```
 
-- **Encryption at rest and in transit**
-- **Role-based access control (RBAC)**
-- **Audit logging**
-- **Rate limiting**
-- **CORS protection**
-- **SQL injection protection**
-- **XSS protection**
-- **CSRF tokens**
-- **Password hashing with bcrypt**
-- **API key management**
+### Running Tests
 
-## Deployment
+```bash
+# Backend tests
+cd backend
+npm test
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+# Frontend tests
+cd frontend
+npm test
+
+# E2E tests (if configured)
+npm run test:e2e
+```
+
+---
+
+## Production Deployment
+
+### Docker (Recommended)
+
+```bash
+# With Redis for better performance
+docker-compose --profile with-redis up -d
+
+# Or without Redis
+docker-compose up -d
+```
+
+### Environment Configuration
+
+```env
+NODE_ENV=production
+APP_URL=https://surveys.yourdomain.com
+CORS_ORIGIN=https://surveys.yourdomain.com
+
+# Use strong, unique secrets in production
+JWT_SECRET=<generate-new>
+JWT_REFRESH_SECRET=<generate-new>
+ENCRYPTION_KEY=<generate-new>
+```
+
+### Security Checklist
+
+- [ ] Change default admin password
+- [ ] Use strong JWT secrets (64+ chars)
+- [ ] Enable HTTPS/SSL
+- [ ] Configure CORS properly
+- [ ] Set up PostgreSQL backups
+- [ ] Enable Redis for production
+- [ ] Configure rate limiting
+- [ ] Set up monitoring/logging
+- [ ] Review firewall rules
+- [ ] Keep dependencies updated
+
+---
+
+## Troubleshooting
+
+### Port already in use
+```bash
+# Find process
+lsof -i :5000
+# Kill it
+kill -9 <PID>
+```
+
+### Database connection error
+```bash
+# Check PostgreSQL is running
+pg_isready
+
+# Start it
+brew services start postgresql  # macOS
+sudo systemctl start postgresql # Linux
+```
+
+### Redis connection fails
+**This is OK!** App falls back to in-memory cache. To use Redis:
+```bash
+brew install redis && redis-server  # macOS
+sudo apt install redis && sudo systemctl start redis  # Linux
+```
+
+### Prisma client errors
+```bash
+cd backend
+npx prisma generate
+```
+
+**See [SETUP.md](SETUP.md) for complete troubleshooting guide.**
+
+---
+
+## Documentation
+
+- **[SETUP.md](SETUP.md)** - Comprehensive setup guide
+- **[AUTOMATION_TOOL.md](AUTOMATION_TOOL.md)** - Automation tool usage
+- **[scripts/README.md](scripts/README.md)** - Setup scripts reference
+
+---
+
+## Key Features
+
+### Survey Creation
+✅ 17 question types
+✅ Drag-and-drop builder
+✅ Skip logic & branching
+✅ Templates & question bank
+✅ Multi-page surveys
+
+### Distribution
+✅ Public/private links
+✅ QR codes
+✅ Email invitations
+✅ Embed codes
+✅ Password protection
+
+### Analytics
+✅ Real-time dashboard
+✅ Export CSV/Excel/PDF
+✅ Custom filters
+✅ Cross-tabulation
+✅ Response tracking
+
+### AI Features
+✅ Survey generation
+✅ Question optimization
+✅ Sentiment analysis
+✅ Smart summaries
+✅ Action recommendations
+✅ Multi-provider support (OpenAI, Anthropic, Google)
+
+### Enterprise
+✅ Self-hosted
+✅ White-label ready
+✅ SSO support
+✅ Team workspaces
+✅ Audit logging
+✅ API access
+
+---
+
+## Tech Stack
+
+**Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Zustand
+**Backend:** Node.js, Express, Prisma, JWT, Zod
+**Database:** PostgreSQL, Redis (optional)
+**AI:** OpenAI, Anthropic, Google (user-configurable)
+
+---
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+---
 
 ## License
 
-MIT License - see [LICENSE](./LICENSE) for details.
+MIT License - See LICENSE file
+
+---
 
 ## Support
 
-For issues and questions:
-- GitHub Issues: <repository-url>/issues
-- Documentation: See docs/ folder
+- **Issues**: GitHub Issues
+- **Setup Help**: See SETUP.md
+- **API Docs**: http://localhost:5000/api-docs (when running)
 
-## Roadmap
+---
 
-- [ ] Mobile applications (iOS/Android)
-- [ ] Advanced A/B testing
-- [ ] Integration marketplace
-- [ ] Video question types
-- [ ] Voice responses
-- [ ] Offline mode
-- [ ] Advanced statistical analysis
-- [ ] Machine learning models for response prediction
+**Quick Links:**
+- [Setup Guide](SETUP.md)
+- [Automation Tool](AUTOMATION_TOOL.md)
+- [Setup Scripts](scripts/README.md)
