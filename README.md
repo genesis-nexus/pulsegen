@@ -627,17 +627,33 @@ Contributions welcome! Please:
 
 ---
 
-## License
+## Licensing & Editions
 
-MIT License - See LICENSE file
+PulseGen is available in two editions:
+
+### Community Edition (This Repo)
+- **License**: MIT - Free and open source
+- **Features**: Full survey platform with all core features
+- **Support**: Community (GitHub Issues)
+- **Perfect for**: Developers, startups, personal projects
+
+### Enterprise Edition
+- **License**: Commercial (paid subscription)
+- **Features**: Everything in Community + SSO, advanced white-labeling, compliance tools
+- **Support**: Professional SLA with email/phone/video
+- **Perfect for**: Commercial use, large organizations
+- **Details**: See [COMMERCIALIZATION_STRATEGY.md](./COMMERCIALIZATION_STRATEGY.md)
+
+Both editions use the same codebase. Enterprise features unlock via license key.
 
 ---
 
 ## Support
 
 - **Issues**: GitHub Issues
-- **Setup Help**: See SETUP.md
+- **Setup Help**: [SETUP.md](SETUP.md)
 - **API Docs**: http://localhost:5000/api-docs (when running)
+- **Enterprise**: See [CUSTOMER_SETUP_GUIDE.md](./CUSTOMER_SETUP_GUIDE.md)
 
 ---
 
@@ -645,3 +661,4 @@ MIT License - See LICENSE file
 - [Setup Guide](SETUP.md)
 - [Automation Tool](AUTOMATION_TOOL.md)
 - [Setup Scripts](scripts/README.md)
+- [Licensing Details](LICENSING_GUIDE.md)
