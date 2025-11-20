@@ -448,6 +448,131 @@ export class SurveyService {
     const random = Math.random().toString(36).substring(2, 8);
     return `${base}-${random}`;
   }
+
+  // Survey Logic methods
+  static async addLogic(surveyId: string, userId: string, data: any) {
+    await this.checkOwnership(surveyId, userId);
+
+    // Verify source question exists and belongs to survey
+    const sourceQuestion = await prisma.question.findFirst({
+      where: { id: data.sourceQuestionId, surveyId },
+    });
+
+    if (!sourceQuestion) {
+      throw new AppError(404, 'Source question not found');
+    }
+
+    // Verify target question exists if provided
+    if (data.targetQuestionId) {
+      const targetQuestion = await prisma.question.findFirst({
+        where: { id: data.targetQuestionId, surveyId },
+      });
+
+      if (!targetQuestion) {
+        throw new AppError(404, 'Target question not found');
+      }
+    }
+
+    const logic = await prisma.surveyLogic.create({
+      data: {
+        surveyId,
+        sourceQuestionId: data.sourceQuestionId,
+        targetQuestionId: data.targetQuestionId,
+        type: data.type,
+        conditions: data.conditions,
+        actions: data.actions,
+      },
+    });
+
+    return logic;
+  }
+
+  static async getLogicForSurvey(surveyId: string, userId?: string) {
+    // Check access if userId provided
+    if (userId) {
+      await this.checkOwnership(surveyId, userId);
+    }
+
+    const logicRules = await prisma.surveyLogic.findMany({
+      where: { surveyId },
+      include: {
+        sourceQuestion: {
+          select: {
+            id: true,
+            text: true,
+            type: true,
+          },
+        },
+        targetQuestion: {
+          select: {
+            id: true,
+            text: true,
+            type: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return logicRules;
+  }
+
+  static async updateLogic(logicId: string, userId: string, data: any) {
+    const logic = await prisma.surveyLogic.findUnique({
+      where: { id: logicId },
+      include: { survey: true },
+    });
+
+    if (!logic) {
+      throw new AppError(404, 'Logic rule not found');
+    }
+
+    if (logic.survey.createdBy !== userId) {
+      throw new AppError(403, 'Access denied');
+    }
+
+    // Verify target question exists if being updated
+    if (data.targetQuestionId) {
+      const targetQuestion = await prisma.question.findFirst({
+        where: { id: data.targetQuestionId, surveyId: logic.surveyId },
+      });
+
+      if (!targetQuestion) {
+        throw new AppError(404, 'Target question not found');
+      }
+    }
+
+    const updated = await prisma.surveyLogic.update({
+      where: { id: logicId },
+      data: {
+        targetQuestionId: data.targetQuestionId,
+        type: data.type,
+        conditions: data.conditions,
+        actions: data.actions,
+      },
+    });
+
+    return updated;
+  }
+
+  static async deleteLogic(logicId: string, userId: string) {
+    const logic = await prisma.surveyLogic.findUnique({
+      where: { id: logicId },
+      include: { survey: true },
+    });
+
+    if (!logic) {
+      throw new AppError(404, 'Logic rule not found');
+    }
+
+    if (logic.survey.createdBy !== userId) {
+      throw new AppError(403, 'Access denied');
+    }
+
+    await prisma.surveyLogic.delete({
+      where: { id: logicId },
+    });
+  }
 }
 
 export default SurveyService;

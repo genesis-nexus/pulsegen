@@ -75,11 +75,21 @@ export default function SurveyList() {
                 {survey.description || 'No description'}
               </p>
 
-              <div className="flex items-center text-sm text-gray-500 mb-4">
-                <span>{survey._count?.questions || 0} questions</span>
-                <span className="mx-2">•</span>
-                <span>{survey._count?.responses || 0} responses</span>
+              <div className="flex items-center text-sm mb-4">
+                <span className={survey._count?.questions === 0 ? 'text-orange-600 font-medium' : 'text-gray-500'}>
+                  {survey._count?.questions || 0} questions
+                  {survey._count?.questions === 0 && ' ⚠️'}
+                </span>
+                <span className="mx-2 text-gray-300">•</span>
+                <span className="text-gray-500">{survey._count?.responses || 0} responses</span>
               </div>
+              {survey._count?.questions === 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded p-2 mb-4">
+                  <p className="text-xs text-orange-800">
+                    This survey has no questions. Add questions before publishing.
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <Link
