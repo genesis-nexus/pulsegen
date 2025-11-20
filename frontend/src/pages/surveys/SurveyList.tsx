@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Copy, BarChart, Eye, Edit } from 'lucide-react';
+import { Plus, Trash2, Copy, BarChart, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { Survey } from '../../types';

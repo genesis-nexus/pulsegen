@@ -133,13 +133,28 @@ export class RedisCache implements CacheInterface {
     }
   }
 
-  async disconnect(): Promise<void> {
+  async ping(): Promise<string> {
+    if (!this.connected) throw new Error('Redis not connected');
+    try {
+      return await this.client.ping();
+    } catch (error) {
+      logger.error('Redis PING error:', error);
+      throw error;
+    }
+  }
+
+  async quit(): Promise<void> {
     try {
       await this.client.quit();
       this.connected = false;
       logger.info('Redis cache disconnected');
     } catch (error) {
       logger.error('Error disconnecting Redis:', error);
+      throw error;
     }
+  }
+
+  async disconnect(): Promise<void> {
+    await this.quit();
   }
 }

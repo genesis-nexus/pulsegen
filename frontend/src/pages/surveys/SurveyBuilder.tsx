@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tantml:parameter>
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Save, Eye, Trash2, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
-import { Survey, Question, QuestionType } from '../../types';
+import { Survey, QuestionType } from '../../types';
 
 const QUESTION_TYPES = [
   { value: QuestionType.MULTIPLE_CHOICE, label: 'Multiple Choice' },

@@ -54,4 +54,14 @@ export interface CacheInterface {
    * @param key Cache key
    */
   exists(key: string): Promise<boolean>;
+
+  /**
+   * Ping the cache to check connectivity
+   */
+  ping(): Promise<string>;
+
+  /**
+   * Quit/close the cache connection
+   */
+  quit(): Promise<void>;
 }

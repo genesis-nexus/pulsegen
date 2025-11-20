@@ -85,6 +85,14 @@ export class MemoryCache implements CacheInterface {
     return true;
   }
 
+  async ping(): Promise<string> {
+    return 'PONG';
+  }
+
+  async quit(): Promise<void> {
+    this.destroy();
+  }
+
   private cleanup(): void {
     const now = Date.now();
     let expiredCount = 0;

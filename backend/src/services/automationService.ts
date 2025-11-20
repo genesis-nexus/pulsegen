@@ -122,7 +122,6 @@ export class AutomationService {
     const survey = await SurveyService.create(userId, {
       title,
       description,
-      status: 'ACTIVE',
       visibility: 'PUBLIC',
       isAnonymous: true,
       allowMultiple: false,
@@ -349,7 +348,7 @@ export class AutomationService {
 
       // Submit response
       try {
-        const response = await ResponseService.submitResponse(surveyId, { answers });
+        const response = await ResponseService.submit(surveyId, { answers });
 
         const completionTime = this.calculateCompletionTime(persona, scenario, willComplete);
 

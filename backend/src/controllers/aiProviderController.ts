@@ -51,9 +51,9 @@ export class AIProviderController {
 
   static async addProvider(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const data = addProviderSchema.parse(req.body);
+      const validatedData = addProviderSchema.parse(req.body);
 
-      const provider = await AIProviderService.addProvider(req.user!.id, data);
+      const provider = await AIProviderService.addProvider(req.user!.id, validatedData as any);
 
       res.status(201).json({
         success: true,

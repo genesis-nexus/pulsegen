@@ -7,7 +7,7 @@ interface CreateSurveyData {
   description?: string;
   workspaceId?: string;
   isAnonymous?: boolean;
-  isPublic?: boolean;
+  visibility?: 'PUBLIC' | 'PRIVATE' | 'PASSWORD_PROTECTED';
   allowMultiple?: boolean;
   responseLimit?: number;
   closeDate?: string;
@@ -40,7 +40,7 @@ export class SurveyService {
         createdBy: userId,
         workspaceId: data.workspaceId,
         isAnonymous: data.isAnonymous ?? false,
-        isPublic: data.isPublic ?? true,
+        visibility: data.visibility ?? 'PUBLIC',
         allowMultiple: data.allowMultiple ?? false,
         responseLimit: data.responseLimit,
         closeDate: data.closeDate ? new Date(data.closeDate) : null,
@@ -154,7 +154,7 @@ export class SurveyService {
     }
 
     // Check access
-    if (userId && survey.createdBy !== userId && !survey.isPublic) {
+    if (userId && survey.createdBy !== userId && survey.visibility !== 'PUBLIC') {
       throw new AppError(403, 'Access denied');
     }
 
@@ -171,7 +171,7 @@ export class SurveyService {
         title: data.title,
         description: data.description,
         isAnonymous: data.isAnonymous,
-        isPublic: data.isPublic,
+        visibility: data.visibility,
         allowMultiple: data.allowMultiple,
         responseLimit: data.responseLimit,
         closeDate: data.closeDate ? new Date(data.closeDate) : undefined,
@@ -212,7 +212,7 @@ export class SurveyService {
         slug,
         createdBy: userId,
         isAnonymous: original.isAnonymous,
-        isPublic: original.isPublic,
+        visibility: original.visibility,
         allowMultiple: original.allowMultiple,
         welcomeText: original.welcomeText,
         thankYouText: original.thankYouText,

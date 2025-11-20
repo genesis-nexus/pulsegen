@@ -331,6 +331,7 @@ model Survey {
   pages         SurveyPage[]
   questions     Question[]
   responses     Response[]
+  logic         SurveyLogic[]
   theme         SurveyTheme?
   analytics     SurveyAnalytics?
   aiInsights    AiInsight[]

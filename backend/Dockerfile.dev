@@ -1,0 +1,26 @@
+# Development Dockerfile - runs with tsx
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install all dependencies (including dev dependencies)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Create directories for uploads and logs
+RUN mkdir -p uploads logs
+
+# Expose port
+EXPOSE 5000
+
+# Start server with tsx (no TypeScript compilation needed)
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/index.ts"]
