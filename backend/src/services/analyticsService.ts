@@ -291,6 +291,7 @@ export class AnalyticsService {
     }
 
     const aiAnalysis = await AIService.analyzeResponses({
+      userId,
       responses,
       questions: survey.questions,
       analysisType: type as any,
@@ -302,6 +303,7 @@ export class AnalyticsService {
         prisma.aiInsight.create({
           data: {
             surveyId,
+            provider: 'AI',
             type: aiAnalysis.type,
             insight: insight.description,
             confidence: insight.confidence,

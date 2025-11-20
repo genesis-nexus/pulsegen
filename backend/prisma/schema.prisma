@@ -135,6 +135,115 @@ model UserAIProvider {
   @@index([isDefault])
 }
 
+// License Management
+enum LicenseTier {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  SUSPENDED
+}
+
+model License {
+  id                String        @id @default(cuid())
+  licenseKey        String        @unique // Full encrypted license key
+  customerId        String        // Customer identifier from license payload
+  email             String
+  companyName       String
+  tier              LicenseTier
+  status            LicenseStatus @default(ACTIVE)
+
+  // License validity
+  issuedAt          DateTime
+  expiresAt         DateTime
+  activatedAt       DateTime?     // When customer first activated the license
+  lastVerifiedAt    DateTime      @default(now()) // Last successful verification
+
+  // Limits (from license payload)
+  maxUsers          Int           @default(-1) // -1 means unlimited
+  maxSurveys        Int           @default(-1)
+  maxResponses      Int           @default(-1)
+
+  // Features (JSON array of feature flags)
+  features          Json          // ["sso", "white_label", "api_access", etc.]
+
+  // Instance binding (optional - ties license to specific installation)
+  instanceId        String?       @unique
+  instanceFingerprint String?     // Machine/server fingerprint
+
+  // Usage tracking
+  currentUsers      Int           @default(0)
+  currentSurveys    Int           @default(0)
+  currentResponses  Int           @default(0) // Monthly counter, resets each month
+  lastUsageUpdate   DateTime      @default(now())
+
+  // Grace period for offline operation
+  gracePeriodDays   Int           @default(30)
+  offlineSince      DateTime?     // When license verification last failed
+
+  // Metadata
+  notes             String?       // Internal notes
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  verificationLogs  LicenseVerificationLog[]
+
+  @@index([licenseKey])
+  @@index([email])
+  @@index([customerId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// License verification audit log
+model LicenseVerificationLog {
+  id            String    @id @default(cuid())
+  licenseId     String
+  success       Boolean
+  errorMessage  String?
+  verifiedAt    DateTime  @default(now())
+  ipAddress     String?
+  userAgent     String?
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@index([licenseId])
+  @@index([verifiedAt])
+}
+
+// Platform configuration (for license enforcement, analytics, etc.)
+model PlatformConfig {
+  id                      String   @id @default(cuid())
+
+  // License enforcement
+  licenseEnforced         Boolean  @default(false)  // Toggle license requirement
+  licenseGracePeriod      Boolean  @default(true)   // Allow grace period
+
+  // Analytics
+  analyticsEnabled        Boolean  @default(false)
+  googleAnalyticsId       String?  // GA4 Measurement ID (e.g., G-XXXXXXXXXX)
+
+  // Telemetry
+  telemetryEnabled        Boolean  @default(false)  // Anonymous usage stats
+
+  // Instance info
+  instanceName            String?
+  instanceDescription     String?
+  adminEmail              String?
+
+  // Metadata
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("platform_config")
+}
+
 model Session {
   id           String   @id @default(cuid())
   userId       String
@@ -222,6 +331,7 @@ model Survey {
   pages         SurveyPage[]
   questions     Question[]
   responses     Response[]
+  logic         SurveyLogic[]
   theme         SurveyTheme?
   analytics     SurveyAnalytics?
   aiInsights    AiInsight[]
@@ -553,6 +663,50 @@ enum ModelStatus {
   READY
   FAILED
   ARCHIVED
+}
+
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  INVITED
+}
+
+// Download Access Request (for pre-monetization audience building)
+model DownloadAccessRequest {
+  id                    String              @id @default(cuid())
+  email                 String
+  githubUsername        String              // To invite to private repo
+  fullName              String?
+
+  // Social media verification
+  youtubeSubscribed     Boolean             @default(false)
+  instagramFollowed     Boolean             @default(false)
+  proofScreenshotUrl    String?             // Optional: Screenshot proof
+
+  // Status
+  status                AccessRequestStatus @default(PENDING)
+  statusNote            String?             // Admin notes
+
+  // GitHub invitation
+  githubInviteSent      Boolean             @default(false)
+  githubInvitedAt       DateTime?
+  githubInviteAccepted  Boolean             @default(false)
+
+  // Metadata
+  ipAddress             String?
+  userAgent             String?
+  referralSource        String?             // Where they found PulseGen
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  reviewedAt            DateTime?
+  reviewedBy            String?             // Admin user ID who reviewed
+
+  @@index([email])
+  @@index([githubUsername])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model AIToolConfig {

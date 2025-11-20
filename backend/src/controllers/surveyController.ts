@@ -14,8 +14,8 @@ import {
 export class SurveyController {
   static async create(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const data = createSurveySchema.parse(req.body);
-      const survey = await SurveyService.create(req.user!.id, data);
+      const validatedData = createSurveySchema.parse(req.body);
+      const survey = await SurveyService.create(req.user!.id, validatedData as any);
 
       res.status(201).json({
         success: true,
@@ -133,8 +133,8 @@ export class SurveyController {
   static async addQuestion(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const data = createQuestionSchema.parse(req.body);
-      const question = await SurveyService.addQuestion(id, req.user!.id, data);
+      const validatedData = createQuestionSchema.parse(req.body);
+      const question = await SurveyService.addQuestion(id, req.user!.id, validatedData as any);
 
       res.status(201).json({
         success: true,
@@ -148,11 +148,11 @@ export class SurveyController {
   static async updateQuestion(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { questionId } = req.params;
-      const data = updateQuestionSchema.parse(req.body);
+      const validatedData = updateQuestionSchema.parse(req.body);
       const question = await SurveyService.updateQuestion(
         questionId,
         req.user!.id,
-        data
+        validatedData as any
       );
 
       res.json({
