@@ -279,7 +279,7 @@ export default function SurveyBuilder() {
     updateEditingQuestion(questionId, { options: newOptions });
 
     // Save the new option immediately
-    saveQuestion(questionId, { options: newOptions.map(o => ({ text: o.text, value: o.value })) });
+    saveQuestion(questionId, { options: newOptions.map(o => ({ text: o.text, value: o.value })) as any });
   };
 
   const handleRemoveOption = (questionId: string, optionIndex: number) => {
@@ -290,7 +290,7 @@ export default function SurveyBuilder() {
       return;
     }
     updateEditingQuestion(questionId, { options: newOptions });
-    saveQuestion(questionId, { options: newOptions.map(o => ({ text: o.text, value: o.value })) });
+    saveQuestion(questionId, { options: newOptions.map(o => ({ text: o.text, value: o.value })) as any });
   };
 
   const saveQuestion = (questionId: string, updates?: Partial<Question>) => {

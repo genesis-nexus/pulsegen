@@ -511,7 +511,7 @@ export class SurveyService {
           },
         },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { id: 'asc' },
     });
 
     return logicRules;
