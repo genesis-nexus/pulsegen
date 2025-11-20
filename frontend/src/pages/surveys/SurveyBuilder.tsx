@@ -212,19 +212,35 @@ export default function SurveyBuilder() {
 
   const handleQuestionTypeChange = (questionId: string, type: QuestionType) => {
     const question = getEditingQuestion(questionId);
-    const newOptions = OPTION_BASED_TYPES.includes(type)
-      ? question.options?.length > 0
-        ? question.options
-        : [
-            { id: '', questionId, text: 'Option 1', value: 'option1', order: 0 },
-            { id: '', questionId, text: 'Option 2', value: 'option2', order: 1 },
-          ]
-      : [];
 
-    updateEditingQuestion(questionId, { type, options: newOptions as QuestionOption[] });
+    // Determine what options to use based on the new type
+    let newOptions: QuestionOption[];
+    if (OPTION_BASED_TYPES.includes(type)) {
+      // If switching to an option-based type, keep existing options or create defaults
+      if (question.options && question.options.length > 0) {
+        newOptions = question.options;
+      } else {
+        newOptions = [
+          { id: '', questionId, text: 'Option 1', value: 'option1', order: 0 },
+          { id: '', questionId, text: 'Option 2', value: 'option2', order: 1 },
+        ];
+      }
+    } else {
+      // If switching to a non-option type, clear options
+      newOptions = [];
+    }
+
+    updateEditingQuestion(questionId, { type, options: newOptions });
 
     // Save immediately when type changes
-    saveQuestion(questionId, { type, options: newOptions.map(o => ({ text: o.text, value: o.value })) });
+    const dataToSave: any = { type };
+    if (OPTION_BASED_TYPES.includes(type)) {
+      dataToSave.options = newOptions.map(o => ({ text: o.text, value: o.value }));
+    } else {
+      dataToSave.options = [];
+    }
+
+    saveQuestion(questionId, dataToSave);
   };
 
   const handleRequiredChange = (questionId: string, isRequired: boolean) => {
@@ -251,6 +267,9 @@ export default function SurveyBuilder() {
       order: newOptions.length,
     });
     updateEditingQuestion(questionId, { options: newOptions });
+
+    // Save the new option immediately
+    saveQuestion(questionId, { options: newOptions.map(o => ({ text: o.text, value: o.value })) });
   };
 
   const handleRemoveOption = (questionId: string, optionIndex: number) => {
