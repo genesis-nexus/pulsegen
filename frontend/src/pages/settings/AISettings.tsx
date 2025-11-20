@@ -320,6 +320,18 @@ export default function AISettings() {
         </p>
         <div className="space-y-2 text-sm">
           <p>
+            <strong>OpenRouter (Recommended - Free Tier Available):</strong> Get your API key from{' '}
+            <a
+              href="https://openrouter.ai/keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary-600 hover:underline"
+            >
+              openrouter.ai
+            </a>
+            {' '}- Provides access to multiple AI models including free options
+          </p>
+          <p>
             <strong>OpenAI:</strong> Get your API key from{' '}
             <a
               href="https://platform.openai.com/api-keys"

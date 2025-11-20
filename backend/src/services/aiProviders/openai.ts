@@ -9,6 +9,10 @@ import {
   OptimizeQuestionRequest,
   SentimentAnalysisRequest,
   GenerateReportRequest,
+  GenerateSurveyIdeasRequest,
+  ImproveSurveyRequest,
+  GenerateAnalyticsSummaryRequest,
+  CrossSurveyAnalysisRequest,
 } from './base';
 import logger from '../../utils/logger';
 
@@ -245,6 +249,119 @@ Create a well-formatted markdown report with:
       };
     } catch (error: any) {
       logger.error('OpenAI generateReport error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async generateSurveyIdeas(request: GenerateSurveyIdeasRequest): Promise<AIResponse> {
+    try {
+      const prompt = `Generate ${request.count || 5} survey ideas for: "${request.topic}"
+${request.targetAudience ? `Target: ${request.targetAudience}` : ''}
+${request.purpose ? `Purpose: ${request.purpose}` : ''}
+
+Return as JSON with survey ideas including title, description, key areas, and expected insights.`;
+
+      const completion = await this.client.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+        temperature: 0.8,
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) throw new Error('No response from OpenAI');
+
+      const data = JSON.parse(content);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+        tokensUsed: completion.usage?.total_tokens,
+      };
+    } catch (error: any) {
+      logger.error('OpenAI generateSurveyIdeas error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async improveSurvey(request: ImproveSurveyRequest): Promise<AIResponse> {
+    try {
+      const prompt = `Analyze and improve this survey: ${JSON.stringify(request.survey)}
+Provide assessment, improvements, and suggestions. Return as JSON.`;
+
+      const completion = await this.client.chat.completions.create({
+        model: this.defaultModel,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) throw new Error('No response from OpenAI');
+
+      const data = JSON.parse(content);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+        tokensUsed: completion.usage?.total_tokens,
+      };
+    } catch (error: any) {
+      logger.error('OpenAI improveSurvey error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async generateAnalyticsSummary(request: GenerateAnalyticsSummaryRequest): Promise<AIResponse> {
+    try {
+      const prompt = `Generate analytics summary for "${request.surveyTitle}": ${JSON.stringify(request.analytics)}
+Include executive summary, key metrics, highlights, and action items. Return as JSON.`;
+
+      const completion = await this.client.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) throw new Error('No response from OpenAI');
+
+      const data = JSON.parse(content);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+        tokensUsed: completion.usage?.total_tokens,
+      };
+    } catch (error: any) {
+      logger.error('OpenAI generateAnalyticsSummary error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async crossSurveyAnalysis(request: CrossSurveyAnalysisRequest): Promise<AIResponse> {
+    try {
+      const prompt = `Analyze patterns across ${request.surveys.length} surveys: ${JSON.stringify(request.surveys)}
+${request.analysisGoal || 'Find common themes, trends, and correlations'}
+Return as JSON with overview, themes, trends, correlations, and recommendations.`;
+
+      const completion = await this.client.chat.completions.create({
+        model: this.defaultModel,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) throw new Error('No response from OpenAI');
+
+      const data = JSON.parse(content);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+        tokensUsed: completion.usage?.total_tokens,
+      };
+    } catch (error: any) {
+      logger.error('OpenAI crossSurveyAnalysis error:', error);
       return this.formatError(error);
     }
   }

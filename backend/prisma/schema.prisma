@@ -63,6 +63,7 @@ enum AIProvider {
   AZURE_OPENAI
   COHERE
   HUGGINGFACE
+  OPENROUTER
   CUSTOM
 }
 
