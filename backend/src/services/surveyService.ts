@@ -112,8 +112,16 @@ export class SurveyService {
   }
 
   static async findById(surveyId: string, userId?: string) {
-    const survey = await prisma.survey.findUnique({
-      where: { id: surveyId },
+    // Check if the parameter is a slug or an ID
+    // CUIDs are 25 character alphanumeric strings starting with 'c' (e.g., cmi778pbl000712fd1bxze4gf)
+    // UUIDs match pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+    // Slugs are human-readable with hyphens (e.g., my-survey-slug)
+    const isCuid = /^c[a-z0-9]{24}$/.test(surveyId);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(surveyId);
+    const isId = isCuid || isUuid;
+
+    const survey = await prisma.survey.findFirst({
+      where: isId ? { id: surveyId } : { slug: surveyId },
       include: {
         questions: {
           include: {
@@ -424,8 +432,15 @@ export class SurveyService {
   }
 
   private static async checkOwnership(surveyId: string, userId: string) {
-    const survey = await prisma.survey.findUnique({
-      where: { id: surveyId },
+    // Check if the parameter is a slug or an ID
+    // CUIDs are 25 character alphanumeric strings starting with 'c'
+    // UUIDs match pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+    const isCuid = /^c[a-z0-9]{24}$/.test(surveyId);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(surveyId);
+    const isId = isCuid || isUuid;
+
+    const survey = await prisma.survey.findFirst({
+      where: isId ? { id: surveyId } : { slug: surveyId },
     });
 
     if (!survey) {
@@ -511,7 +526,7 @@ export class SurveyService {
           },
         },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { id: 'asc' },
     });
 
     return logicRules;

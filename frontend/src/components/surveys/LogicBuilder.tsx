@@ -61,9 +61,9 @@ export default function LogicBuilder({
   const targetQuestions = allQuestions.filter((q) => q.order > question.order);
 
   // Get the selected question for condition
-  const selectedConditionQuestion = allQuestions.find(
-    (q) => q.id === conditions[0]?.questionId
-  );
+  // const selectedConditionQuestion = allQuestions.find(
+  //   (q) => q.id === conditions[0]?.questionId
+  // );
 
   const handleAddCondition = () => {
     setConditions([
