@@ -10,13 +10,20 @@ import LogicBuilder from '../../components/surveys/LogicBuilder';
 const QUESTION_TYPES = [
   { value: QuestionType.MULTIPLE_CHOICE, label: 'Multiple Choice' },
   { value: QuestionType.CHECKBOXES, label: 'Checkboxes' },
+  { value: QuestionType.DROPDOWN, label: 'Dropdown' },
   { value: QuestionType.SHORT_TEXT, label: 'Short Text' },
   { value: QuestionType.LONG_TEXT, label: 'Long Text' },
   { value: QuestionType.RATING_SCALE, label: 'Rating Scale' },
+  { value: QuestionType.LIKERT_SCALE, label: 'Likert Scale' },
+  { value: QuestionType.SLIDER, label: 'Slider' },
   { value: QuestionType.NPS, label: 'NPS' },
+  { value: QuestionType.RANKING, label: 'Ranking' },
+  { value: QuestionType.MATRIX, label: 'Matrix' },
   { value: QuestionType.EMAIL, label: 'Email' },
   { value: QuestionType.NUMBER, label: 'Number' },
   { value: QuestionType.DATE, label: 'Date' },
+  { value: QuestionType.TIME, label: 'Time' },
+  { value: QuestionType.FILE_UPLOAD, label: 'File Upload' },
   { value: QuestionType.YES_NO, label: 'Yes/No' },
 ];
 
@@ -25,6 +32,9 @@ const OPTION_BASED_TYPES = [
   QuestionType.MULTIPLE_CHOICE,
   QuestionType.CHECKBOXES,
   QuestionType.DROPDOWN,
+  QuestionType.RANKING,
+  QuestionType.MATRIX,
+  QuestionType.LIKERT_SCALE,
 ];
 
 export default function SurveyBuilder() {
@@ -516,7 +526,7 @@ export default function SurveyBuilder() {
                       </button>
                     </div>
                   )}
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
                     <label className="inline-flex items-center">
                       <input
                         type="checkbox"
@@ -528,12 +538,13 @@ export default function SurveyBuilder() {
                     </label>
                     <button
                       onClick={() => handleOpenLogicBuilder(question)}
-                      className="text-sm text-primary-600 hover:text-primary-700 inline-flex items-center"
+                      className="text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md inline-flex items-center transition-colors"
+                      title="Configure skip logic for this question"
                     >
                       <GitBranch className="w-4 h-4 mr-1" />
-                      Skip Logic
+                      <span className="font-medium">Skip Logic</span>
                       {getLogicForQuestion(question.id).length > 0 && (
-                        <span className="ml-1 bg-primary-100 text-primary-800 text-xs px-2 py-0.5 rounded-full">
+                        <span className="ml-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
                           {getLogicForQuestion(question.id).length}
                         </span>
                       )}
