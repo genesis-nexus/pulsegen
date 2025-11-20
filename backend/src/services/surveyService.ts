@@ -112,8 +112,12 @@ export class SurveyService {
   }
 
   static async findById(surveyId: string, userId?: string) {
-    const survey = await prisma.survey.findUnique({
-      where: { id: surveyId },
+    // Check if the parameter is a slug or an ID
+    // UUIDs are 36 characters with specific format, slugs contain hyphens but are different
+    const isSlug = surveyId.includes('-') && surveyId.length !== 36;
+
+    const survey = await prisma.survey.findFirst({
+      where: isSlug ? { slug: surveyId } : { id: surveyId },
       include: {
         questions: {
           include: {
@@ -424,8 +428,11 @@ export class SurveyService {
   }
 
   private static async checkOwnership(surveyId: string, userId: string) {
-    const survey = await prisma.survey.findUnique({
-      where: { id: surveyId },
+    // Check if the parameter is a slug or an ID
+    const isSlug = surveyId.includes('-') && surveyId.length !== 36;
+
+    const survey = await prisma.survey.findFirst({
+      where: isSlug ? { slug: surveyId } : { id: surveyId },
     });
 
     if (!survey) {
