@@ -10,12 +10,13 @@ export default function SurveyTake() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const { data: survey, isLoading } = useQuery({
+  const { data: survey, isLoading, error } = useQuery({
     queryKey: ['public-survey', slug],
     queryFn: async () => {
       const response = await api.get(`/surveys/${slug}`);
       return response.data.data as Survey;
     },
+    retry: false, // Don't retry on error
   });
 
   const submitMutation = useMutation({
@@ -77,6 +78,21 @@ export default function SurveyTake() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading survey...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    const errorMessage = (error as any)?.response?.data?.message || (error as Error).message || 'Unknown error';
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Survey not found</h1>
+          <p className="text-gray-600 mb-4">This survey may have been removed or is no longer available.</p>
+          <p className="text-sm text-gray-500 bg-gray-100 p-3 rounded">
+            Error: {errorMessage}
+          </p>
         </div>
       </div>
     );

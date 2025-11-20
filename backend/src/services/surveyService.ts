@@ -113,11 +113,13 @@ export class SurveyService {
 
   static async findById(surveyId: string, userId?: string) {
     // Check if the parameter is a slug or an ID
-    // UUIDs are 36 characters with specific format, slugs contain hyphens but are different
-    const isSlug = surveyId.includes('-') && surveyId.length !== 36;
+    // UUIDs match pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+    // Slugs are everything else
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const isUuid = uuidRegex.test(surveyId);
 
     const survey = await prisma.survey.findFirst({
-      where: isSlug ? { slug: surveyId } : { id: surveyId },
+      where: isUuid ? { id: surveyId } : { slug: surveyId },
       include: {
         questions: {
           include: {
