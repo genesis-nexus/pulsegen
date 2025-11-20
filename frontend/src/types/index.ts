@@ -153,3 +153,51 @@ export interface AIInsight {
   metadata?: Record<string, any>;
   createdAt: string;
 }
+
+export enum LogicType {
+  SKIP_LOGIC = 'SKIP_LOGIC',
+  BRANCHING = 'BRANCHING',
+  PIPING = 'PIPING',
+  DISPLAY_LOGIC = 'DISPLAY_LOGIC',
+}
+
+export enum ConditionOperator {
+  EQUALS = 'EQUALS',
+  NOT_EQUALS = 'NOT_EQUALS',
+  CONTAINS = 'CONTAINS',
+  NOT_CONTAINS = 'NOT_CONTAINS',
+  GREATER_THAN = 'GREATER_THAN',
+  LESS_THAN = 'LESS_THAN',
+  IS_ANSWERED = 'IS_ANSWERED',
+  IS_NOT_ANSWERED = 'IS_NOT_ANSWERED',
+}
+
+export enum LogicAction {
+  SKIP_TO_QUESTION = 'SKIP_TO_QUESTION',
+  SKIP_TO_END = 'SKIP_TO_END',
+  SHOW_QUESTION = 'SHOW_QUESTION',
+  HIDE_QUESTION = 'HIDE_QUESTION',
+}
+
+export interface LogicCondition {
+  questionId: string;
+  operator: ConditionOperator;
+  value?: string | number | string[];
+}
+
+export interface LogicActionData {
+  action: LogicAction;
+  targetQuestionId?: string;
+}
+
+export interface SurveyLogic {
+  id: string;
+  surveyId: string;
+  sourceQuestionId: string;
+  targetQuestionId?: string;
+  type: LogicType;
+  conditions: LogicCondition[];
+  actions: LogicActionData;
+  createdAt?: string;
+  updatedAt?: string;
+}
