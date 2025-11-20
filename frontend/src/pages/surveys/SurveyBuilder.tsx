@@ -57,6 +57,16 @@ export default function SurveyBuilder() {
       setTitle(data.title);
       setDescription(data.description || '');
 
+      // Debug logging
+      console.log('Survey data loaded:', {
+        id: data.id,
+        title: data.title,
+        questionsCount: data.questions?.length || 0,
+        questions: data.questions,
+        pagesCount: data.pages?.length || 0,
+        pages: data.pages,
+      });
+
       // Fetch logic rules
       try {
         const logicResponse = await api.get(`/surveys/${id}/logic`);
@@ -458,6 +468,7 @@ export default function SurveyBuilder() {
       </div>
 
       <div className="space-y-4">
+        {console.log('Rendering questions:', survey?.questions?.length || 0, survey?.questions)}
         {survey?.questions.map((question, index) => {
           const editingQuestion = getEditingQuestion(question.id);
 
