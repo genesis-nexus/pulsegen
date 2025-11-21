@@ -12,6 +12,7 @@ import ssoRoutes from './ssoRoutes';
 import smtpRoutes from './smtpRoutes';
 import brandingRoutes from './brandingRoutes';
 import surveySharingRoutes from './surveySharingRoutes';
+import automationRoutes from './automationRoutes';
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use('/identity', identityProviderRoutes); // Identity provider configurat
 router.use('/settings', smtpRoutes); // SMTP configuration
 router.use('/settings', brandingRoutes); // Platform branding
 router.use('/', surveySharingRoutes); // Survey sharing and visibility
+router.use('/automation', automationRoutes); // Automation tool
 
 export default router;

@@ -164,7 +164,7 @@ export default function SurveyAnalytics() {
                         fill="#8884d8"
                         dataKey="count"
                       >
-                        {qa.distribution.map((entry, index) => (
+                        {qa.distribution.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>

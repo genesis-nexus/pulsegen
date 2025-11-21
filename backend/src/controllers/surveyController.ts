@@ -7,13 +7,15 @@ import {
   publishSurveySchema,
   createQuestionSchema,
   updateQuestionSchema,
+  createLogicSchema,
+  updateLogicSchema,
 } from '../utils/validators';
 
 export class SurveyController {
   static async create(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const data = createSurveySchema.parse(req.body);
-      const survey = await SurveyService.create(req.user!.id, data);
+      const validatedData = createSurveySchema.parse(req.body);
+      const survey = await SurveyService.create(req.user!.id, validatedData as any);
 
       res.status(201).json({
         success: true,
@@ -131,8 +133,8 @@ export class SurveyController {
   static async addQuestion(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const data = createQuestionSchema.parse(req.body);
-      const question = await SurveyService.addQuestion(id, req.user!.id, data);
+      const validatedData = createQuestionSchema.parse(req.body);
+      const question = await SurveyService.addQuestion(id, req.user!.id, validatedData as any);
 
       res.status(201).json({
         success: true,
@@ -146,11 +148,11 @@ export class SurveyController {
   static async updateQuestion(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { questionId } = req.params;
-      const data = updateQuestionSchema.parse(req.body);
+      const validatedData = updateQuestionSchema.parse(req.body);
       const question = await SurveyService.updateQuestion(
         questionId,
         req.user!.id,
-        data
+        validatedData as any
       );
 
       res.json({
@@ -186,6 +188,65 @@ export class SurveyController {
       res.json({
         success: true,
         message: 'Questions reordered',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Logic methods
+  static async addLogic(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const data = createLogicSchema.parse(req.body);
+      const logic = await SurveyService.addLogic(id, req.user!.id, data);
+
+      res.status(201).json({
+        success: true,
+        data: logic,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getLogic(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const logic = await SurveyService.getLogicForSurvey(id, req.user?.id);
+
+      res.json({
+        success: true,
+        data: logic,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateLogic(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { logicId } = req.params;
+      const data = updateLogicSchema.parse(req.body);
+      const logic = await SurveyService.updateLogic(logicId, req.user!.id, data);
+
+      res.json({
+        success: true,
+        data: logic,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteLogic(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { logicId } = req.params;
+      await SurveyService.deleteLogic(logicId, req.user!.id);
+
+      res.json({
+        success: true,
+        message: 'Logic rule deleted',
       });
     } catch (error) {
       next(error);
