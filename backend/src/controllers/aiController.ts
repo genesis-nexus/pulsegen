@@ -122,6 +122,67 @@ export class AIController {
       next(error);
     }
   }
+
+  static async healthCheck(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { surveyId } = req.params;
+      const { title, description, questions } = req.body;
+
+      // Verify survey ownership
+      await SurveyService.findById(surveyId, req.user!.id);
+
+      const result = await AIService.improveSurvey(req.user!.id, {
+        title,
+        description,
+        questions,
+      });
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async analyzeSurvey(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { surveyId } = req.params;
+      const { analysisType, responses, questions, analytics } = req.body;
+
+      // Verify survey ownership
+      const survey = await SurveyService.findById(surveyId, req.user!.id);
+
+      // If analysisType is 'summary', use generateAnalyticsSummary
+      if (analysisType === 'summary') {
+        const result = await AIService.generateAnalyticsSummary(req.user!.id, {
+          surveyTitle: survey.title,
+          analytics,
+        });
+
+        return res.json({
+          success: true,
+          data: result,
+        });
+      }
+
+      // Otherwise use analyzeResponses
+      const result = await AIService.analyzeResponses({
+        userId: req.user!.id,
+        responses: responses || [],
+        questions: questions || survey.questions,
+        analysisType,
+      });
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 // Import AnalyticsService

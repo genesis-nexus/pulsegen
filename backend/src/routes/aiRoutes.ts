@@ -11,4 +11,8 @@ router.post('/questions/:questionId/optimize', authenticate, AIController.optimi
 router.post('/sentiment', authenticate, AIController.analyzeSentiment);
 router.post('/surveys/:surveyId/report', authenticate, AIController.generateReport);
 
+// New AI features
+router.post('/surveys/:surveyId/health-check', authenticate, AIController.healthCheck);
+router.post('/surveys/:surveyId/analyze', authenticate, AIController.analyzeSurvey);
+
 export default router;

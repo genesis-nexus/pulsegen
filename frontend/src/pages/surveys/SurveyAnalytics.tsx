@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Download, Sparkles } from 'lucide-react';
 import api from '../../lib/api';
 import { Survey, Analytics, QuestionAnalytics } from '../../types';
+import { SmartAnalyzer } from '../../components/ai';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -85,12 +86,25 @@ export default function SurveyAnalytics() {
         </div>
       </div>
 
-      {/* AI Insights */}
+      {/* Smart AI Analyzer */}
+      {survey && id && (
+        <div className="mb-8">
+          <SmartAnalyzer
+            surveyId={id}
+            surveyTitle={survey.title}
+            analytics={analytics}
+            responses={[]} // Responses are fetched in the component
+            questions={survey.questions || []}
+          />
+        </div>
+      )}
+
+      {/* Stored AI Insights */}
       {insights && insights.length > 0 && (
         <div className="card mb-8">
           <div className="flex items-center mb-4">
             <Sparkles className="w-5 h-5 text-primary-600 mr-2" />
-            <h2 className="text-xl font-bold">AI-Powered Insights</h2>
+            <h2 className="text-xl font-bold">Previous AI Insights</h2>
           </div>
           <div className="space-y-4">
             {insights.map((insight: any) => (

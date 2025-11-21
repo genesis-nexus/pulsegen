@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import SurveyList from './pages/surveys/SurveyList';
 import SurveyBuilder from './pages/surveys/SurveyBuilder';
 import SurveyAnalytics from './pages/surveys/SurveyAnalytics';
+import AIBuilder from './pages/surveys/AIBuilder';
 import SurveyTake from './pages/public/SurveyTake';
 import AISettings from './pages/settings/AISettings';
 import AIToolsSettings from './pages/settings/AIToolsSettings';
@@ -46,6 +47,7 @@ function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/surveys" element={<SurveyList />} />
+        <Route path="/surveys/ai-builder" element={<AIBuilder />} />
         <Route path="/surveys/new" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/edit" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/analytics" element={<SurveyAnalytics />} />
