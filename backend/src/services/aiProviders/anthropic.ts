@@ -66,7 +66,7 @@ Requirements:
           data,
           provider: this.providerName,
           model: this.defaultModel,
-          tokensUsed: message.usage?.total_tokens,
+          tokensUsed: message.usage ? message.usage.input_tokens + message.usage.output_tokens : undefined,
         };
       }
 
@@ -101,7 +101,7 @@ Suggest 5 additional questions. Return ONLY valid JSON:
           success: true,
           data,
           provider: this.providerName,
-          tokensUsed: message.usage?.total_tokens,
+          tokensUsed: message.usage ? message.usage.input_tokens + message.usage.output_tokens : undefined,
         };
       }
 
@@ -151,7 +151,7 @@ Return ONLY valid JSON:
           success: true,
           data,
           provider: this.providerName,
-          tokensUsed: message.usage?.total_tokens,
+          tokensUsed: message.usage ? message.usage.input_tokens + message.usage.output_tokens : undefined,
         };
       }
 
@@ -185,7 +185,7 @@ Return ONLY valid JSON:
           success: true,
           data,
           provider: this.providerName,
-          tokensUsed: message.usage?.total_tokens,
+          tokensUsed: message.usage ? message.usage.input_tokens + message.usage.output_tokens : undefined,
         };
       }
 
@@ -214,7 +214,7 @@ Return ONLY JSON: {"sentiment": "positive|negative|neutral", "score": 0.85, "emo
           success: true,
           data,
           provider: this.providerName,
-          tokensUsed: message.usage?.total_tokens,
+          tokensUsed: message.usage ? message.usage.input_tokens + message.usage.output_tokens : undefined,
         };
       }
 
@@ -252,7 +252,7 @@ Create a well-formatted markdown report with:
           success: true,
           data: content.text,
           provider: this.providerName,
-          tokensUsed: message.usage?.total_tokens,
+          tokensUsed: message.usage ? message.usage.input_tokens + message.usage.output_tokens : undefined,
         };
       }
 
