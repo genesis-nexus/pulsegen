@@ -84,7 +84,8 @@ export class AIProviderFactory {
           'google/gemini-pro-1.5',
         ],
         defaultModel: 'google/gemini-2.0-flash-exp:free',
-        requiresEndpoint: false,
+        requiresEndpoint: true,
+        defaultEndpoint: 'https://openrouter.ai/api/v1',
         description: 'Access multiple AI models through OpenRouter. Free tier available with models marked ":free"',
       },
       COHERE: {

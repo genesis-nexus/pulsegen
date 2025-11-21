@@ -268,15 +268,27 @@ export default function AISettings() {
 
               {selectedProviderInfo?.requiresEndpoint && (
                 <div>
-                  <label className="label">Endpoint URL</label>
+                  <label className="label">
+                    Endpoint URL
+                    {(selectedProviderInfo as any)?.defaultEndpoint && (
+                      <span className="text-sm font-normal text-gray-500 ml-2">
+                        (Optional - defaults to {(selectedProviderInfo as any).defaultEndpoint})
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="url"
                     className="input"
                     value={formData.endpoint}
                     onChange={(e) => setFormData({ ...formData, endpoint: e.target.value })}
-                    placeholder="https://api.example.com"
-                    required
+                    placeholder={(selectedProviderInfo as any)?.defaultEndpoint || "https://api.example.com"}
+                    required={!(selectedProviderInfo as any)?.defaultEndpoint}
                   />
+                  {(selectedProviderInfo as any)?.defaultEndpoint && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty to use the default endpoint
+                    </p>
+                  )}
                 </div>
               )}
 
