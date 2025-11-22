@@ -7,8 +7,6 @@ import {
   DollarSign,
   Activity,
   TrendingUp,
-  TrendingDown,
-  Minus,
   Cpu,
   MessageSquare,
   Sparkles,

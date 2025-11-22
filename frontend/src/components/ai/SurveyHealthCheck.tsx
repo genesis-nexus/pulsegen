@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useMutation } from '@tantml:parameter>
-import { X, Sparkles, AlertCircle, CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { X, Sparkles, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import AILoadingState from './AILoadingState';
@@ -17,7 +17,7 @@ interface SurveyHealthCheckProps {
   onApplyImprovement?: (improvement: any) => void;
 }
 
-export default function SurveyHealthCheck({ survey, onClose, onApplyImprovement }: SurveyHealthCheckProps) {
+export default function SurveyHealthCheck({ survey, onClose, onApplyImprovement: _onApplyImprovement }: SurveyHealthCheckProps) {
   const [result, setResult] = useState<any>(null);
 
   const healthCheckMutation = useMutation({

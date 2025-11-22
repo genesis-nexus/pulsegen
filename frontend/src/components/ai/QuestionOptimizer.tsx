@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tantml:parameter>
+import { useMutation } from '@tanstack/react-query';
 import { X, Sparkles, Check, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';

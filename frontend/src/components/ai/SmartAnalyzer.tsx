@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tantml:parameter>
+import { useMutation } from '@tanstack/react-query';
 import { Sparkles, TrendingUp, MessageSquare, Target, Lightbulb, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
@@ -40,7 +40,7 @@ interface AnalysisResult {
 
 export default function SmartAnalyzer({
   surveyId,
-  surveyTitle,
+  surveyTitle: _surveyTitle,
   analytics,
   responses,
   questions,
