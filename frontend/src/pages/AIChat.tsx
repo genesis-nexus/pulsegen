@@ -57,7 +57,7 @@ export default function AIChat() {
   const { data: providers = [] } = useQuery({
     queryKey: ['ai-providers'],
     queryFn: async () => {
-      const response = await api.get('/ai-providers');
+      const response = await api.get('/ai/providers');
       return response.data.data as AIProvider[];
     },
   });
@@ -277,7 +277,7 @@ export default function AIChat() {
             </div>
 
             {/* Provider Selector */}
-            {providers.length > 1 && selectedConversation && (
+            {providers.length > 0 && selectedConversation && (
               <div className="relative">
                 <button
                   onClick={() => setShowProviderDropdown(!showProviderDropdown)}

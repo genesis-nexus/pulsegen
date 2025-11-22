@@ -24,7 +24,8 @@ export class GoogleProvider extends BaseAIProvider {
   constructor(config: AIProviderConfig) {
     super(config, 'Google');
     this.client = new GoogleGenerativeAI(config.apiKey);
-    this.defaultModel = config.modelName || 'gemini-pro';
+    // Use gemini-2.0-flash (latest free tier model) or gemini-1.5-pro for advanced tasks
+    this.defaultModel = config.modelName || 'gemini-2.0-flash';
   }
 
   async generateSurvey(request: GenerateSurveyRequest): Promise<AIResponse> {
