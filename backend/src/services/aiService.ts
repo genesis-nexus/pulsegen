@@ -201,6 +201,56 @@ export class AIService {
       throw error;
     }
   }
+
+  static async improveSurvey(
+    userId: string,
+    survey: {
+      title: string;
+      description?: string;
+      questions: any[];
+    },
+    provider?: AIProvider
+  ): Promise<any> {
+    try {
+      const aiProvider = await AIProviderService.getUserProvider(userId, provider);
+
+      const result = await aiProvider.improveSurvey({ survey });
+
+      if (result.success && result.data) {
+        return result.data;
+      }
+
+      throw new Error(result.error || 'Failed to improve survey');
+    } catch (error: any) {
+      logger.error('AI survey improvement error:', error);
+      throw error;
+    }
+  }
+
+  static async generateAnalyticsSummary(
+    userId: string,
+    data: {
+      surveyTitle: string;
+      analytics: any;
+      timeRange?: string;
+    },
+    provider?: AIProvider
+  ): Promise<any> {
+    try {
+      const aiProvider = await AIProviderService.getUserProvider(userId, provider);
+
+      const result = await aiProvider.generateAnalyticsSummary(data);
+
+      if (result.success && result.data) {
+        return result.data;
+      }
+
+      throw new Error(result.error || 'Failed to generate analytics summary');
+    } catch (error: any) {
+      logger.error('AI analytics summary error:', error);
+      throw error;
+    }
+  }
 }
 
 export default AIService;

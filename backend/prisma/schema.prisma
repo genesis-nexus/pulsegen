@@ -63,6 +63,7 @@ enum AIProvider {
   AZURE_OPENAI
   COHERE
   HUGGINGFACE
+  OPENROUTER
   CUSTOM
 }
 
@@ -110,6 +111,8 @@ model User {
   createdTemplates  SurveyTemplate[]
   aiProviders       UserAIProvider[]
   mlModels          MLModel[]
+  aiUsageLogs       AIUsageLog[]
+  aiConversations   AIChatConversation[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -779,5 +782,94 @@ model Prediction {
   @@index([modelId])
   @@index([surveyId])
   @@index([responseId])
+  @@index([createdAt])
+}
+
+// AI Usage Tracking
+enum AIFeatureType {
+  SURVEY_GENERATE
+  QUESTION_SUGGEST
+  QUESTION_OPTIMIZE
+  RESPONSE_ANALYZE
+  SENTIMENT_ANALYZE
+  REPORT_GENERATE
+  SURVEY_IMPROVE
+  ANALYTICS_SUMMARY
+  CHAT
+  OTHER
+}
+
+model AIUsageLog {
+  id            String        @id @default(cuid())
+  userId        String
+  provider      AIProvider
+  model         String?       // Specific model used (e.g., gpt-4, claude-3, gemini-pro)
+  feature       AIFeatureType
+
+  // Token usage
+  inputTokens   Int           @default(0)
+  outputTokens  Int           @default(0)
+  totalTokens   Int           @default(0)
+
+  // Cost tracking (even for free models, track estimated cost)
+  estimatedCost Float         @default(0) // In USD
+  isFreeModel   Boolean       @default(false)
+
+  // Request details
+  requestSize   Int?          // Size of request in bytes
+  responseSize  Int?          // Size of response in bytes
+  latencyMs     Int?          // Response time in milliseconds
+
+  // Status
+  success       Boolean       @default(true)
+  errorMessage  String?
+
+  // Metadata
+  metadata      Json?         // Additional context (survey ID, etc.)
+  createdAt     DateTime      @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([provider])
+  @@index([feature])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+// AI Chat Messages
+model AIChatConversation {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String?   // Auto-generated or user-provided title
+  provider    AIProvider?
+  model       String?
+  isArchived  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    AIChatMessage[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model AIChatMessage {
+  id              String    @id @default(cuid())
+  conversationId  String
+  role            String    // 'user' or 'assistant'
+  content         String    @db.Text
+
+  // Token tracking for this message
+  tokensUsed      Int?
+
+  // Metadata
+  metadata        Json?     // Additional context
+  createdAt       DateTime  @default(now())
+
+  conversation    AIChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
   @@index([createdAt])
 }

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, FileText, BarChart, Users } from 'lucide-react';
+import { Plus, FileText, BarChart, Users, Sparkles } from 'lucide-react';
 import api from '../lib/api';
 import { Survey } from '../types';
 
@@ -21,10 +21,19 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <Link to="/surveys/new" className="btn btn-primary inline-flex items-center">
-          <Plus className="w-5 h-5 mr-2" />
-          Create Survey
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            to="/surveys/ai-builder"
+            className="btn bg-gradient-to-r from-primary-600 to-purple-600 text-white hover:from-primary-700 hover:to-purple-700 inline-flex items-center"
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Create with AI
+          </Link>
+          <Link to="/surveys/new" className="btn btn-secondary inline-flex items-center">
+            <Plus className="w-5 h-5 mr-2" />
+            Blank Survey
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

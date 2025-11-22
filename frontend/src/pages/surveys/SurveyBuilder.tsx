@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Save, Eye, Trash2, GripVertical, X, GitBranch } from 'lucide-react';
+import { Plus, Save, Eye, Trash2, GripVertical, X, GitBranch, Sparkles, Lightbulb, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { Survey, Question, QuestionType, QuestionOption, SurveyLogic } from '../../types';
 import LogicBuilder from '../../components/surveys/LogicBuilder';
+import {
+  QuestionOptimizer,
+  SuggestQuestions,
+  SurveyHealthCheck,
+} from '../../components/ai';
 
 const QUESTION_TYPES = [
   { value: QuestionType.MULTIPLE_CHOICE, label: 'Multiple Choice' },
@@ -47,6 +52,12 @@ export default function SurveyBuilder() {
   const [logicBuilderOpen, setLogicBuilderOpen] = useState(false);
   const [selectedQuestionForLogic, setSelectedQuestionForLogic] = useState<Question | null>(null);
   const [surveyLogic, setSurveyLogic] = useState<SurveyLogic[]>([]);
+
+  // AI Modal States
+  const [showQuestionOptimizer, setShowQuestionOptimizer] = useState(false);
+  const [showSuggestQuestions, setShowSuggestQuestions] = useState(false);
+  const [showHealthCheck, setShowHealthCheck] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
 
   const { data: survey, isLoading } = useQuery({
     queryKey: ['survey', id],
@@ -446,6 +457,34 @@ export default function SurveyBuilder() {
         </div>
       </div>
 
+      {/* AI Toolbar */}
+      {survey && (
+        <div className="mb-6 bg-gradient-to-r from-primary-50 to-purple-50 border border-primary-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary-600" />
+              <span className="font-medium text-primary-900">AI Assistant</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowSuggestQuestions(true)}
+                className="btn btn-secondary inline-flex items-center text-sm"
+              >
+                <Lightbulb className="w-4 h-4 mr-2" />
+                Suggest Questions
+              </button>
+              <button
+                onClick={() => setShowHealthCheck(true)}
+                className="btn btn-secondary inline-flex items-center text-sm"
+              >
+                <Activity className="w-4 h-4 mr-2" />
+                Health Check
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold">Questions</h2>
         <button
@@ -470,12 +509,24 @@ export default function SurveyBuilder() {
                     <span className="text-sm font-medium text-gray-500">
                       Question {index + 1}
                     </span>
-                    <button
-                      onClick={() => handleDeleteQuestion(question.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedQuestion(question);
+                          setShowQuestionOptimizer(true);
+                        }}
+                        className="text-primary-600 hover:text-primary-700 p-1 rounded hover:bg-primary-50"
+                        title="Improve with AI"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteQuestion(question.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   <input
                     type="text"
@@ -586,6 +637,56 @@ export default function SurveyBuilder() {
           onSave={handleSaveLogic}
           onDelete={handleDeleteLogic}
           onClose={() => setLogicBuilderOpen(false)}
+        />
+      )}
+
+      {/* AI Modals */}
+      {showQuestionOptimizer && selectedQuestion && (
+        <QuestionOptimizer
+          question={{
+            id: selectedQuestion.id,
+            text: selectedQuestion.text,
+            type: selectedQuestion.type,
+            options: selectedQuestion.options,
+          }}
+          onClose={() => {
+            setShowQuestionOptimizer(false);
+            setSelectedQuestion(null);
+          }}
+          onApply={(improvements) => {
+            // Apply improvements to question
+            if (selectedQuestion) {
+              updateQuestionMutation.mutate({
+                questionId: selectedQuestion.id,
+                data: improvements,
+              });
+            }
+            queryClient.invalidateQueries({ queryKey: ['survey', id] });
+          }}
+        />
+      )}
+
+      {showSuggestQuestions && survey && (
+        <SuggestQuestions
+          surveyId={survey.id}
+          surveyTitle={survey.title}
+          existingQuestions={survey.questions.map((q) => q.text)}
+          onClose={() => setShowSuggestQuestions(false)}
+          onAddQuestion={(question) => {
+            addQuestionMutation.mutate(question);
+          }}
+        />
+      )}
+
+      {showHealthCheck && survey && (
+        <SurveyHealthCheck
+          survey={{
+            id: survey.id,
+            title: survey.title,
+            description: survey.description,
+            questions: survey.questions,
+          }}
+          onClose={() => setShowHealthCheck(false)}
         />
       )}
     </div>

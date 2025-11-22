@@ -41,6 +41,36 @@ export interface GenerateReportRequest {
   insights: any[];
 }
 
+export interface GenerateSurveyIdeasRequest {
+  topic: string;
+  count?: number;
+  targetAudience?: string;
+  purpose?: string;
+}
+
+export interface ImproveSurveyRequest {
+  survey: {
+    title: string;
+    description?: string;
+    questions: any[];
+  };
+}
+
+export interface GenerateAnalyticsSummaryRequest {
+  surveyTitle: string;
+  analytics: any;
+  timeRange?: string;
+}
+
+export interface CrossSurveyAnalysisRequest {
+  surveys: Array<{
+    title: string;
+    responses: any[];
+    questions: any[];
+  }>;
+  analysisGoal?: string;
+}
+
 export interface AIResponse<T = any> {
   success: boolean;
   data?: T;
@@ -48,6 +78,18 @@ export interface AIResponse<T = any> {
   provider: string;
   model?: string;
   tokensUsed?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface ChatRequest {
+  messages: ChatMessage[];
+  systemPrompt?: string;
 }
 
 export abstract class BaseAIProvider {
@@ -65,6 +107,15 @@ export abstract class BaseAIProvider {
   abstract optimizeQuestion(request: OptimizeQuestionRequest): Promise<AIResponse>;
   abstract analyzeSentiment(request: SentimentAnalysisRequest): Promise<AIResponse>;
   abstract generateReport(request: GenerateReportRequest): Promise<AIResponse>;
+
+  // Enhanced AI features
+  abstract generateSurveyIdeas(request: GenerateSurveyIdeasRequest): Promise<AIResponse>;
+  abstract improveSurvey(request: ImproveSurveyRequest): Promise<AIResponse>;
+  abstract generateAnalyticsSummary(request: GenerateAnalyticsSummaryRequest): Promise<AIResponse>;
+  abstract crossSurveyAnalysis(request: CrossSurveyAnalysisRequest): Promise<AIResponse>;
+
+  // Chat feature
+  abstract chat(request: ChatRequest): Promise<AIResponse<string>>;
 
   protected formatError(error: any): AIResponse {
     return {
