@@ -13,6 +13,7 @@ import {
   ImproveSurveyRequest,
   GenerateAnalyticsSummaryRequest,
   CrossSurveyAnalysisRequest,
+  ChatRequest,
 } from './base';
 import logger from '../../utils/logger';
 
@@ -568,6 +569,67 @@ Return as JSON:
       };
     } catch (error: any) {
       logger.error('OpenRouter crossSurveyAnalysis error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  /**
+   * General purpose chat for asking questions
+   * Supports conversation history for contextual responses
+   */
+  async chat(request: ChatRequest): Promise<AIResponse<string>> {
+    try {
+      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+
+      // Add system prompt if provided
+      if (request.systemPrompt) {
+        messages.push({
+          role: 'system',
+          content: request.systemPrompt,
+        });
+      } else {
+        // Default system prompt for PulseGen context
+        messages.push({
+          role: 'system',
+          content: `You are a helpful AI assistant for PulseGen, a survey platform. You can help users with:
+- Creating and designing surveys
+- Analyzing survey results
+- Understanding survey best practices
+- General questions about data collection and analysis
+- Any other questions the user may have
+
+Be helpful, concise, and professional. If asked about something outside your knowledge, be honest about it.`,
+        });
+      }
+
+      // Add conversation history
+      for (const msg of request.messages) {
+        messages.push({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        });
+      }
+
+      const completion = await this.client.chat.completions.create({
+        model: this.defaultModel,
+        messages,
+        temperature: 0.7,
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) throw new Error('No response from OpenRouter');
+
+      return {
+        success: true,
+        data: content,
+        provider: this.providerName,
+        model: this.defaultModel,
+        tokensUsed: completion.usage?.total_tokens,
+        inputTokens: completion.usage?.prompt_tokens,
+        outputTokens: completion.usage?.completion_tokens,
+      };
+    } catch (error: any) {
+      logger.error('OpenRouter chat error:', error);
       return this.formatError(error);
     }
   }

@@ -13,6 +13,7 @@ import {
   ImproveSurveyRequest,
   GenerateAnalyticsSummaryRequest,
   CrossSurveyAnalysisRequest,
+  ChatRequest,
 } from './base';
 import logger from '../../utils/logger';
 
@@ -379,6 +380,47 @@ Return ONLY valid JSON with overview, themes, trends, correlations, and recommen
       throw new Error('Unexpected response format');
     } catch (error: any) {
       logger.error('Anthropic crossSurveyAnalysis error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async chat(request: ChatRequest): Promise<AIResponse<string>> {
+    try {
+      const messages: Anthropic.MessageParam[] = [];
+
+      for (const msg of request.messages) {
+        messages.push({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        });
+      }
+
+      const systemPrompt = request.systemPrompt ||
+        `You are a helpful AI assistant for PulseGen, a survey platform. Help users with surveys, data analysis, and general questions.`;
+
+      const message = await this.client.messages.create({
+        model: this.defaultModel,
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages,
+      });
+
+      const content = message.content[0];
+      if (content.type === 'text') {
+        return {
+          success: true,
+          data: content.text,
+          provider: this.providerName,
+          model: this.defaultModel,
+          tokensUsed: message.usage ? message.usage.input_tokens + message.usage.output_tokens : undefined,
+          inputTokens: message.usage?.input_tokens,
+          outputTokens: message.usage?.output_tokens,
+        };
+      }
+
+      throw new Error('Unexpected response format');
+    } catch (error: any) {
+      logger.error('Anthropic chat error:', error);
       return this.formatError(error);
     }
   }

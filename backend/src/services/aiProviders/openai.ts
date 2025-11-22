@@ -13,6 +13,7 @@ import {
   ImproveSurveyRequest,
   GenerateAnalyticsSummaryRequest,
   CrossSurveyAnalysisRequest,
+  ChatRequest,
 } from './base';
 import logger from '../../utils/logger';
 
@@ -362,6 +363,47 @@ Return as JSON with overview, themes, trends, correlations, and recommendations.
       };
     } catch (error: any) {
       logger.error('OpenAI crossSurveyAnalysis error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async chat(request: ChatRequest): Promise<AIResponse<string>> {
+    try {
+      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+
+      if (request.systemPrompt) {
+        messages.push({ role: 'system', content: request.systemPrompt });
+      } else {
+        messages.push({
+          role: 'system',
+          content: `You are a helpful AI assistant for PulseGen, a survey platform. Help users with surveys, data analysis, and general questions.`,
+        });
+      }
+
+      for (const msg of request.messages) {
+        messages.push({ role: msg.role as 'user' | 'assistant', content: msg.content });
+      }
+
+      const completion = await this.client.chat.completions.create({
+        model: this.defaultModel,
+        messages,
+        temperature: 0.7,
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) throw new Error('No response from OpenAI');
+
+      return {
+        success: true,
+        data: content,
+        provider: this.providerName,
+        model: this.defaultModel,
+        tokensUsed: completion.usage?.total_tokens,
+        inputTokens: completion.usage?.prompt_tokens,
+        outputTokens: completion.usage?.completion_tokens,
+      };
+    } catch (error: any) {
+      logger.error('OpenAI chat error:', error);
       return this.formatError(error);
     }
   }

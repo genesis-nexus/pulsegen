@@ -78,6 +78,18 @@ export interface AIResponse<T = any> {
   provider: string;
   model?: string;
   tokensUsed?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface ChatRequest {
+  messages: ChatMessage[];
+  systemPrompt?: string;
 }
 
 export abstract class BaseAIProvider {
@@ -101,6 +113,9 @@ export abstract class BaseAIProvider {
   abstract improveSurvey(request: ImproveSurveyRequest): Promise<AIResponse>;
   abstract generateAnalyticsSummary(request: GenerateAnalyticsSummaryRequest): Promise<AIResponse>;
   abstract crossSurveyAnalysis(request: CrossSurveyAnalysisRequest): Promise<AIResponse>;
+
+  // Chat feature
+  abstract chat(request: ChatRequest): Promise<AIResponse<string>>;
 
   protected formatError(error: any): AIResponse {
     return {

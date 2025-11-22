@@ -13,6 +13,7 @@ import {
   ImproveSurveyRequest,
   GenerateAnalyticsSummaryRequest,
   CrossSurveyAnalysisRequest,
+  ChatRequest,
 } from './base';
 import logger from '../../utils/logger';
 
@@ -307,6 +308,47 @@ Return ONLY valid JSON with overview, themes, trends, correlations, and recommen
       };
     } catch (error: any) {
       logger.error('Google crossSurveyAnalysis error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async chat(request: ChatRequest): Promise<AIResponse<string>> {
+    try {
+      const model = this.client.getGenerativeModel({ model: this.defaultModel });
+
+      const systemPrompt = request.systemPrompt ||
+        `You are a helpful AI assistant for PulseGen, a survey platform. Help users with surveys, data analysis, and general questions.`;
+
+      // Build conversation history for Gemini
+      const history = request.messages.slice(0, -1).map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+      }));
+
+      const chat = model.startChat({
+        history: history as any,
+        generationConfig: {
+          temperature: 0.7,
+        },
+      });
+
+      // Get the last message (current user message)
+      const lastMessage = request.messages[request.messages.length - 1];
+      const prompt = history.length === 0 && systemPrompt
+        ? `${systemPrompt}\n\n${lastMessage.content}`
+        : lastMessage.content;
+
+      const result = await chat.sendMessage(prompt);
+      const text = result.response.text();
+
+      return {
+        success: true,
+        data: text,
+        provider: this.providerName,
+        model: this.defaultModel,
+      };
+    } catch (error: any) {
+      logger.error('Google chat error:', error);
       return this.formatError(error);
     }
   }

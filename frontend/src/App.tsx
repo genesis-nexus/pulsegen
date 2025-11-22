@@ -16,10 +16,12 @@ import AIBuilder from './pages/surveys/AIBuilder';
 import SurveyTake from './pages/public/SurveyTake';
 import AISettings from './pages/settings/AISettings';
 import AIToolsSettings from './pages/settings/AIToolsSettings';
+import AIUsage from './pages/settings/AIUsage';
 import SSOSettings from './pages/settings/SSOSettings';
 import SMTPSettings from './pages/settings/SMTPSettings';
 import BrandingSettings from './pages/settings/BrandingSettings';
 import MLModels from './pages/ml/MLModels';
+import AIChat from './pages/AIChat';
 import NotFound from './pages/NotFound';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -52,8 +54,10 @@ function App() {
         <Route path="/surveys/:id/edit" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/analytics" element={<SurveyAnalytics />} />
         <Route path="/ml/models" element={<MLModels />} />
+        <Route path="/ai/chat" element={<AIChat />} />
         <Route path="/settings/ai" element={<AISettings />} />
         <Route path="/settings/ai-tools" element={<AIToolsSettings />} />
+        <Route path="/settings/ai-usage" element={<AIUsage />} />
         <Route path="/settings/sso" element={<SSOSettings />} />
         <Route path="/settings/smtp" element={<SMTPSettings />} />
         <Route path="/settings/branding" element={<BrandingSettings />} />
