@@ -1,7 +1,22 @@
-import { PrismaClient, AIProvider, AIFeatureType } from '@prisma/client';
+import { PrismaClient, AIProvider } from '@prisma/client';
 import logger from '../utils/logger';
 
 const prisma = new PrismaClient();
+
+// Feature types as strings (matching the enum in schema)
+type AIFeatureType = 'SURVEY_GENERATE' | 'QUESTION_SUGGEST' | 'QUESTION_OPTIMIZE' | 'RESPONSE_ANALYZE' | 'SENTIMENT_ANALYZE' | 'REPORT_GENERATE' | 'SURVEY_IMPROVE' | 'ANALYTICS_SUMMARY' | 'CHAT' | 'OTHER';
+
+// Map provider names to enum values
+const PROVIDER_MAP: Record<string, AIProvider> = {
+  'openai': 'OPENAI',
+  'anthropic': 'ANTHROPIC',
+  'google': 'GOOGLE',
+  'openrouter': 'OPENROUTER',
+  'azure_openai': 'AZURE_OPENAI',
+  'cohere': 'COHERE',
+  'huggingface': 'HUGGINGFACE',
+  'custom': 'CUSTOM',
+};
 
 // Pricing per 1K tokens (estimated, as of 2024)
 const TOKEN_PRICING: Record<string, { input: number; output: number }> = {
@@ -46,7 +61,7 @@ const FREE_MODELS = [
 
 interface LogUsageParams {
   userId: string;
-  provider: AIProvider;
+  provider: string; // Accept string and map to enum
   model?: string;
   feature: AIFeatureType;
   inputTokens?: number;
@@ -117,6 +132,14 @@ export class AIUsageService {
   }
 
   /**
+   * Map provider string to enum value
+   */
+  static mapProvider(provider: string): AIProvider {
+    const normalized = provider.toLowerCase().replace(/[^a-z_]/g, '');
+    return PROVIDER_MAP[normalized] || 'CUSTOM';
+  }
+
+  /**
    * Log AI usage
    */
   static async logUsage(params: LogUsageParams): Promise<void> {
@@ -139,11 +162,12 @@ export class AIUsageService {
       const totalTokens = inputTokens + outputTokens;
       const isFreeModel = this.isFreeModel(model);
       const estimatedCost = isFreeModel ? 0 : this.calculateCost(model, inputTokens, outputTokens);
+      const mappedProvider = this.mapProvider(provider);
 
       await prisma.aIUsageLog.create({
         data: {
           userId,
-          provider,
+          provider: mappedProvider,
           model,
           feature,
           inputTokens,
@@ -160,11 +184,31 @@ export class AIUsageService {
         },
       });
 
-      logger.debug(`AI usage logged: ${feature} using ${provider}/${model}, ${totalTokens} tokens`);
-    } catch (error) {
+      logger.debug(`AI usage logged: ${feature} using ${mappedProvider}/${model}, ${totalTokens} tokens`);
+    } catch (error: any) {
       // Don't fail the main operation if logging fails
-      logger.error('Failed to log AI usage:', error);
+      // This handles cases where the table doesn't exist yet
+      logger.error('Failed to log AI usage:', error?.message || error);
     }
+  }
+
+  /**
+   * Get empty stats object
+   */
+  static getEmptyStats(): UsageStats {
+    return {
+      totalRequests: 0,
+      successfulRequests: 0,
+      failedRequests: 0,
+      totalTokens: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      estimatedCost: 0,
+      averageLatencyMs: 0,
+      byProvider: {},
+      byFeature: {},
+      dailyUsage: [],
+    };
   }
 
   /**
@@ -175,18 +219,19 @@ export class AIUsageService {
     startDate?: Date,
     endDate?: Date
   ): Promise<UsageStats> {
-    const where: any = { userId };
+    try {
+      const where: any = { userId };
 
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = startDate;
-      if (endDate) where.createdAt.lte = endDate;
-    }
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt.gte = startDate;
+        if (endDate) where.createdAt.lte = endDate;
+      }
 
-    const logs = await prisma.aIUsageLog.findMany({
-      where,
-      orderBy: { createdAt: 'asc' },
-    });
+      const logs = await prisma.aIUsageLog.findMany({
+        where,
+        orderBy: { createdAt: 'asc' },
+      });
 
     // Calculate aggregated stats
     const stats: UsageStats = {
@@ -258,6 +303,11 @@ export class AIUsageService {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     return stats;
+    } catch (error: any) {
+      // Return empty stats if table doesn't exist or other errors
+      logger.error('Failed to get usage stats:', error?.message || error);
+      return this.getEmptyStats();
+    }
   }
 
   /**
@@ -268,17 +318,22 @@ export class AIUsageService {
     limit: number = 50,
     offset: number = 0
   ) {
-    const [logs, total] = await Promise.all([
-      prisma.aIUsageLog.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-      prisma.aIUsageLog.count({ where: { userId } }),
-    ]);
+    try {
+      const [logs, total] = await Promise.all([
+        prisma.aIUsageLog.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip: offset,
+        }),
+        prisma.aIUsageLog.count({ where: { userId } }),
+      ]);
 
-    return { logs, total };
+      return { logs, total };
+    } catch (error: any) {
+      logger.error('Failed to get usage logs:', error?.message || error);
+      return { logs: [], total: 0 };
+    }
   }
 
   /**

@@ -9,10 +9,18 @@ import {
   Loader2,
   ChevronLeft,
   Menu,
+  ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { AIProviderCheck } from '../components/ai';
+
+interface AIProvider {
+  id: string;
+  provider: string;
+  isDefault: boolean;
+  modelName?: string;
+}
 
 interface Conversation {
   id: string;
@@ -39,9 +47,20 @@ interface ConversationDetail extends Conversation {
 export default function AIChat() {
   const queryClient = useQueryClient();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showProviderDropdown, setShowProviderDropdown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch available providers
+  const { data: providers = [] } = useQuery({
+    queryKey: ['ai-providers'],
+    queryFn: async () => {
+      const response = await api.get('/ai-providers');
+      return response.data.data as AIProvider[];
+    },
+  });
 
   // Fetch conversations
   const { data: conversations = [], isLoading: loadingConversations } = useQuery({
@@ -94,8 +113,8 @@ export default function AIChat() {
 
   // Send message mutation
   const sendMutation = useMutation({
-    mutationFn: async ({ conversationId, message }: { conversationId: string; message: string }) => {
-      const response = await api.post(`/ai/chat/conversations/${conversationId}/messages`, { message });
+    mutationFn: async ({ conversationId, message, provider }: { conversationId: string; message: string; provider?: string }) => {
+      const response = await api.post(`/ai/chat/conversations/${conversationId}/messages`, { message, provider });
       return response.data.data;
     },
     onSuccess: () => {
@@ -103,7 +122,10 @@ export default function AIChat() {
       queryClient.invalidateQueries({ queryKey: ['ai-conversations'] });
       setMessage('');
     },
-    onError: () => toast.error('Failed to send message'),
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Failed to send message';
+      toast.error(errorMessage);
+    },
   });
 
   // Scroll to bottom when messages change
@@ -111,9 +133,26 @@ export default function AIChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages]);
 
+  // Get current provider display name
+  const getCurrentProviderName = () => {
+    if (selectedProvider) {
+      const provider = providers.find(p => p.provider === selectedProvider);
+      return provider?.provider || selectedProvider;
+    }
+    if (conversation?.provider) {
+      return conversation.provider;
+    }
+    const defaultProvider = providers.find(p => p.isDefault);
+    return defaultProvider?.provider || 'Default';
+  };
+
   const handleSend = () => {
     if (!message.trim() || !selectedConversation) return;
-    sendMutation.mutate({ conversationId: selectedConversation, message: message.trim() });
+    sendMutation.mutate({
+      conversationId: selectedConversation,
+      message: message.trim(),
+      provider: selectedProvider || undefined,
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -212,27 +251,72 @@ export default function AIChat() {
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <div className="h-14 px-4 border-b border-gray-200 flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg lg:hidden"
-            >
-              {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg hidden lg:block"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-600" />
-              <span className="font-semibold">AI Chat</span>
+          <div className="h-14 px-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 hover:bg-gray-100 rounded-lg lg:hidden"
+              >
+                {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 hover:bg-gray-100 rounded-lg hidden lg:block"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary-600" />
+                <span className="font-semibold">AI Chat</span>
+              </div>
+              {conversation?.model && (
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  {conversation.model}
+                </span>
+              )}
             </div>
-            {conversation?.model && (
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                {conversation.model}
-              </span>
+
+            {/* Provider Selector */}
+            {providers.length > 1 && selectedConversation && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowProviderDropdown(!showProviderDropdown)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  <span>{getCurrentProviderName()}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {showProviderDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      {providers.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            setSelectedProvider(p.provider);
+                            setShowProviderDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                            (selectedProvider === p.provider || (!selectedProvider && p.isDefault))
+                              ? 'bg-primary-50 text-primary-700'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{p.provider}</span>
+                            {p.isDefault && (
+                              <span className="text-xs text-gray-400">default</span>
+                            )}
+                          </div>
+                          {p.modelName && (
+                            <span className="text-xs text-gray-400">{p.modelName}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

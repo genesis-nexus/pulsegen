@@ -276,19 +276,24 @@ export class AIController {
         success: true,
         data: conversations,
       });
-    } catch (error) {
+    } catch (error: any) {
+      // Return empty array if table doesn't exist
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.json({ success: true, data: [] });
+      }
       next(error);
     }
   }
 
   static async createConversation(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { title } = req.body;
+      const { title, provider } = req.body;
 
       const conversation = await prisma.aIChatConversation.create({
         data: {
           userId: req.user!.id,
           title: title || 'New Conversation',
+          provider: provider || null,
         },
       });
 
@@ -296,7 +301,13 @@ export class AIController {
         success: true,
         data: conversation,
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.status(500).json({
+          success: false,
+          message: 'Database migration required. Please run: npx prisma migrate dev',
+        });
+      }
       next(error);
     }
   }
@@ -328,7 +339,10 @@ export class AIController {
         success: true,
         data: conversation,
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.status(404).json({ success: false, message: 'Conversation not found' });
+      }
       next(error);
     }
   }
@@ -336,7 +350,7 @@ export class AIController {
   static async sendMessage(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { conversationId } = req.params;
-      const { message } = req.body;
+      const { message, provider: requestedProvider } = req.body;
 
       if (!message) {
         return res.status(400).json({
@@ -375,9 +389,12 @@ export class AIController {
         },
       });
 
-      // Get AI provider and generate response
+      // Get AI provider (use requested provider or default)
       const startTime = Date.now();
-      const provider = await AIProviderService.getUserProvider(req.user!.id);
+      const provider = await AIProviderService.getUserProvider(
+        req.user!.id,
+        requestedProvider || conversation.provider || undefined
+      );
 
       // Build message history
       const messageHistory = conversation.messages.map(m => ({
@@ -390,7 +407,12 @@ export class AIController {
       const latencyMs = Date.now() - startTime;
 
       if (!aiResponse.success) {
-        throw new Error(aiResponse.error || 'Failed to get AI response');
+        // Still save the error state but inform user
+        return res.status(500).json({
+          success: false,
+          message: aiResponse.error || 'Failed to get AI response',
+          userMessage,
+        });
       }
 
       // Save assistant message
@@ -403,29 +425,26 @@ export class AIController {
         },
       });
 
-      // Update conversation title if it's the first message
+      // Update conversation with provider info
+      const updateData: any = { updatedAt: new Date() };
       if (conversation.messages.length === 0) {
         // Generate a title from the first message (first 50 chars)
-        const autoTitle = message.substring(0, 50) + (message.length > 50 ? '...' : '');
-        await prisma.aIChatConversation.update({
-          where: { id: conversationId },
-          data: {
-            title: autoTitle,
-            provider: aiResponse.provider as any,
-            model: aiResponse.model,
-          },
-        });
-      } else {
-        await prisma.aIChatConversation.update({
-          where: { id: conversationId },
-          data: { updatedAt: new Date() },
-        });
+        updateData.title = message.substring(0, 50) + (message.length > 50 ? '...' : '');
+      }
+      if (!conversation.provider) {
+        updateData.provider = AIUsageService.mapProvider(aiResponse.provider);
+        updateData.model = aiResponse.model;
       }
 
-      // Log usage
+      await prisma.aIChatConversation.update({
+        where: { id: conversationId },
+        data: updateData,
+      });
+
+      // Log usage (this won't fail the request if table doesn't exist)
       await AIUsageService.logUsage({
         userId: req.user!.id,
-        provider: aiResponse.provider as any,
+        provider: aiResponse.provider,
         model: aiResponse.model,
         feature: 'CHAT',
         inputTokens: aiResponse.inputTokens,
@@ -440,9 +459,17 @@ export class AIController {
         data: {
           userMessage,
           assistantMessage,
+          provider: aiResponse.provider,
+          model: aiResponse.model,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.status(500).json({
+          success: false,
+          message: 'Database migration required. Please run: npx prisma migrate dev',
+        });
+      }
       next(error);
     }
   }
@@ -474,7 +501,10 @@ export class AIController {
         success: true,
         message: 'Conversation deleted',
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.json({ success: true, message: 'Conversation deleted' });
+      }
       next(error);
     }
   }
