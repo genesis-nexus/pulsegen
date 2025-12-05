@@ -17,6 +17,7 @@ import SurveyTake from './pages/public/SurveyTake';
 import AISettings from './pages/settings/AISettings';
 import AIToolsSettings from './pages/settings/AIToolsSettings';
 import AIUsage from './pages/settings/AIUsage';
+import MLFeaturesSettings from './pages/settings/MLFeaturesSettings';
 import SSOSettings from './pages/settings/SSOSettings';
 import SMTPSettings from './pages/settings/SMTPSettings';
 import BrandingSettings from './pages/settings/BrandingSettings';
@@ -58,6 +59,7 @@ function App() {
         <Route path="/settings/ai" element={<AISettings />} />
         <Route path="/settings/ai-tools" element={<AIToolsSettings />} />
         <Route path="/settings/ai-usage" element={<AIUsage />} />
+        <Route path="/settings/ml-features" element={<MLFeaturesSettings />} />
         <Route path="/settings/sso" element={<SSOSettings />} />
         <Route path="/settings/smtp" element={<SMTPSettings />} />
         <Route path="/settings/branding" element={<BrandingSettings />} />
