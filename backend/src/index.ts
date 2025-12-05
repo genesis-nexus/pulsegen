@@ -10,7 +10,7 @@ import { notFoundHandler } from './middleware/notFoundHandler';
 import { rateLimiter } from './middleware/rateLimiter';
 import routes from './routes';
 import { prisma } from './config/database';
-import { redis } from './config/redis';
+import { cache, CacheFactory } from './lib/cache';
 import logger from './utils/logger';
 import { configurePassport } from './config/passport';
 
@@ -49,6 +49,10 @@ app.get('/health', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    cache: {
+      type: CacheFactory.getCacheType(),
+      connected: cache.isConnected(),
+    },
   });
 });
 
@@ -65,8 +69,17 @@ const gracefulShutdown = async () => {
 
   try {
     await prisma.$disconnect();
-    await redis.quit();
-    logger.info('Database and Redis connections closed');
+    logger.info('Database connection closed');
+
+    // Gracefully disconnect cache if it's Redis
+    if (CacheFactory.getCacheType() === 'redis') {
+      const { RedisCache } = await import('./lib/cache');
+      if (cache instanceof RedisCache) {
+        await cache.disconnect();
+        logger.info('Redis cache disconnected');
+      }
+    }
+
     process.exit(0);
   } catch (error) {
     logger.error('Error during shutdown:', error);
@@ -84,9 +97,14 @@ const startServer = async () => {
     await prisma.$connect();
     logger.info('Database connected successfully');
 
-    // Test Redis connection
-    await redis.ping();
-    logger.info('Redis connected successfully');
+    // Check cache status (optional, won't fail startup)
+    const cacheType = CacheFactory.getCacheType();
+    const cacheConnected = cache.isConnected();
+    logger.info(`Cache: ${cacheType} (${cacheConnected ? 'connected' : 'not connected'})`);
+
+    if (!cacheConnected && cacheType !== 'memory') {
+      logger.warn('Cache is not connected, falling back to in-memory caching');
+    }
 
     // Configure passport strategies
     await configurePassport();

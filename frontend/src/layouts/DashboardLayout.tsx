@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database } from 'lucide-react';
+import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database, Key, Server, Download } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
@@ -44,6 +44,13 @@ export default function DashboardLayout() {
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   ML Models
+                </Link>
+                <Link
+                  to="/download-access"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-gray-300"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Downloads
                 </Link>
               </div>
             </div>
@@ -98,6 +105,22 @@ export default function DashboardLayout() {
                       >
                         <Palette className="w-4 h-4 mr-2" />
                         Branding
+                      </Link>
+                      <Link
+                        to="/settings/license"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <Key className="w-4 h-4 mr-2" />
+                        License
+                      </Link>
+                      <Link
+                        to="/settings/platform"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <Server className="w-4 h-4 mr-2" />
+                        Platform
                       </Link>
                     </div>
                   </div>

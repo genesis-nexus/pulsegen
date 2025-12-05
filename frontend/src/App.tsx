@@ -18,6 +18,10 @@ import AIToolsSettings from './pages/settings/AIToolsSettings';
 import SSOSettings from './pages/settings/SSOSettings';
 import SMTPSettings from './pages/settings/SMTPSettings';
 import BrandingSettings from './pages/settings/BrandingSettings';
+import LicenseSettings from './pages/settings/LicenseSettings';
+import PlatformSettings from './pages/settings/PlatformSettings';
+import DownloadAccess from './pages/DownloadAccess';
+import DownloadAccessAdmin from './pages/admin/DownloadAccessAdmin';
 import MLModels from './pages/ml/MLModels';
 import NotFound from './pages/NotFound';
 
@@ -55,6 +59,10 @@ function App() {
         <Route path="/settings/sso" element={<SSOSettings />} />
         <Route path="/settings/smtp" element={<SMTPSettings />} />
         <Route path="/settings/branding" element={<BrandingSettings />} />
+        <Route path="/settings/license" element={<LicenseSettings />} />
+        <Route path="/settings/platform" element={<PlatformSettings />} />
+        <Route path="/download-access" element={<DownloadAccess />} />
+        <Route path="/admin/download-access" element={<DownloadAccessAdmin />} />
       </Route>
 
       {/* 404 */}

@@ -13,6 +13,10 @@ import smtpRoutes from './smtpRoutes';
 import brandingRoutes from './brandingRoutes';
 import surveySharingRoutes from './surveySharingRoutes';
 import automationRoutes from './automationRoutes';
+import configRoutes from './config';
+import downloadAccessRoutes from './downloadAccess';
+import licenseRoutes from './license';
+import platformRoutes from './platform';
 
 const router = Router();
 
@@ -30,5 +34,9 @@ router.use('/settings', smtpRoutes); // SMTP configuration
 router.use('/settings', brandingRoutes); // Platform branding
 router.use('/', surveySharingRoutes); // Survey sharing and visibility
 router.use('/automation', automationRoutes); // Automation tool
+router.use('/config', configRoutes); // Platform configuration
+router.use('/download-access', downloadAccessRoutes); // Download access management
+router.use('/license', licenseRoutes); // License validation
+router.use('/platform', platformRoutes); // Platform settings
 
 export default router;
