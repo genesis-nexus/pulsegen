@@ -7,6 +7,7 @@ import aiRoutes from './aiRoutes';
 import aiProviderRoutes from './aiProviderRoutes';
 import aiToolsRoutes from './aiToolsRoutes';
 import mlModelsRoutes from './mlModelsRoutes';
+import mlFeaturesRoutes from './mlFeaturesRoutes';
 import identityProviderRoutes from './identityProviderRoutes';
 import ssoRoutes from './ssoRoutes';
 import smtpRoutes from './smtpRoutes';
@@ -29,6 +30,7 @@ router.use('/ai', aiRoutes);
 router.use('/ai', aiProviderRoutes); // AI provider management
 router.use('/ai', aiToolsRoutes); // AI tools (MindsDB, etc.) configuration
 router.use('/ml', mlModelsRoutes); // ML models and predictions
+router.use('/ml/features', mlFeaturesRoutes); // ML-powered features (quality, sentiment, dropout)
 router.use('/identity', identityProviderRoutes); // Identity provider configuration
 router.use('/settings', smtpRoutes); // SMTP configuration
 router.use('/settings', brandingRoutes); // Platform branding

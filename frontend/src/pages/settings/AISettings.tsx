@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Check, X, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, X, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 
@@ -268,15 +268,27 @@ export default function AISettings() {
 
               {selectedProviderInfo?.requiresEndpoint && (
                 <div>
-                  <label className="label">Endpoint URL</label>
+                  <label className="label">
+                    Endpoint URL
+                    {(selectedProviderInfo as any)?.defaultEndpoint && (
+                      <span className="text-sm font-normal text-gray-500 ml-2">
+                        (Optional - defaults to {(selectedProviderInfo as any).defaultEndpoint})
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="url"
                     className="input"
                     value={formData.endpoint}
                     onChange={(e) => setFormData({ ...formData, endpoint: e.target.value })}
-                    placeholder="https://api.example.com"
-                    required
+                    placeholder={(selectedProviderInfo as any)?.defaultEndpoint || "https://api.example.com"}
+                    required={!(selectedProviderInfo as any)?.defaultEndpoint}
                   />
+                  {(selectedProviderInfo as any)?.defaultEndpoint && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty to use the default endpoint
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -319,6 +331,18 @@ export default function AISettings() {
           API key from at least one provider to use AI features.
         </p>
         <div className="space-y-2 text-sm">
+          <p>
+            <strong>OpenRouter (Recommended - Free Tier Available):</strong> Get your API key from{' '}
+            <a
+              href="https://openrouter.ai/keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary-600 hover:underline"
+            >
+              openrouter.ai
+            </a>
+            {' '}- Provides access to multiple AI models including free options
+          </p>
           <p>
             <strong>OpenAI:</strong> Get your API key from{' '}
             <a

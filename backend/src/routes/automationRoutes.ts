@@ -58,12 +58,12 @@ router.post('/run', authenticate, async (req: Request, res: Response) => {
     const userId = (req as any).user.id;
 
     // Validate request body
-    const config = automationConfigSchema.parse(req.body);
+    const validatedConfig = automationConfigSchema.parse(req.body);
 
-    console.log('Starting automation with config:', config);
+    console.log('Starting automation with config:', validatedConfig);
 
     // Run automation
-    const result = await AutomationService.runAutomation(userId, config);
+    const result = await AutomationService.runAutomation(userId, validatedConfig as any);
 
     res.json({
       success: true,

@@ -81,7 +81,7 @@ export default function LicenseSettings() {
     setActivating(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/license/activate`, {
+      await axios.post(`${API_URL}/api/license/activate`, {
         licenseKey: licenseKey.trim()
       });
 
@@ -106,7 +106,7 @@ export default function LicenseSettings() {
     setVerifying(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/license/verify`);
+      await axios.post(`${API_URL}/api/license/verify`);
       setSuccess('License verified successfully!');
       loadLicenseInfo();
     } catch (err: any) {

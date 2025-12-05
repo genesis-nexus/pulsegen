@@ -152,16 +152,17 @@ export async function configurePassport() {
   // Configure SAML
   const samlConfig = await identityProviderService.getConfig(IdentityProvider.SAML);
   if (samlConfig && samlConfig.isEnabled) {
+    const metadata = samlConfig.metadata as { cert?: string; identifierFormat?: string } | null | undefined;
     passport.use(
       new SamlStrategy(
         {
           entryPoint: samlConfig.authUrl || '',
           issuer: samlConfig.issuer || '',
           callbackUrl: samlConfig.callbackUrl || '/api/auth/saml/callback',
-          cert: samlConfig.metadata?.cert || '',
-          identifierFormat: samlConfig.metadata?.identifierFormat,
+          cert: metadata?.cert || '',
+          identifierFormat: metadata?.identifierFormat,
         },
-        async (profile, done) => {
+        async (profile: any, done: any) => {
           try {
             const user = await findOrCreateUser({
               provider: IdentityProvider.SAML,

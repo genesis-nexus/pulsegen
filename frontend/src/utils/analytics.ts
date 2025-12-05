@@ -24,8 +24,9 @@ export async function initializeAnalytics() {
     const config = await response.json();
 
     if (config.analyticsEnabled && config.googleAnalyticsId) {
-      analyticsId = config.googleAnalyticsId;
-      loadGoogleAnalytics(analyticsId);
+      const measurementId = config.googleAnalyticsId;
+      analyticsId = measurementId;
+      loadGoogleAnalytics(measurementId);
       console.log('✅ Google Analytics initialized:', analyticsId);
     }
   } catch (error) {
@@ -58,6 +59,7 @@ function loadGoogleAnalytics(measurementId: string) {
   });
 
   analyticsInitialized = true;
+  analyticsId = measurementId;
 }
 
 /**

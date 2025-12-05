@@ -7,6 +7,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Request interceptor to add auth token
@@ -32,6 +33,8 @@ api.interceptors.response.use(
         if (refreshToken) {
           const response = await axios.post(`${API_URL}/api/auth/refresh`, {
             refreshToken,
+          }, {
+            withCredentials: true,
           });
 
           const { accessToken, refreshToken: newRefreshToken } = response.data.data;

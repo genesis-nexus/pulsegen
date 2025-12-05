@@ -63,6 +63,8 @@ export const authorize = (...roles: UserRole[]) => {
   };
 };
 
+export const requireAdmin = authorize(UserRole.ADMIN);
+
 export const apiKeyAuth = async (
   req: AuthRequest,
   res: Response,

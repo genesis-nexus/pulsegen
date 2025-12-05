@@ -1,8 +1,13 @@
 import { Response, NextFunction } from 'express';
+import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 import AIService from '../services/aiService';
 import SurveyService from '../services/surveyService';
+import AIUsageService from '../services/aiUsageService';
+import { AIProviderService } from '../services/aiProviderService';
 import { generateSurveySchema, analyzeResponsesSchema } from '../utils/validators';
+
+const prisma = new PrismaClient();
 
 export class AIController {
   static async generateSurvey(req: AuthRequest, res: Response, next: NextFunction) {
@@ -119,6 +124,387 @@ export class AIController {
         },
       });
     } catch (error) {
+      next(error);
+    }
+  }
+
+  static async healthCheck(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { surveyId } = req.params;
+      const { title, description, questions } = req.body;
+
+      // Verify survey ownership
+      await SurveyService.findById(surveyId, req.user!.id);
+
+      const result = await AIService.improveSurvey(req.user!.id, {
+        title,
+        description,
+        questions,
+      });
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async analyzeSurvey(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { surveyId } = req.params;
+      const { analysisType, responses, questions, analytics } = req.body;
+
+      // Verify survey ownership
+      const survey = await SurveyService.findById(surveyId, req.user!.id);
+
+      // If analysisType is 'summary', use generateAnalyticsSummary
+      if (analysisType === 'summary') {
+        const result = await AIService.generateAnalyticsSummary(req.user!.id, {
+          surveyTitle: survey.title,
+          analytics,
+        });
+
+        return res.json({
+          success: true,
+          data: result,
+        });
+      }
+
+      // Otherwise use analyzeResponses
+      const result = await AIService.analyzeResponses({
+        userId: req.user!.id,
+        responses: responses || [],
+        questions: questions || survey.questions,
+        analysisType,
+      });
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ==================== Usage Tracking ====================
+
+  static async getUsageStats(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { startDate, endDate, days } = req.query;
+
+      let start: Date | undefined;
+      let end: Date | undefined;
+
+      if (days) {
+        const daysNum = parseInt(days as string, 10);
+        end = new Date();
+        start = new Date(Date.now() - daysNum * 24 * 60 * 60 * 1000);
+      } else {
+        if (startDate) start = new Date(startDate as string);
+        if (endDate) end = new Date(endDate as string);
+      }
+
+      const stats = await AIUsageService.getUserStats(req.user!.id, start, end);
+
+      res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getMonthlyUsage(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const stats = await AIUsageService.getMonthlyUsage(req.user!.id);
+
+      res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getUsageLogs(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { limit = '50', offset = '0' } = req.query;
+
+      const { logs, total } = await AIUsageService.getRecentLogs(
+        req.user!.id,
+        parseInt(limit as string, 10),
+        parseInt(offset as string, 10)
+      );
+
+      res.json({
+        success: true,
+        data: {
+          logs,
+          total,
+          limit: parseInt(limit as string, 10),
+          offset: parseInt(offset as string, 10),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ==================== Chat ====================
+
+  static async getConversations(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const conversations = await prisma.aIChatConversation.findMany({
+        where: {
+          userId: req.user!.id,
+          isArchived: false,
+        },
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          _count: {
+            select: { messages: true },
+          },
+        },
+      });
+
+      res.json({
+        success: true,
+        data: conversations,
+      });
+    } catch (error: any) {
+      // Return empty array if table doesn't exist
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.json({ success: true, data: [] });
+      }
+      next(error);
+    }
+  }
+
+  static async createConversation(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { title, provider } = req.body;
+
+      const conversation = await prisma.aIChatConversation.create({
+        data: {
+          userId: req.user!.id,
+          title: title || 'New Conversation',
+          provider: provider || null,
+        },
+      });
+
+      res.json({
+        success: true,
+        data: conversation,
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.status(500).json({
+          success: false,
+          message: 'Database migration required. Please run: npx prisma migrate dev',
+        });
+      }
+      next(error);
+    }
+  }
+
+  static async getConversation(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { conversationId } = req.params;
+
+      const conversation = await prisma.aIChatConversation.findFirst({
+        where: {
+          id: conversationId,
+          userId: req.user!.id,
+        },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      });
+
+      if (!conversation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Conversation not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        data: conversation,
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.status(404).json({ success: false, message: 'Conversation not found' });
+      }
+      next(error);
+    }
+  }
+
+  static async sendMessage(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { conversationId } = req.params;
+      const { message, provider: requestedProvider } = req.body;
+
+      if (!message) {
+        return res.status(400).json({
+          success: false,
+          message: 'Message is required',
+        });
+      }
+
+      // Verify conversation ownership
+      const conversation = await prisma.aIChatConversation.findFirst({
+        where: {
+          id: conversationId,
+          userId: req.user!.id,
+        },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            take: 50, // Last 50 messages for context
+          },
+        },
+      });
+
+      if (!conversation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Conversation not found',
+        });
+      }
+
+      // Save user message
+      const userMessage = await prisma.aIChatMessage.create({
+        data: {
+          conversationId,
+          role: 'user',
+          content: message,
+        },
+      });
+
+      // Get AI provider (use requested provider or default)
+      const startTime = Date.now();
+      const provider = await AIProviderService.getUserProvider(
+        req.user!.id,
+        requestedProvider || conversation.provider || undefined
+      );
+
+      // Build message history
+      const messageHistory = conversation.messages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      }));
+      messageHistory.push({ role: 'user', content: message });
+
+      const aiResponse = await provider.chat({ messages: messageHistory });
+      const latencyMs = Date.now() - startTime;
+
+      if (!aiResponse.success) {
+        // Still save the error state but inform user
+        return res.status(500).json({
+          success: false,
+          message: aiResponse.error || 'Failed to get AI response',
+          userMessage,
+        });
+      }
+
+      // Save assistant message
+      const assistantMessage = await prisma.aIChatMessage.create({
+        data: {
+          conversationId,
+          role: 'assistant',
+          content: aiResponse.data!,
+          tokensUsed: aiResponse.tokensUsed,
+        },
+      });
+
+      // Update conversation with provider info
+      const updateData: any = { updatedAt: new Date() };
+      if (conversation.messages.length === 0) {
+        // Generate a title from the first message (first 50 chars)
+        updateData.title = message.substring(0, 50) + (message.length > 50 ? '...' : '');
+      }
+      if (!conversation.provider) {
+        updateData.provider = AIUsageService.mapProvider(aiResponse.provider);
+        updateData.model = aiResponse.model;
+      }
+
+      await prisma.aIChatConversation.update({
+        where: { id: conversationId },
+        data: updateData,
+      });
+
+      // Log usage (this won't fail the request if table doesn't exist)
+      await AIUsageService.logUsage({
+        userId: req.user!.id,
+        provider: aiResponse.provider,
+        model: aiResponse.model,
+        feature: 'CHAT',
+        inputTokens: aiResponse.inputTokens,
+        outputTokens: aiResponse.outputTokens,
+        latencyMs,
+        success: true,
+        metadata: { conversationId },
+      });
+
+      res.json({
+        success: true,
+        data: {
+          userMessage,
+          assistantMessage,
+          provider: aiResponse.provider,
+          model: aiResponse.model,
+        },
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.status(500).json({
+          success: false,
+          message: 'Database migration required. Please run: npx prisma migrate dev',
+        });
+      }
+      next(error);
+    }
+  }
+
+  static async deleteConversation(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { conversationId } = req.params;
+
+      // Verify ownership and delete
+      const conversation = await prisma.aIChatConversation.findFirst({
+        where: {
+          id: conversationId,
+          userId: req.user!.id,
+        },
+      });
+
+      if (!conversation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Conversation not found',
+        });
+      }
+
+      await prisma.aIChatConversation.delete({
+        where: { id: conversationId },
+      });
+
+      res.json({
+        success: true,
+        message: 'Conversation deleted',
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        return res.json({ success: true, message: 'Conversation deleted' });
+      }
       next(error);
     }
   }

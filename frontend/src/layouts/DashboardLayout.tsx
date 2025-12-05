@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database, Key, Server, Download } from 'lucide-react';
+import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database, Key, Server, Download, MessageSquare, BarChart3, Brain } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
@@ -46,6 +46,13 @@ export default function DashboardLayout() {
                   ML Models
                 </Link>
                 <Link
+                  to="/ai/chat"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-gray-300"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  AI Chat
+                </Link>
+                <Link
                   to="/download-access"
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-gray-300"
                 >
@@ -81,6 +88,22 @@ export default function DashboardLayout() {
                       >
                         <Database className="w-4 h-4 mr-2" />
                         AI Tools (MindsDB)
+                      </Link>
+                      <Link
+                        to="/settings/ai-usage"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        AI Usage
+                      </Link>
+                      <Link
+                        to="/settings/ml-features"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setShowSettingsMenu(false)}
+                      >
+                        <Brain className="w-4 h-4 mr-2" />
+                        ML Features
                       </Link>
                       <Link
                         to="/settings/sso"

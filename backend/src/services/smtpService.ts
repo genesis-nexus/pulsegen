@@ -191,7 +191,7 @@ export const smtpService = {
       return null;
     }
 
-    transporterCache = nodemailer.createTransporter({
+    transporterCache = nodemailer.createTransport({
       host: config.host,
       port: config.port,
       secure: config.secure,

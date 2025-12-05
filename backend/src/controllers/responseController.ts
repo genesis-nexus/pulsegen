@@ -7,11 +7,11 @@ export class ResponseController {
   static async submit(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { surveyId } = req.params;
-      const data = submitResponseSchema.parse(req.body);
+      const validatedData = submitResponseSchema.parse(req.body);
 
       const response = await ResponseService.submit(
         surveyId,
-        data,
+        validatedData as any,
         req.ip,
         req.headers['user-agent']
       );
