@@ -13,6 +13,7 @@ interface CreateSurveyData {
   closeDate?: string;
   welcomeText?: string;
   thankYouText?: string;
+  status?: SurveyStatus;
 }
 
 interface CreateQuestionData {
@@ -46,6 +47,7 @@ export class SurveyService {
         closeDate: data.closeDate ? new Date(data.closeDate) : null,
         welcomeText: data.welcomeText,
         thankYouText: data.thankYouText,
+        status: data.status ?? 'DRAFT',
       },
       include: {
         creator: {
@@ -328,7 +330,7 @@ export class SurveyService {
         data: data.options.map((opt, index) => ({
           questionId: question.id,
           text: opt.text,
-          value: opt.value,
+          value: opt.value || opt.text, // Use text as value if value is not provided
           imageUrl: opt.imageUrl,
           order: index,
         })),
@@ -377,7 +379,7 @@ export class SurveyService {
         data: data.options.map((opt, index) => ({
           questionId,
           text: opt.text,
-          value: opt.value,
+          value: opt.value || opt.text, // Use text as value if value is not provided
           imageUrl: opt.imageUrl,
           order: index,
         })),

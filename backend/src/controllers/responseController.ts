@@ -44,14 +44,22 @@ export class ResponseController {
       const { surveyId } = req.params;
       const { isComplete, startDate, endDate } = req.query;
 
+      // Build filters object only with defined values
+      const filters: any = {};
+      if (isComplete !== undefined) {
+        filters.isComplete = isComplete === 'true';
+      }
+      if (startDate) {
+        filters.startDate = startDate as string;
+      }
+      if (endDate) {
+        filters.endDate = endDate as string;
+      }
+
       const responses = await ResponseService.getBySurvey(
         surveyId,
         req.user!.id,
-        {
-          isComplete: isComplete === 'true',
-          startDate: startDate as string,
-          endDate: endDate as string,
-        }
+        Object.keys(filters).length > 0 ? filters : undefined
       );
 
       res.json({

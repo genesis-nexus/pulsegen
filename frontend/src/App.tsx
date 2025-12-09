@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
+import { UserRole } from './types';
 
 // Layouts
 import DashboardLayout from './layouts/DashboardLayout';
@@ -25,9 +26,25 @@ import MLModels from './pages/ml/MLModels';
 import AIChat from './pages/AIChat';
 import NotFound from './pages/NotFound';
 
+// Admin Pages
+import AutomationDashboard from './pages/automation/AutomationDashboard';
+import AutomationRunner from './pages/automation/AutomationRunner';
+import AutomationResults from './pages/automation/AutomationResults';
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
   return user ? <>{children}</> : <Navigate to="/login" />;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore();
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  if (user.role !== UserRole.ADMIN) {
+    return <Navigate to="/" />;
+  }
+  return <>{children}</>;
 }
 
 function App() {
@@ -63,6 +80,32 @@ function App() {
         <Route path="/settings/sso" element={<SSOSettings />} />
         <Route path="/settings/smtp" element={<SMTPSettings />} />
         <Route path="/settings/branding" element={<BrandingSettings />} />
+
+        {/* Admin routes */}
+        <Route
+          path="/admin/automation"
+          element={
+            <AdminRoute>
+              <AutomationDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/automation/run"
+          element={
+            <AdminRoute>
+              <AutomationRunner />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/automation/results/:surveyId"
+          element={
+            <AdminRoute>
+              <AutomationResults />
+            </AdminRoute>
+          }
+        />
       </Route>
 
       {/* 404 */}

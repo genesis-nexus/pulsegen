@@ -126,7 +126,8 @@ export class AutomationService {
       isAnonymous: true,
       allowMultiple: false,
       welcomeText: `Welcome to our ${persona.industry} survey! Your feedback is valuable to us.`,
-      thankYouText: 'Thank you for taking the time to complete this survey!'
+      thankYouText: 'Thank you for taking the time to complete this survey!',
+      status: 'ACTIVE' // Make sure survey is active to accept responses
     });
 
     // Add questions based on persona

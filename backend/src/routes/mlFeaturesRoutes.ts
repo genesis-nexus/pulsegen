@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { requireAuth, requireAdmin } from '../middleware/auth';
+import { authenticate, requireAdmin } from '../middleware/auth';
 import * as mlFeaturesController from '../controllers/mlFeaturesController';
 
 const router = Router();
@@ -15,12 +15,12 @@ const router = Router();
 // ============================================================================
 
 // Get all feature configurations
-router.get('/configs', requireAuth, requireAdmin, mlFeaturesController.getAllFeatureConfigs);
+router.get('/configs', authenticate, requireAdmin, mlFeaturesController.getAllFeatureConfigs);
 
 // Get configurations by type
 router.get(
   '/configs/type/:type',
-  requireAuth,
+  authenticate,
   requireAdmin,
   mlFeaturesController.getFeatureConfigsByType
 );
@@ -28,25 +28,25 @@ router.get(
 // Get default settings for a feature type
 router.get(
   '/configs/defaults/:type',
-  requireAuth,
+  authenticate,
   requireAdmin,
   mlFeaturesController.getDefaultSettings
 );
 
 // Get single configuration
-router.get('/configs/:id', requireAuth, requireAdmin, mlFeaturesController.getFeatureConfig);
+router.get('/configs/:id', authenticate, requireAdmin, mlFeaturesController.getFeatureConfig);
 
 // Create configuration
-router.post('/configs', requireAuth, requireAdmin, mlFeaturesController.createFeatureConfig);
+router.post('/configs', authenticate, requireAdmin, mlFeaturesController.createFeatureConfig);
 
 // Update configuration
-router.put('/configs/:id', requireAuth, requireAdmin, mlFeaturesController.updateFeatureConfig);
+router.put('/configs/:id', authenticate, requireAdmin, mlFeaturesController.updateFeatureConfig);
 
 // Delete configuration
-router.delete('/configs/:id', requireAuth, requireAdmin, mlFeaturesController.deleteFeatureConfig);
+router.delete('/configs/:id', authenticate, requireAdmin, mlFeaturesController.deleteFeatureConfig);
 
 // Toggle feature enabled state
-router.patch('/configs/:id/toggle', requireAuth, requireAdmin, mlFeaturesController.toggleFeature);
+router.patch('/configs/:id/toggle', authenticate, requireAdmin, mlFeaturesController.toggleFeature);
 
 // ============================================================================
 // SURVEY OVERRIDES
@@ -55,14 +55,14 @@ router.patch('/configs/:id/toggle', requireAuth, requireAdmin, mlFeaturesControl
 // Set survey-specific override
 router.post(
   '/configs/:id/overrides',
-  requireAuth,
+  authenticate,
   mlFeaturesController.setSurveyOverride
 );
 
 // Delete survey override
 router.delete(
   '/configs/:id/overrides/:surveyId',
-  requireAuth,
+  authenticate,
   mlFeaturesController.deleteSurveyOverride
 );
 
@@ -71,46 +71,46 @@ router.delete(
 // ============================================================================
 
 // Analyze response quality
-router.post('/quality/analyze', requireAuth, mlFeaturesController.analyzeResponseQuality);
+router.post('/quality/analyze', authenticate, mlFeaturesController.analyzeResponseQuality);
 
 // Get quality statistics for a survey
-router.get('/quality/stats/:surveyId', requireAuth, mlFeaturesController.getQualityStats);
+router.get('/quality/stats/:surveyId', authenticate, mlFeaturesController.getQualityStats);
 
 // ============================================================================
 // SENTIMENT ANALYSIS
 // ============================================================================
 
 // Analyze single text sentiment
-router.post('/sentiment/analyze', requireAuth, mlFeaturesController.analyzeSentiment);
+router.post('/sentiment/analyze', authenticate, mlFeaturesController.analyzeSentiment);
 
 // Analyze batch sentiments
-router.post('/sentiment/analyze/batch', requireAuth, mlFeaturesController.analyzeSentimentBatch);
+router.post('/sentiment/analyze/batch', authenticate, mlFeaturesController.analyzeSentimentBatch);
 
 // Get sentiment statistics for a survey
-router.get('/sentiment/stats/:surveyId', requireAuth, mlFeaturesController.getSentimentStats);
+router.get('/sentiment/stats/:surveyId', authenticate, mlFeaturesController.getSentimentStats);
 
 // ============================================================================
 // DROPOUT PREDICTION
 // ============================================================================
 
 // Predict dropout probability
-router.post('/dropout/predict', requireAuth, mlFeaturesController.predictDropout);
+router.post('/dropout/predict', authenticate, mlFeaturesController.predictDropout);
 
 // Mark intervention as shown
 router.patch(
   '/dropout/intervention/:predictionId',
-  requireAuth,
+  authenticate,
   mlFeaturesController.markInterventionShown
 );
 
 // Get dropout statistics for a survey
-router.get('/dropout/stats/:surveyId', requireAuth, mlFeaturesController.getDropoutStats);
+router.get('/dropout/stats/:surveyId', authenticate, mlFeaturesController.getDropoutStats);
 
 // ============================================================================
 // ADMINISTRATION
 // ============================================================================
 
 // Clear feature instance cache
-router.post('/cache/clear', requireAuth, requireAdmin, mlFeaturesController.clearCache);
+router.post('/cache/clear', authenticate, requireAdmin, mlFeaturesController.clearCache);
 
 export default router;

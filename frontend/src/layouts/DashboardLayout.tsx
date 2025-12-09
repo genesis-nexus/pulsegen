@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database, MessageSquare, BarChart3 } from 'lucide-react';
+import { UserRole } from '../types';
+import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database, MessageSquare, BarChart3, Zap } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
@@ -52,6 +53,15 @@ export default function DashboardLayout() {
                   <MessageSquare className="w-4 h-4 mr-2" />
                   AI Chat
                 </Link>
+                {user?.role === UserRole.ADMIN && (
+                  <Link
+                    to="/admin/automation"
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-gray-300"
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    Automation
+                  </Link>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-4">
