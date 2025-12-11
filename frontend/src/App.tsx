@@ -19,6 +19,7 @@ import SSOSettings from './pages/settings/SSOSettings';
 import SMTPSettings from './pages/settings/SMTPSettings';
 import BrandingSettings from './pages/settings/BrandingSettings';
 import MLModels from './pages/ml/MLModels';
+import UserManagement from './pages/admin/UserManagement';
 import NotFound from './pages/NotFound';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -55,6 +56,7 @@ function App() {
         <Route path="/settings/sso" element={<SSOSettings />} />
         <Route path="/settings/smtp" element={<SMTPSettings />} />
         <Route path="/settings/branding" element={<BrandingSettings />} />
+        <Route path="/admin/users" element={<UserManagement />} />
       </Route>
 
       {/* 404 */}

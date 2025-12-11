@@ -98,6 +98,7 @@ model User {
   emailVerified Boolean   @default(false)
   provider      IdentityProvider @default(LOCAL)
   providerId    String?   // ID from SSO provider
+  preferredLanguage String @default("en")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -216,6 +217,16 @@ model Survey {
   updatedAt     DateTime         @updatedAt
   publishedAt   DateTime?
 
+  // i18n
+  baseLanguage   String              @default("en")
+  translations   SurveyTranslation[]
+
+  // Progress Bar
+  showProgressBar     Boolean @default(true)
+  progressBarPosition String  @default("top") // "top", "bottom", "both"
+  progressBarStyle    String  @default("bar") // "bar", "steps", "minimal", "combined"
+  progressBarFormat   String  @default("percentage") // "percentage", "count", "both"
+
   // Relations
   creator       User             @relation(fields: [createdBy], references: [id])
   workspace     Workspace?       @relation(fields: [workspaceId], references: [id])
@@ -229,6 +240,7 @@ model Survey {
   exports       Export[]
   mlModels      MLModel[]
   predictions   Prediction[]
+  surveyLogics  SurveyLogic[]
 
   @@index([createdBy])
   @@index([workspaceId])
@@ -272,6 +284,7 @@ model Question {
   answers Answer[]
   logic   SurveyLogic[]    @relation("SourceQuestion")
   targets SurveyLogic[]    @relation("TargetQuestion")
+  translations QuestionTranslation[]
 
   @@index([surveyId])
   @@index([pageId])
@@ -288,6 +301,7 @@ model QuestionOption {
 
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   answers  Answer[]
+  translations QuestionOptionTranslation[]
 
   @@index([questionId])
   @@index([order])
@@ -626,4 +640,49 @@ model Prediction {
   @@index([surveyId])
   @@index([responseId])
   @@index([createdAt])
+}
+
+// Translations
+model SurveyTranslation {
+  id          String   @id @default(cuid())
+  surveyId    String
+  survey      Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  language    String   // ISO language code
+  title       String
+  description String?
+  welcomeText String?
+  thankYouText String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([surveyId, language])
+  @@index([surveyId])
+}
+
+model QuestionTranslation {
+  id          String   @id @default(cuid())
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  language    String
+  text        String
+  description String?
+  placeholder String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([questionId, language])
+  @@index([questionId])
+}
+
+model QuestionOptionTranslation {
+  id        String         @id @default(cuid())
+  optionId  String
+  option    QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  language  String
+  text      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([optionId, language])
+  @@index([optionId])
 }

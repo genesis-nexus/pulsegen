@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Copy, BarChart, Eye, Edit } from 'lucide-react';
+import { Plus, Trash2, Copy, BarChart, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { Survey } from '../../types';
@@ -59,13 +59,12 @@ export default function SurveyList() {
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">{survey.title}</h3>
                 <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    survey.status === 'ACTIVE'
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${survey.status === 'ACTIVE'
                       ? 'bg-green-100 text-green-800'
                       : survey.status === 'DRAFT'
-                      ? 'bg-gray-100 text-gray-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
+                        ? 'bg-gray-100 text-gray-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
                 >
                   {survey.status}
                 </span>

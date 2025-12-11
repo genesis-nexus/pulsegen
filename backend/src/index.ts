@@ -65,7 +65,10 @@ const gracefulShutdown = async () => {
 
   try {
     await prisma.$disconnect();
-    await redis.quit();
+    // Disconnect Redis only if it was connected
+    if (redis.status === 'ready') {
+      await redis.quit();
+    }
     logger.info('Database and Redis connections closed');
     process.exit(0);
   } catch (error) {
@@ -85,8 +88,15 @@ const startServer = async () => {
     logger.info('Database connected successfully');
 
     // Test Redis connection
-    await redis.ping();
-    logger.info('Redis connected successfully');
+    try {
+      await redis.connect();
+      await redis.ping();
+      logger.info('Redis connected successfully');
+    } catch (redisError) {
+      logger.warn('Redis connection failed - Cache and Queue features will be disabled');
+      logger.warn(redisError instanceof Error ? redisError.message : String(redisError));
+      // Do not exit, continue without Redis
+    }
 
     // Configure passport strategies
     await configurePassport();

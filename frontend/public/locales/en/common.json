@@ -1,0 +1,13 @@
+{
+    "app": {
+        "name": "PulseGen",
+        "tagline": "AI-Powered Survey Platform"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "surveys": "Surveys",
+        "analytics": "Analytics",
+        "settings": "Settings",
+        "logout": "Log out"
+    }
+}

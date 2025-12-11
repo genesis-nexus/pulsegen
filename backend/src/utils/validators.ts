@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { QuestionType, SurveyStatus, LogicType } from '@prisma/client';
+import { QuestionType } from '@prisma/client';
 
 // Auth validators
 export const registerSchema = z.object({
@@ -40,6 +40,15 @@ export const publishSurveySchema = z.object({
 });
 
 // Question validators
+// Logic validator
+const logicSchema = z.object({
+  id: z.string().optional(),
+  type: z.enum(['SKIP_LOGIC', 'BRANCHING', 'PIPING', 'DISPLAY_LOGIC']),
+  targetQuestionId: z.string().optional(),
+  conditions: z.array(z.any()),
+  actions: z.array(z.any()),
+});
+
 export const createQuestionSchema = z.object({
   type: z.nativeEnum(QuestionType),
   text: z.string().min(1, 'Question text is required'),
@@ -58,6 +67,7 @@ export const createQuestionSchema = z.object({
       })
     )
     .optional(),
+  logic: z.array(logicSchema).optional(),
 });
 
 export const updateQuestionSchema = createQuestionSchema.partial();

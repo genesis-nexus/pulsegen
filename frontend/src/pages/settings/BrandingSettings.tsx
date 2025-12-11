@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Upload, X, RefreshCw, Save } from 'lucide-react';
+import { Upload, RefreshCw, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 

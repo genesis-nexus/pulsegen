@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { Survey, QuestionType } from '../../types';
+import { SurveyProgressWrapper } from '../../components/survey/SurveyProgressWrapper';
 
 export default function SurveyTake() {
   const { slug } = useParams();
@@ -112,180 +113,185 @@ export default function SurveyTake() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="card mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{survey.title}</h1>
-          {survey.description && (
-            <p className="text-gray-600">{survey.description}</p>
-          )}
-          {survey.welcomeText && (
-            <p className="mt-4 text-gray-700">{survey.welcomeText}</p>
-          )}
-        </div>
+    <SurveyProgressWrapper
+      survey={survey}
+      currentPage={1}
+      totalPages={1}
+      currentQuestion={Object.keys(answers).length}
+      totalQuestions={survey.questions.length}
+    >
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="card mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{survey.title}</h1>
+            {survey.description && (
+              <p className="text-gray-600">{survey.description}</p>
+            )}
+            {survey.welcomeText && (
+              <p className="mt-4 text-gray-700">{survey.welcomeText}</p>
+            )}
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {survey.questions.map((question, index) => (
-            <div key={question.id} className="card">
-              <label className="block mb-4">
-                <span className="text-lg font-medium text-gray-900">
-                  {index + 1}. {question.text}
-                  {question.isRequired && <span className="text-red-600 ml-1">*</span>}
-                </span>
-                {question.description && (
-                  <span className="block text-sm text-gray-600 mt-1">
-                    {question.description}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {survey.questions.map((question, index) => (
+              <div key={question.id} className="card">
+                <label className="block mb-4">
+                  <span className="text-lg font-medium text-gray-900">
+                    {index + 1}. {question.text}
+                    {question.isRequired && <span className="text-red-600 ml-1">*</span>}
                   </span>
+                  {question.description && (
+                    <span className="block text-sm text-gray-600 mt-1">
+                      {question.description}
+                    </span>
+                  )}
+                </label>
+
+                {question.type === QuestionType.MULTIPLE_CHOICE && (
+                  <div className="space-y-2">
+                    {question.options.map((option) => (
+                      <label key={option.id} className="flex items-center">
+                        <input
+                          type="radio"
+                          name={question.id}
+                          value={option.id}
+                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                          className="mr-2"
+                        />
+                        <span>{option.text}</span>
+                      </label>
+                    ))}
+                  </div>
                 )}
-              </label>
 
-              {question.type === QuestionType.MULTIPLE_CHOICE && (
-                <div className="space-y-2">
-                  {question.options.map((option) => (
-                    <label key={option.id} className="flex items-center">
-                      <input
-                        type="radio"
-                        name={question.id}
-                        value={option.id}
-                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                        className="mr-2"
-                      />
-                      <span>{option.text}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
+                {question.type === QuestionType.CHECKBOXES && (
+                  <div className="space-y-2">
+                    {question.options.map((option) => (
+                      <label key={option.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          value={option.id}
+                          onChange={(e) => {
+                            const current = answers[question.id] || [];
+                            if (e.target.checked) {
+                              handleAnswerChange(question.id, [...current, option.id]);
+                            } else {
+                              handleAnswerChange(
+                                question.id,
+                                current.filter((id: string) => id !== option.id)
+                              );
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span>{option.text}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
 
-              {question.type === QuestionType.CHECKBOXES && (
-                <div className="space-y-2">
-                  {question.options.map((option) => (
-                    <label key={option.id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        value={option.id}
-                        onChange={(e) => {
-                          const current = answers[question.id] || [];
-                          if (e.target.checked) {
-                            handleAnswerChange(question.id, [...current, option.id]);
-                          } else {
-                            handleAnswerChange(
-                              question.id,
-                              current.filter((id: string) => id !== option.id)
-                            );
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <span>{option.text}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
+                {question.type === QuestionType.SHORT_TEXT && (
+                  <input
+                    type="text"
+                    className="input"
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required={question.isRequired}
+                  />
+                )}
 
-              {question.type === QuestionType.SHORT_TEXT && (
-                <input
-                  type="text"
-                  className="input"
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  required={question.isRequired}
-                />
-              )}
+                {question.type === QuestionType.LONG_TEXT && (
+                  <textarea
+                    className="input"
+                    rows={4}
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required={question.isRequired}
+                  />
+                )}
 
-              {question.type === QuestionType.LONG_TEXT && (
-                <textarea
-                  className="input"
-                  rows={4}
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  required={question.isRequired}
-                />
-              )}
+                {question.type === QuestionType.EMAIL && (
+                  <input
+                    type="email"
+                    className="input"
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required={question.isRequired}
+                  />
+                )}
 
-              {question.type === QuestionType.EMAIL && (
-                <input
-                  type="email"
-                  className="input"
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  required={question.isRequired}
-                />
-              )}
+                {question.type === QuestionType.NUMBER && (
+                  <input
+                    type="number"
+                    className="input"
+                    onChange={(e) => handleAnswerChange(question.id, parseFloat(e.target.value))}
+                    required={question.isRequired}
+                  />
+                )}
 
-              {question.type === QuestionType.NUMBER && (
-                <input
-                  type="number"
-                  className="input"
-                  onChange={(e) => handleAnswerChange(question.id, parseFloat(e.target.value))}
-                  required={question.isRequired}
-                />
-              )}
+                {question.type === QuestionType.DATE && (
+                  <input
+                    type="date"
+                    className="input"
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required={question.isRequired}
+                  />
+                )}
 
-              {question.type === QuestionType.DATE && (
-                <input
-                  type="date"
-                  className="input"
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  required={question.isRequired}
-                />
-              )}
+                {question.type === QuestionType.RATING_SCALE && (
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        onClick={() => handleAnswerChange(question.id, rating)}
+                        className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === rating
+                            ? 'border-primary-600 bg-primary-600 text-white'
+                            : 'border-gray-300 hover:border-primary-600'
+                          }`}
+                      >
+                        {rating}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-              {question.type === QuestionType.RATING_SCALE && (
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
+                {question.type === QuestionType.YES_NO && (
+                  <div className="flex gap-4">
                     <button
-                      key={rating}
                       type="button"
-                      onClick={() => handleAnswerChange(question.id, rating)}
-                      className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${
-                        answers[question.id] === rating
+                      onClick={() => handleAnswerChange(question.id, 'yes')}
+                      className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'yes'
                           ? 'border-primary-600 bg-primary-600 text-white'
                           : 'border-gray-300 hover:border-primary-600'
-                      }`}
+                        }`}
                     >
-                      {rating}
+                      Yes
                     </button>
-                  ))}
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => handleAnswerChange(question.id, 'no')}
+                      className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'no'
+                          ? 'border-primary-600 bg-primary-600 text-white'
+                          : 'border-gray-300 hover:border-primary-600'
+                        }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
 
-              {question.type === QuestionType.YES_NO && (
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => handleAnswerChange(question.id, 'yes')}
-                    className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${
-                      answers[question.id] === 'yes'
-                        ? 'border-primary-600 bg-primary-600 text-white'
-                        : 'border-gray-300 hover:border-primary-600'
-                    }`}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleAnswerChange(question.id, 'no')}
-                    className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${
-                      answers[question.id] === 'no'
-                        ? 'border-primary-600 bg-primary-600 text-white'
-                        : 'border-gray-300 hover:border-primary-600'
-                    }`}
-                  >
-                    No
-                  </button>
-                </div>
-              )}
+            <div className="card">
+              <button
+                type="submit"
+                disabled={submitMutation.isPending}
+                className="w-full btn btn-primary"
+              >
+                {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
+              </button>
             </div>
-          ))}
-
-          <div className="card">
-            <button
-              type="submit"
-              disabled={submitMutation.isPending}
-              className="w-full btn btn-primary"
-            >
-              {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
+    </SurveyProgressWrapper>
   );
 }

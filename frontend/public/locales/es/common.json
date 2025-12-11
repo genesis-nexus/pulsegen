@@ -1,0 +1,13 @@
+{
+    "app": {
+        "name": "PulseGen",
+        "tagline": "Plataforma de Encuestas Impulsada por IA"
+    },
+    "nav": {
+        "dashboard": "Tablero",
+        "surveys": "Encuestas",
+        "analytics": "Analítica",
+        "settings": "Ajustes",
+        "logout": "Cerrar sesión"
+    }
+}

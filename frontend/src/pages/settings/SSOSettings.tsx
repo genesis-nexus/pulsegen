@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Edit2, X, Eye, EyeOff, Power } from 'lucide-react';
+import { Plus, Trash2, X, Eye, EyeOff, Power } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 
@@ -142,7 +142,7 @@ export default function SSOSettings() {
         {providers && providers.length > 0 ? (
           <div className="space-y-4">
             {providers.map((provider) => {
-              const info = availableProviders?.find((p) => p.provider === provider.provider);
+
               return (
                 <div
                   key={provider.id}

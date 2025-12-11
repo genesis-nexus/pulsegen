@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database } from 'lucide-react';
+import { LayoutDashboard, FileText, LogOut, Settings, Sparkles, Lock, Mail, Palette, TrendingUp, Database, Users } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
@@ -99,6 +99,16 @@ export default function DashboardLayout() {
                         <Palette className="w-4 h-4 mr-2" />
                         Branding
                       </Link>
+                      {user?.role === 'ADMIN' && (
+                        <Link
+                          to="/admin/users"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowSettingsMenu(false)}
+                        >
+                          <Users className="w-4 h-4 mr-2" />
+                          User Management
+                        </Link>
+                      )}
                     </div>
                   </div>
                 )}
@@ -116,12 +126,12 @@ export default function DashboardLayout() {
             </div>
           </div>
         </div>
-      </nav>
+      </nav >
 
       {/* Main content */}
-      <main>
+      < main >
         <Outlet />
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }

@@ -31,6 +31,13 @@ export enum QuestionType {
   LIKERT_SCALE = 'LIKERT_SCALE',
 }
 
+export enum LogicType {
+  SKIP_LOGIC = 'SKIP_LOGIC',
+  BRANCHING = 'BRANCHING',
+  PIPING = 'PIPING',
+  DISPLAY_LOGIC = 'DISPLAY_LOGIC',
+}
+
 export interface User {
   id: string;
   email: string;
@@ -56,6 +63,14 @@ export interface Survey {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+
+  // Settings
+  baseLanguage?: string;
+  showProgressBar?: boolean;
+  progressBarPosition?: 'top' | 'bottom' | 'both';
+  progressBarStyle?: 'bar' | 'steps' | 'minimal' | 'combined';
+  progressBarFormat?: 'percentage' | 'count' | 'both';
+
   questions: Question[];
   theme?: SurveyTheme;
   _count?: {
@@ -76,6 +91,28 @@ export interface Question {
   settings?: Record<string, any>;
   validation?: Record<string, any>;
   options: QuestionOption[];
+  logic?: SurveyLogic[];
+}
+
+export interface SurveyLogic {
+  id: string;
+  surveyId: string;
+  sourceQuestionId: string;
+  targetQuestionId?: string;
+  type: LogicType;
+  conditions: LogicCondition[];
+  actions: LogicAction[];
+}
+
+export interface LogicCondition {
+  operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
+  value: string | number | boolean;
+  field?: string; // For complex types
+}
+
+export interface LogicAction {
+  type: 'skip_to' | 'end_survey' | 'hide_question' | 'show_question';
+  targetId?: string;
 }
 
 export interface QuestionOption {

@@ -1,6 +1,6 @@
 import { prisma } from '../config/database';
 import { AppError } from '../middleware/errorHandler';
-import { SurveyStatus, QuestionType } from '@prisma/client';
+import { SurveyStatus, QuestionType, SurveyVisibility } from '@prisma/client';
 
 interface CreateSurveyData {
   title: string;
@@ -25,6 +25,12 @@ interface CreateQuestionData {
   settings?: any;
   validation?: any;
   options?: Array<{ text: string; value: string; imageUrl?: string }>;
+  logic?: Array<{
+    type: any; // Using any for enum simplicity here, or import LogicType
+    targetQuestionId?: string;
+    conditions: any;
+    actions: any;
+  }>;
 }
 
 export class SurveyService {
@@ -40,7 +46,7 @@ export class SurveyService {
         createdBy: userId,
         workspaceId: data.workspaceId,
         isAnonymous: data.isAnonymous ?? false,
-        isPublic: data.isPublic ?? true,
+        visibility: data.isPublic ? SurveyVisibility.PUBLIC : SurveyVisibility.PRIVATE,
         allowMultiple: data.allowMultiple ?? false,
         responseLimit: data.responseLimit,
         closeDate: data.closeDate ? new Date(data.closeDate) : null,
@@ -120,6 +126,7 @@ export class SurveyService {
             options: {
               orderBy: { order: 'asc' },
             },
+            logic: true,
           },
           orderBy: { order: 'asc' },
         },
@@ -154,7 +161,7 @@ export class SurveyService {
     }
 
     // Check access
-    if (userId && survey.createdBy !== userId && !survey.isPublic) {
+    if (userId && survey.createdBy !== userId && survey.visibility !== SurveyVisibility.PUBLIC) {
       throw new AppError(403, 'Access denied');
     }
 
@@ -163,7 +170,7 @@ export class SurveyService {
 
   static async update(surveyId: string, userId: string, data: Partial<CreateSurveyData>) {
     // Check ownership
-    const survey = await this.checkOwnership(surveyId, userId);
+    await this.checkOwnership(surveyId, userId);
 
     const updated = await prisma.survey.update({
       where: { id: surveyId },
@@ -171,7 +178,7 @@ export class SurveyService {
         title: data.title,
         description: data.description,
         isAnonymous: data.isAnonymous,
-        isPublic: data.isPublic,
+        visibility: data.isPublic === undefined ? undefined : (data.isPublic ? SurveyVisibility.PUBLIC : SurveyVisibility.PRIVATE),
         allowMultiple: data.allowMultiple,
         responseLimit: data.responseLimit,
         closeDate: data.closeDate ? new Date(data.closeDate) : undefined,
@@ -212,7 +219,7 @@ export class SurveyService {
         slug,
         createdBy: userId,
         isAnonymous: original.isAnonymous,
-        isPublic: original.isPublic,
+        visibility: original.visibility,
         allowMultiple: original.allowMultiple,
         welcomeText: original.welcomeText,
         thankYouText: original.thankYouText,
@@ -327,6 +334,20 @@ export class SurveyService {
       });
     }
 
+    // Add logic if provided
+    if (data.logic && data.logic.length > 0) {
+      await prisma.surveyLogic.createMany({
+        data: data.logic.map((l) => ({
+          surveyId,
+          sourceQuestionId: question.id,
+          targetQuestionId: l.targetQuestionId,
+          type: l.type,
+          conditions: l.conditions,
+          actions: l.actions,
+        })),
+      });
+    }
+
     return this.getQuestion(question.id);
   }
 
@@ -344,7 +365,7 @@ export class SurveyService {
       throw new AppError(403, 'Access denied');
     }
 
-    const updated = await prisma.question.update({
+    await prisma.question.update({
       where: { id: questionId },
       data: {
         type: data.type,
@@ -374,6 +395,29 @@ export class SurveyService {
           order: index,
         })),
       });
+    }
+
+    // Update logic if provided
+    if (data.logic) {
+      // Delete existing logic
+      await prisma.surveyLogic.deleteMany({
+        where: { sourceQuestionId: questionId },
+      });
+
+      // Create new logic
+      // Note: We need to map the logic type string to enum if coming from JSON, but validator checks usage
+      if (data.logic.length > 0) {
+        await prisma.surveyLogic.createMany({
+          data: data.logic.map((l) => ({
+            surveyId: question.survey.id,
+            sourceQuestionId: questionId,
+            targetQuestionId: l.targetQuestionId,
+            type: l.type,
+            conditions: l.conditions,
+            actions: l.actions,
+          })),
+        });
+      }
     }
 
     return this.getQuestion(questionId);
@@ -419,6 +463,7 @@ export class SurveyService {
         options: {
           orderBy: { order: 'asc' },
         },
+        logic: true,
       },
     });
   }
