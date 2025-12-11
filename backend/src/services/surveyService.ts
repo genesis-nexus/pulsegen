@@ -7,12 +7,13 @@ interface CreateSurveyData {
   description?: string;
   workspaceId?: string;
   isAnonymous?: boolean;
-  isPublic?: boolean;
+  visibility?: 'PUBLIC' | 'PRIVATE' | 'PASSWORD_PROTECTED';
   allowMultiple?: boolean;
   responseLimit?: number;
   closeDate?: string;
   welcomeText?: string;
   thankYouText?: string;
+  status?: SurveyStatus;
 }
 
 interface CreateQuestionData {
@@ -46,12 +47,13 @@ export class SurveyService {
         createdBy: userId,
         workspaceId: data.workspaceId,
         isAnonymous: data.isAnonymous ?? false,
-        visibility: data.isPublic ? SurveyVisibility.PUBLIC : SurveyVisibility.PRIVATE,
+        visibility: data.visibility ?? 'PUBLIC',
         allowMultiple: data.allowMultiple ?? false,
         responseLimit: data.responseLimit,
         closeDate: data.closeDate ? new Date(data.closeDate) : null,
         welcomeText: data.welcomeText,
         thankYouText: data.thankYouText,
+        status: data.status ?? 'DRAFT',
       },
       include: {
         creator: {
@@ -118,8 +120,16 @@ export class SurveyService {
   }
 
   static async findById(surveyId: string, userId?: string) {
-    const survey = await prisma.survey.findUnique({
-      where: { id: surveyId },
+    // Check if the parameter is a slug or an ID
+    // CUIDs are 25 character alphanumeric strings starting with 'c' (e.g., cmi778pbl000712fd1bxze4gf)
+    // UUIDs match pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+    // Slugs are human-readable with hyphens (e.g., my-survey-slug)
+    const isCuid = /^c[a-z0-9]{24}$/.test(surveyId);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(surveyId);
+    const isId = isCuid || isUuid;
+
+    const survey = await prisma.survey.findFirst({
+      where: isId ? { id: surveyId } : { slug: surveyId },
       include: {
         questions: {
           include: {
@@ -178,7 +188,7 @@ export class SurveyService {
         title: data.title,
         description: data.description,
         isAnonymous: data.isAnonymous,
-        visibility: data.isPublic === undefined ? undefined : (data.isPublic ? SurveyVisibility.PUBLIC : SurveyVisibility.PRIVATE),
+        visibility: data.visibility,
         allowMultiple: data.allowMultiple,
         responseLimit: data.responseLimit,
         closeDate: data.closeDate ? new Date(data.closeDate) : undefined,
@@ -327,7 +337,7 @@ export class SurveyService {
         data: data.options.map((opt, index) => ({
           questionId: question.id,
           text: opt.text,
-          value: opt.value,
+          value: opt.value || opt.text, // Use text as value if value is not provided
           imageUrl: opt.imageUrl,
           order: index,
         })),
@@ -390,7 +400,7 @@ export class SurveyService {
         data: data.options.map((opt, index) => ({
           questionId,
           text: opt.text,
-          value: opt.value,
+          value: opt.value || opt.text, // Use text as value if value is not provided
           imageUrl: opt.imageUrl,
           order: index,
         })),
@@ -469,8 +479,15 @@ export class SurveyService {
   }
 
   private static async checkOwnership(surveyId: string, userId: string) {
-    const survey = await prisma.survey.findUnique({
-      where: { id: surveyId },
+    // Check if the parameter is a slug or an ID
+    // CUIDs are 25 character alphanumeric strings starting with 'c'
+    // UUIDs match pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+    const isCuid = /^c[a-z0-9]{24}$/.test(surveyId);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(surveyId);
+    const isId = isCuid || isUuid;
+
+    const survey = await prisma.survey.findFirst({
+      where: isId ? { id: surveyId } : { slug: surveyId },
     });
 
     if (!survey) {
@@ -492,6 +509,131 @@ export class SurveyService {
 
     const random = Math.random().toString(36).substring(2, 8);
     return `${base}-${random}`;
+  }
+
+  // Survey Logic methods
+  static async addLogic(surveyId: string, userId: string, data: any) {
+    await this.checkOwnership(surveyId, userId);
+
+    // Verify source question exists and belongs to survey
+    const sourceQuestion = await prisma.question.findFirst({
+      where: { id: data.sourceQuestionId, surveyId },
+    });
+
+    if (!sourceQuestion) {
+      throw new AppError(404, 'Source question not found');
+    }
+
+    // Verify target question exists if provided
+    if (data.targetQuestionId) {
+      const targetQuestion = await prisma.question.findFirst({
+        where: { id: data.targetQuestionId, surveyId },
+      });
+
+      if (!targetQuestion) {
+        throw new AppError(404, 'Target question not found');
+      }
+    }
+
+    const logic = await prisma.surveyLogic.create({
+      data: {
+        surveyId,
+        sourceQuestionId: data.sourceQuestionId,
+        targetQuestionId: data.targetQuestionId,
+        type: data.type,
+        conditions: data.conditions,
+        actions: data.actions,
+      },
+    });
+
+    return logic;
+  }
+
+  static async getLogicForSurvey(surveyId: string, userId?: string) {
+    // Check access if userId provided
+    if (userId) {
+      await this.checkOwnership(surveyId, userId);
+    }
+
+    const logicRules = await prisma.surveyLogic.findMany({
+      where: { surveyId },
+      include: {
+        sourceQuestion: {
+          select: {
+            id: true,
+            text: true,
+            type: true,
+          },
+        },
+        targetQuestion: {
+          select: {
+            id: true,
+            text: true,
+            type: true,
+          },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    return logicRules;
+  }
+
+  static async updateLogic(logicId: string, userId: string, data: any) {
+    const logic = await prisma.surveyLogic.findUnique({
+      where: { id: logicId },
+      include: { survey: true },
+    });
+
+    if (!logic) {
+      throw new AppError(404, 'Logic rule not found');
+    }
+
+    if (logic.survey.createdBy !== userId) {
+      throw new AppError(403, 'Access denied');
+    }
+
+    // Verify target question exists if being updated
+    if (data.targetQuestionId) {
+      const targetQuestion = await prisma.question.findFirst({
+        where: { id: data.targetQuestionId, surveyId: logic.surveyId },
+      });
+
+      if (!targetQuestion) {
+        throw new AppError(404, 'Target question not found');
+      }
+    }
+
+    const updated = await prisma.surveyLogic.update({
+      where: { id: logicId },
+      data: {
+        targetQuestionId: data.targetQuestionId,
+        type: data.type,
+        conditions: data.conditions,
+        actions: data.actions,
+      },
+    });
+
+    return updated;
+  }
+
+  static async deleteLogic(logicId: string, userId: string) {
+    const logic = await prisma.surveyLogic.findUnique({
+      where: { id: logicId },
+      include: { survey: true },
+    });
+
+    if (!logic) {
+      throw new AppError(404, 'Logic rule not found');
+    }
+
+    if (logic.survey.createdBy !== userId) {
+      throw new AppError(403, 'Access denied');
+    }
+
+    await prisma.surveyLogic.delete({
+      where: { id: logicId },
+    });
   }
 }
 

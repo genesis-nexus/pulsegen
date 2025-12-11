@@ -149,7 +149,11 @@ export class ResponseService {
       where: { id: surveyId },
     });
 
-    if (!survey || survey.createdBy !== userId) {
+    if (!survey) {
+      throw new AppError(404, 'Survey not found');
+    }
+
+    if (survey.createdBy !== userId) {
       throw new AppError(403, 'Access denied');
     }
 

@@ -5,13 +5,28 @@ import { Save, Eye, Split, Layout } from 'lucide-react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
-import { Survey, Question, QuestionType } from '../../types';
+import { Survey, Question, QuestionType, SurveyLogic } from '../../types';
 import Toolbox from '../../components/survey/workspace/Toolbox';
 import Canvas from '../../components/survey/workspace/Canvas';
 import PropertyInspector from '../../components/survey/workspace/PropertyInspector';
 import LogicEditor from '../../components/survey/workspace/LogicEditor';
+import {
+  QuestionOptimizer,
+  SuggestQuestions,
+  SurveyHealthCheck,
+} from '../../components/ai';
 
-
+// Question types that support options
+/*
+const OPTION_BASED_TYPES = [
+  QuestionType.MULTIPLE_CHOICE,
+  QuestionType.CHECKBOXES,
+  QuestionType.DROPDOWN,
+  QuestionType.RANKING,
+  QuestionType.MATRIX,
+  QuestionType.LIKERT_SCALE,
+];
+*/
 
 export default function SurveyBuilder() {
   const { id } = useParams();
@@ -26,8 +41,11 @@ export default function SurveyBuilder() {
   const [progressBarStyle, setProgressBarStyle] = useState('bar');
   const [progressBarFormat, setProgressBarFormat] = useState('percentage');
 
-  // Effect to sync local state when survey loads
-
+  // AI & Logic State
+  const [showQuestionOptimizer, setShowQuestionOptimizer] = useState(false);
+  const [showSuggestQuestions, setShowSuggestQuestions] = useState(false);
+  const [showHealthCheck, setShowHealthCheck] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
 
   interface SurveySettingsData {
     title: string;
@@ -51,6 +69,21 @@ export default function SurveyBuilder() {
       setProgressBarPosition(data.progressBarPosition || 'top');
       setProgressBarStyle(data.progressBarStyle || 'bar');
       setProgressBarFormat(data.progressBarFormat || 'percentage');
+
+      // Fetch logic rules
+      try {
+        const logicResponse = await api.get(`/surveys/${id}/logic`);
+        const logics = logicResponse.data.data as SurveyLogic[] || [];
+
+        if (data.questions) {
+          data.questions = data.questions.map(q => ({
+            ...q,
+            logic: logics.filter(l => l.sourceQuestionId === q.id)
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch logic rules:', error);
+      }
       return data;
     },
     enabled: !!id && id !== 'new',
@@ -82,12 +115,57 @@ export default function SurveyBuilder() {
   });
 
   const addQuestionMutation = useMutation({
-    mutationFn: (question: any) => api.post(`/surveys/${id}/questions`, question),
+    mutationFn: (question: Partial<Question>) => {
+      return api.post(`/surveys/${id}/questions`, question);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['survey', id] });
       toast.success('Question added');
     },
     onError: () => toast.error('Failed to add question'),
+  });
+
+  const updateQuestionMutation = useMutation({
+    mutationFn: ({ questionId, data }: { questionId: string; data: Partial<Question> }) => {
+      return api.patch(`/surveys/${id}/questions/${questionId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['survey', id] });
+      toast.success('Question updated');
+    },
+    onError: () => toast.error('Failed to update question'),
+  });
+
+  /*
+  const deleteQuestionMutation = useMutation({
+    mutationFn: (questionId: string) => api.delete(`/surveys/questions/${questionId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['survey', id] });
+      toast.success('Question deleted');
+    },
+    onError: () => toast.error('Failed to delete question'),
+  });
+
+  const deleteLogicMutation = useMutation({
+    mutationFn: (logicId: string) => api.delete(`/surveys/logic/${logicId}`),
+    onSuccess: (_, logicId) => {
+      setSurveyLogic(surveyLogic.filter((l) => l.id !== logicId));
+      toast.success('Logic rule deleted');
+    },
+    onError: () => toast.error('Failed to delete logic rule'),
+  });
+  */
+
+  const publishMutation = useMutation({
+    mutationFn: (status: string) => api.post(`/surveys/${id}/publish`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['survey', id] });
+      toast.success('Survey published successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to publish survey';
+      toast.error(message);
+    },
   });
 
   const handleSave = () => {
@@ -106,9 +184,34 @@ export default function SurveyBuilder() {
     }
   };
 
+
+
   const handleAddQuestion = (type: QuestionType) => {
+    // If survey hasn't been created yet, create it first
     if (!id || id === 'new') {
-      toast.error('Save the survey first');
+      if (!title.trim()) {
+        toast.error('Please enter a survey title first');
+        return;
+      }
+
+      // Create survey first, then add question
+      createMutation.mutate(
+        { title, description },
+        {
+          onSuccess: (response) => {
+            const newSurveyId = response.data.data.id;
+            // Add question to the newly created survey
+            api.post(`/surveys/${newSurveyId}/questions`, {
+              type: QuestionType.MULTIPLE_CHOICE,
+              text: 'New Question',
+              options: [
+                { text: 'Option 1', value: 'option1' },
+                { text: 'Option 2', value: 'option2' },
+              ],
+            });
+          },
+        }
+      );
       return;
     }
 
@@ -116,7 +219,7 @@ export default function SurveyBuilder() {
       type,
       text: 'New Question',
       options: (type === QuestionType.MULTIPLE_CHOICE || type === QuestionType.CHECKBOXES)
-        ? [{ text: 'Option 1', value: 'option1', order: 0 }]
+        ? [{ text: 'Option 1', value: 'option1', order: 0 } as any]
         : [],
     };
 
@@ -136,28 +239,7 @@ export default function SurveyBuilder() {
     setLocalQuestions(questions =>
       questions.map(q => q.id === selectedQuestionId ? { ...q, ...data } : q)
     );
-
-    // Debounce this in real app, simply calling mutation here for simplicity but guarding against rapid updates might be needed
-    // implementing a save trigger or effect would be better, but for now consistent with existing pattern:
-    // Actually, we'll implement a 'save' effect or just save on blur/change. 
-    // Given the request for IDE-like, local state + explicit save or auto-save is common.
-    // For this implementation, we will NOT auto-save to backend on every keystroke to avoid spamming the API,
-    // but the user can click 'Save' in the header.
-    // OR, we can update the backend on specific 'commits'.
-    // Let's stick to the previous pattern of explicit Save for survey settings, but individual questions were being saved on wizard close.
-
-    // Better approach for IDE: Auto-save questions when changing selection or periodically.
-    // For now, let's keep it simple: Changing properties updates LOCAL state. 
-    // We need a way to persist changes.
-    // Let's rely on the UpdateMutation for the survey which should include questions ideally, OR individual updates.
-    // The current backend API might not support bulk update of questions via survey update.
-    // We should probably add a "Save Changes" button in the inspector or auto-save.
   };
-
-
-  // Wait, let's double check route: surveyRoutes.ts
-  // router.put('/:surveyId/questions/:questionId', surveyController.updateQuestion);
-
 
   const saveSelectedQuestion = () => {
     if (!selectedQuestionId) return;
@@ -191,11 +273,27 @@ export default function SurveyBuilder() {
     items.splice(result.destination.index, 0, reorderedItem);
 
     setLocalQuestions(items);
+  };
 
-    // Ideally, we should also persist this new order to the backend
-    // Since backend might rely on 'order' field or simply array order in JSON
-    // If backend uses separate question records, we need to update their order fields.
-    // For now, updating local UI.
+  const handlePublish = () => {
+    if (!survey) return;
+
+    // Validate survey has questions
+    if (!survey.questions || survey.questions.length === 0) {
+      toast.error('Cannot publish survey without questions. Please add at least one question.');
+      return;
+    }
+
+    // Confirm publishing
+    if (confirm('Are you sure you want to publish this survey? It will become available to respondents.')) {
+      publishMutation.mutate('ACTIVE');
+    }
+  };
+
+  const handleUnpublish = () => {
+    if (confirm('Are you sure you want to unpublish this survey? It will no longer be available to respondents.')) {
+      publishMutation.mutate('DRAFT');
+    };
   };
 
   if (isLoading) {
@@ -251,6 +349,23 @@ export default function SurveyBuilder() {
             <Save className="w-4 h-4 mr-2" />
             Save Survey
           </button>
+
+          {survey?.status === 'ACTIVE' ? (
+            <button
+              onClick={handleUnpublish}
+              className="btn btn-warning btn-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-300"
+            >
+              Unpublish
+            </button>
+          ) : (
+            <button
+              onClick={handlePublish}
+              className="btn btn-success btn-sm bg-green-600 text-white hover:bg-green-700"
+            >
+              Publish
+            </button>
+          )}
+
           {survey && (
             <button
               onClick={() => window.open(`/s/${survey.slug}`, '_blank')}
@@ -325,6 +440,61 @@ export default function SurveyBuilder() {
           />
         )}
       </div>
-    </div>
+      {/* AI Modals */}
+      {
+        showQuestionOptimizer && selectedQuestion && (
+          <QuestionOptimizer
+            question={{
+              id: selectedQuestion.id,
+              text: selectedQuestion.text,
+              type: selectedQuestion.type,
+              options: selectedQuestion.options,
+            }}
+            onClose={() => {
+              setShowQuestionOptimizer(false);
+              setSelectedQuestion(null);
+            }}
+            onApply={(improvements) => {
+              if (selectedQuestion) {
+                updateQuestionMutation.mutate({
+                  questionId: selectedQuestion.id,
+                  data: improvements,
+                });
+              }
+              queryClient.invalidateQueries({ queryKey: ['survey', id] });
+            }}
+          />
+        )
+      }
+
+      {
+        showSuggestQuestions && survey && (
+          <SuggestQuestions
+            surveyId={survey.id}
+            surveyTitle={survey.title}
+            existingQuestions={survey.questions.map((q) => q.text)}
+            onClose={() => setShowSuggestQuestions(false)}
+            onAddQuestion={(question) => {
+              addQuestionMutation.mutate(question);
+            }}
+          />
+        )
+      }
+
+      {
+        showHealthCheck && survey && (
+          <SurveyHealthCheck
+            survey={{
+              id: survey.id,
+              title: survey.title,
+              description: survey.description,
+              questions: survey.questions,
+            }}
+            onClose={() => setShowHealthCheck(false)}
+          />
+        )
+      }
+
+    </div >
   );
 }

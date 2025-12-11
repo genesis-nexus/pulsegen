@@ -9,6 +9,11 @@ import {
   OptimizeQuestionRequest,
   SentimentAnalysisRequest,
   GenerateReportRequest,
+  GenerateSurveyIdeasRequest,
+  ImproveSurveyRequest,
+  GenerateAnalyticsSummaryRequest,
+  CrossSurveyAnalysisRequest,
+  ChatRequest,
 } from './base';
 import logger from '../../utils/logger';
 
@@ -19,7 +24,8 @@ export class GoogleProvider extends BaseAIProvider {
   constructor(config: AIProviderConfig) {
     super(config, 'Google');
     this.client = new GoogleGenerativeAI(config.apiKey);
-    this.defaultModel = config.modelName || 'gemini-pro';
+    // Use gemini-2.0-flash (latest free tier model) or gemini-1.5-pro for advanced tasks
+    this.defaultModel = config.modelName || 'gemini-2.0-flash';
   }
 
   async generateSurvey(request: GenerateSurveyRequest): Promise<AIResponse> {
@@ -211,6 +217,139 @@ Create a well-formatted markdown report with:
       };
     } catch (error: any) {
       logger.error('Google generateReport error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async generateSurveyIdeas(request: GenerateSurveyIdeasRequest): Promise<AIResponse> {
+    try {
+      const model = this.client.getGenerativeModel({ model: this.defaultModel });
+
+      const prompt = `Generate ${request.count || 5} survey ideas for: "${request.topic}"
+${request.targetAudience ? `Target: ${request.targetAudience}` : ''}
+${request.purpose ? `Purpose: ${request.purpose}` : ''}
+
+Return ONLY valid JSON with survey ideas including title, description, key areas, and expected insights.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+
+      const data = this.extractJSON(text);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+      };
+    } catch (error: any) {
+      logger.error('Google generateSurveyIdeas error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async improveSurvey(request: ImproveSurveyRequest): Promise<AIResponse> {
+    try {
+      const model = this.client.getGenerativeModel({ model: this.defaultModel });
+
+      const prompt = `Analyze and improve this survey: ${JSON.stringify(request.survey)}
+Provide assessment, improvements, and suggestions. Return ONLY valid JSON.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+
+      const data = this.extractJSON(text);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+      };
+    } catch (error: any) {
+      logger.error('Google improveSurvey error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async generateAnalyticsSummary(request: GenerateAnalyticsSummaryRequest): Promise<AIResponse> {
+    try {
+      const model = this.client.getGenerativeModel({ model: this.defaultModel });
+
+      const prompt = `Generate analytics summary for "${request.surveyTitle}": ${JSON.stringify(request.analytics)}
+Include executive summary, key metrics, highlights, and action items. Return ONLY valid JSON.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+
+      const data = this.extractJSON(text);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+      };
+    } catch (error: any) {
+      logger.error('Google generateAnalyticsSummary error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async crossSurveyAnalysis(request: CrossSurveyAnalysisRequest): Promise<AIResponse> {
+    try {
+      const model = this.client.getGenerativeModel({ model: this.defaultModel });
+
+      const prompt = `Analyze patterns across ${request.surveys.length} surveys: ${JSON.stringify(request.surveys)}
+${request.analysisGoal || 'Find common themes, trends, and correlations'}
+Return ONLY valid JSON with overview, themes, trends, correlations, and recommendations.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+
+      const data = this.extractJSON(text);
+      return {
+        success: true,
+        data,
+        provider: this.providerName,
+      };
+    } catch (error: any) {
+      logger.error('Google crossSurveyAnalysis error:', error);
+      return this.formatError(error);
+    }
+  }
+
+  async chat(request: ChatRequest): Promise<AIResponse<string>> {
+    try {
+      const model = this.client.getGenerativeModel({ model: this.defaultModel });
+
+      const systemPrompt = request.systemPrompt ||
+        `You are a helpful AI assistant for PulseGen, a survey platform. Help users with surveys, data analysis, and general questions.`;
+
+      // Build conversation history for Gemini
+      const history = request.messages.slice(0, -1).map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+      }));
+
+      const chat = model.startChat({
+        history: history as any,
+        generationConfig: {
+          temperature: 0.7,
+        },
+      });
+
+      // Get the last message (current user message)
+      const lastMessage = request.messages[request.messages.length - 1];
+      const prompt = history.length === 0 && systemPrompt
+        ? `${systemPrompt}\n\n${lastMessage.content}`
+        : lastMessage.content;
+
+      const result = await chat.sendMessage(prompt);
+      const text = result.response.text();
+
+      return {
+        success: true,
+        data: text,
+        provider: this.providerName,
+        model: this.defaultModel,
+      };
+    } catch (error: any) {
+      logger.error('Google chat error:', error);
       return this.formatError(error);
     }
   }

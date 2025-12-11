@@ -141,65 +141,62 @@ export default function SSOSettings() {
 
         {providers && providers.length > 0 ? (
           <div className="space-y-4">
-            {providers.map((provider) => {
-
-              return (
-                <div
-                  key={provider.id}
-                  className="border border-gray-200 rounded-lg p-4 flex items-center justify-between"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{provider.name}</h3>
-                      {provider.isDefault && (
-                        <span className="px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full">
-                          Default
-                        </span>
-                      )}
-                      {provider.isEnabled ? (
-                        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                          Enabled
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
-                          Disabled
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">Client ID: {provider.clientId}</p>
-                    {provider.callbackUrl && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Callback: {provider.callbackUrl}
-                      </p>
+            {providers.map((provider) => (
+              <div
+                key={provider.id}
+                className="border border-gray-200 rounded-lg p-4 flex items-center justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{provider.name}</h3>
+                    {provider.isDefault && (
+                      <span className="px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full">
+                        Default
+                      </span>
+                    )}
+                    {provider.isEnabled ? (
+                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                        Enabled
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
+                        Disabled
+                      </span>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        toggleMutation.mutate({
-                          provider: provider.provider,
-                          isEnabled: !provider.isEnabled,
-                        })
-                      }
-                      className="btn btn-secondary text-sm inline-flex items-center"
-                    >
-                      <Power className="w-4 h-4 mr-1" />
-                      {provider.isEnabled ? 'Disable' : 'Enable'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this provider?')) {
-                          deleteMutation.mutate(provider.provider);
-                        }
-                      }}
-                      className="btn btn-danger text-sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Client ID: {provider.clientId}</p>
+                  {provider.callbackUrl && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Callback: {provider.callbackUrl}
+                    </p>
+                  )}
                 </div>
-              );
-            })}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() =>
+                      toggleMutation.mutate({
+                        provider: provider.provider,
+                        isEnabled: !provider.isEnabled,
+                      })
+                    }
+                    className="btn btn-secondary text-sm inline-flex items-center"
+                  >
+                    <Power className="w-4 h-4 mr-1" />
+                    {provider.isEnabled ? 'Disable' : 'Enable'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this provider?')) {
+                        deleteMutation.mutate(provider.provider);
+                      }
+                    }}
+                    className="btn btn-danger text-sm"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-8 text-gray-600">

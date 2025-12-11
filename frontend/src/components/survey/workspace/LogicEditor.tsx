@@ -1,4 +1,4 @@
-import { Question, QuestionType, SurveyLogic, LogicType, LogicCondition, LogicAction } from '../../../types';
+import { Question, QuestionType, SurveyLogic, LogicType, LogicCondition, LogicAction, ConditionOperator, LogicActionData } from '../../../types';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface LogicEditorProps {
@@ -23,10 +23,10 @@ export default function LogicEditor({
         const newRule: SurveyLogic = {
             id: crypto.randomUUID(),
             surveyId: selectedQuestion!.surveyId,
-            sourceQuestionId: selectedQuestionId,
+            sourceQuestionId: selectedQuestionId, // Use sourceQuestionId
             type: LogicType.SKIP_LOGIC,
-            conditions: [{ operator: 'equals', value: '' }],
-            actions: [{ type: 'skip_to', targetId: '' }]
+            conditions: [{ questionId: selectedQuestionId, operator: ConditionOperator.EQUALS, value: '' }],
+            actions: { action: LogicAction.SKIP_TO_QUESTION, targetQuestionId: '' }
         };
         onUpdateLogic(selectedQuestionId, [...currentLogic, newRule]);
     };
@@ -53,13 +53,12 @@ export default function LogicEditor({
         handleUpdateRule(ruleId, { conditions: newConditions });
     };
 
-    const updateAction = (ruleId: string, index: number, field: keyof LogicAction, value: any) => {
+    const updateAction = (ruleId: string, field: keyof LogicActionData, value: any) => {
         if (!selectedQuestionId) return;
         const rule = selectedQuestion?.logic?.find(r => r.id === ruleId);
         if (!rule) return;
 
-        const newActions = [...rule.actions];
-        newActions[index] = { ...newActions[index], [field]: value };
+        const newActions = { ...rule.actions, [field]: value };
         handleUpdateRule(ruleId, { actions: newActions });
     };
 
@@ -160,27 +159,30 @@ export default function LogicEditor({
                                         </div>
 
                                         {/* THEN Action */}
-                                        <div className="flex items-center space-x-3">
-                                            <span className="text-sm font-semibold text-gray-700 w-12">THEN</span>
-
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-sm font-medium text-gray-700">Then</span>
                                             <select
-                                                className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                                value={rule.actions[0]?.type}
-                                                onChange={(e) => updateAction(rule.id, 0, 'type', e.target.value)}
+                                                className="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                                                value={rule.actions.action}
+                                                onChange={(e) => updateAction(rule.id, 'action', e.target.value)}
                                             >
-                                                <option value="skip_to">Jump to</option>
-                                                <option value="end_survey">End Survey</option>
+                                                <option value={LogicAction.SKIP_TO_QUESTION}>Skip to...</option>
+                                                <option value={LogicAction.SKIP_TO_END}>End Survey</option>
+                                                <option value={LogicAction.SHOW_QUESTION}>Show Question</option>
+                                                <option value={LogicAction.HIDE_QUESTION}>Hide Question</option>
                                             </select>
 
-                                            {rule.actions[0]?.type === 'skip_to' && (
+                                            {rule.actions.action !== LogicAction.SKIP_TO_END && (
                                                 <select
-                                                    className="block flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                                    value={rule.actions[0]?.targetId || ''}
-                                                    onChange={(e) => updateAction(rule.id, 0, 'targetId', e.target.value)}
+                                                    className="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                                                    value={rule.actions.targetQuestionId || ''}
+                                                    onChange={(e) => updateAction(rule.id, 'targetQuestionId', e.target.value)}
                                                 >
                                                     <option value="">Select question...</option>
-                                                    {getAvailableTargets(selectedQuestion.id).map(q => (
-                                                        <option key={q.id} value={q.id}>{q.text}</option>
+                                                    {getAvailableTargets(selectedQuestion!.id).map(q => (
+                                                        <option key={q.id} value={q.id}>
+                                                            {q.text.length > 20 ? q.text.substring(0, 20) + '...' : q.text}
+                                                        </option>
                                                     ))}
                                                 </select>
                                             )}

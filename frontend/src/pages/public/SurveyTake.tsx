@@ -11,12 +11,13 @@ export default function SurveyTake() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const { data: survey, isLoading } = useQuery({
+  const { data: survey, isLoading, error } = useQuery({
     queryKey: ['public-survey', slug],
     queryFn: async () => {
       const response = await api.get(`/surveys/${slug}`);
       return response.data.data as Survey;
     },
+    retry: false, // Don't retry on error
   });
 
   const submitMutation = useMutation({
@@ -78,6 +79,21 @@ export default function SurveyTake() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading survey...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    const errorMessage = (error as any)?.response?.data?.message || (error as Error).message || 'Unknown error';
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Survey not found</h1>
+          <p className="text-gray-600 mb-4">This survey may have been removed or is no longer available.</p>
+          <p className="text-sm text-gray-500 bg-gray-100 p-3 rounded">
+            Error: {errorMessage}
+          </p>
         </div>
       </div>
     );
@@ -243,8 +259,8 @@ export default function SurveyTake() {
                         type="button"
                         onClick={() => handleAnswerChange(question.id, rating)}
                         className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === rating
-                            ? 'border-primary-600 bg-primary-600 text-white'
-                            : 'border-gray-300 hover:border-primary-600'
+                          ? 'border-primary-600 bg-primary-600 text-white'
+                          : 'border-gray-300 hover:border-primary-600'
                           }`}
                       >
                         {rating}
@@ -259,8 +275,8 @@ export default function SurveyTake() {
                       type="button"
                       onClick={() => handleAnswerChange(question.id, 'yes')}
                       className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'yes'
-                          ? 'border-primary-600 bg-primary-600 text-white'
-                          : 'border-gray-300 hover:border-primary-600'
+                        ? 'border-primary-600 bg-primary-600 text-white'
+                        : 'border-gray-300 hover:border-primary-600'
                         }`}
                     >
                       Yes
@@ -269,17 +285,165 @@ export default function SurveyTake() {
                       type="button"
                       onClick={() => handleAnswerChange(question.id, 'no')}
                       className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'no'
-                          ? 'border-primary-600 bg-primary-600 text-white'
-                          : 'border-gray-300 hover:border-primary-600'
+                        ? 'border-primary-600 bg-primary-600 text-white'
+                        : 'border-gray-300 hover:border-primary-600'
                         }`}
                     >
                       No
                     </button>
                   </div>
                 )}
+                {question.type === QuestionType.DROPDOWN && (
+                  <select
+                    className="input"
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required={question.isRequired}
+                    value={answers[question.id] || ''}
+                  >
+                    <option value="">Select an option...</option>
+                    {question.options.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.text}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {question.type === QuestionType.TIME && (
+                  <input
+                    type="time"
+                    className="input"
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    required={question.isRequired}
+                  />
+                )}
+
+                {question.type === QuestionType.FILE_UPLOAD && (
+                  <input
+                    type="file"
+                    className="input"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleAnswerChange(question.id, file.name);
+                      }
+                    }}
+                    required={question.isRequired}
+                  />
+                )}
+
+                {question.type === QuestionType.SLIDER && (
+                  <div className="space-y-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={answers[question.id] || 50}
+                      onChange={(e) => handleAnswerChange(question.id, parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="text-center text-sm text-gray-600">
+                      Value: {answers[question.id] || 50}
+                    </div>
+                  </div>
+                )}
+
+                {question.type === QuestionType.NPS && (
+                  <div className="space-y-2">
+                    <div className="flex gap-1 justify-between">
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
+                        <button
+                          key={score}
+                          type="button"
+                          onClick={() => handleAnswerChange(question.id, score)}
+                          className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === score
+                            ? score <= 6
+                              ? 'border-red-600 bg-red-600 text-white'
+                              : score <= 8
+                                ? 'border-yellow-600 bg-yellow-600 text-white'
+                                : 'border-green-600 bg-green-600 text-white'
+                            : 'border-gray-300 hover:border-primary-600'
+                            }`}
+                        >
+                          {score}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Not likely</span>
+                      <span>Extremely likely</span>
+                    </div>
+                  </div>
+                )}
+
+                {question.type === QuestionType.LIKERT_SCALE && (
+                  <div className="space-y-2">
+                    {question.options.map((option) => (
+                      <label key={option.id} className="flex items-center">
+                        <input
+                          type="radio"
+                          name={question.id}
+                          value={option.id}
+                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                          className="mr-2"
+                        />
+                        <span>{option.text}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {question.type === QuestionType.RANKING && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 mb-2">Drag to reorder or select in order of preference</p>
+                    {question.options.map((option, idx) => (
+                      <div key={option.id} className="flex items-center gap-2">
+                        <span className="text-gray-500 font-medium w-6">{idx + 1}.</span>
+                        <div className="flex-1 p-3 border-2 border-gray-300 rounded-lg bg-white cursor-move hover:border-primary-600">
+                          {option.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {question.type === QuestionType.MATRIX && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="border border-gray-300 p-2 bg-gray-50"></th>
+                          {question.options.slice(0, 5).map((option) => (
+                            <th key={option.id} className="border border-gray-300 p-2 bg-gray-50 text-sm">
+                              {option.text}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {question.options.slice(0, 5).map((rowOption) => (
+                          <tr key={rowOption.id}>
+                            <td className="border border-gray-300 p-2 font-medium text-sm">
+                              {rowOption.text}
+                            </td>
+                            {question.options.slice(0, 5).map((colOption) => (
+                              <td key={colOption.id} className="border border-gray-300 p-2 text-center">
+                                <input
+                                  type="radio"
+                                  name={`${question.id}_${rowOption.id}`}
+                                  onChange={() => handleAnswerChange(`${question.id}_${rowOption.id}`, colOption.id)}
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             ))}
-
             <div className="card">
               <button
                 type="submit"

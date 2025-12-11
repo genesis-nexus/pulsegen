@@ -6,9 +6,9 @@ import { registerSchema, loginSchema } from '../utils/validators';
 export class AuthController {
   static async register(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const data = registerSchema.parse(req.body);
+      const validatedData = registerSchema.parse(req.body);
       const result = await AuthService.register(
-        data,
+        validatedData as { email: string; password: string; firstName?: string; lastName?: string },
         req.headers['user-agent'],
         req.ip
       );
@@ -24,9 +24,9 @@ export class AuthController {
 
   static async login(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const data = loginSchema.parse(req.body);
+      const validatedData = loginSchema.parse(req.body);
       const result = await AuthService.login(
-        data,
+        validatedData as { email: string; password: string },
         req.headers['user-agent'],
         req.ip
       );

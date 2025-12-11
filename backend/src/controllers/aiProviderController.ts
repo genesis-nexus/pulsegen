@@ -5,10 +5,10 @@ import { z } from 'zod';
 import { AIProvider } from '@prisma/client';
 
 const addProviderSchema = z.object({
-  provider: z.enum(['OPENAI', 'ANTHROPIC', 'GOOGLE', 'AZURE_OPENAI', 'COHERE', 'HUGGINGFACE', 'CUSTOM']),
+  provider: z.enum(['OPENAI', 'ANTHROPIC', 'GOOGLE', 'AZURE_OPENAI', 'COHERE', 'HUGGINGFACE', 'OPENROUTER', 'CUSTOM']),
   apiKey: z.string().min(1, 'API key is required'),
   modelName: z.string().optional(),
-  endpoint: z.string().url().optional(),
+  endpoint: z.union([z.string().url(), z.literal(''), z.undefined()]).optional(),
   isDefault: z.boolean().optional(),
   settings: z.record(z.any()).optional(),
 });
@@ -16,7 +16,7 @@ const addProviderSchema = z.object({
 const updateProviderSchema = z.object({
   apiKey: z.string().min(1).optional(),
   modelName: z.string().optional(),
-  endpoint: z.string().url().optional(),
+  endpoint: z.union([z.string().url(), z.literal(''), z.undefined()]).optional(),
   isDefault: z.boolean().optional(),
   isActive: z.boolean().optional(),
   settings: z.record(z.any()).optional(),
@@ -51,9 +51,15 @@ export class AIProviderController {
 
   static async addProvider(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const data = addProviderSchema.parse(req.body);
+      const validatedData = addProviderSchema.parse(req.body);
 
-      const provider = await AIProviderService.addProvider(req.user!.id, data);
+      // Convert empty string to undefined for endpoint
+      const cleanedData = {
+        ...validatedData,
+        endpoint: validatedData.endpoint === '' ? undefined : validatedData.endpoint,
+      };
+
+      const provider = await AIProviderService.addProvider(req.user!.id, cleanedData as any);
 
       res.status(201).json({
         success: true,

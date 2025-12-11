@@ -129,3 +129,32 @@ export const createExportSchema = z.object({
   format: z.enum(['CSV', 'EXCEL', 'PDF', 'JSON']),
   filters: z.record(z.any()).optional(),
 });
+
+// Survey Logic validators
+export const createLogicSchema = z.object({
+  sourceQuestionId: z.string(),
+  targetQuestionId: z.string().optional(),
+  type: z.nativeEnum(LogicType),
+  conditions: z.array(
+    z.object({
+      questionId: z.string(),
+      operator: z.enum([
+        'EQUALS',
+        'NOT_EQUALS',
+        'CONTAINS',
+        'NOT_CONTAINS',
+        'GREATER_THAN',
+        'LESS_THAN',
+        'IS_ANSWERED',
+        'IS_NOT_ANSWERED',
+      ]),
+      value: z.union([z.string(), z.number(), z.array(z.string())]).optional(),
+    })
+  ),
+  actions: z.object({
+    action: z.enum(['SKIP_TO_QUESTION', 'SKIP_TO_END', 'SHOW_QUESTION', 'HIDE_QUESTION']),
+    targetQuestionId: z.string().optional(),
+  }),
+});
+
+export const updateLogicSchema = createLogicSchema.partial();

@@ -63,6 +63,7 @@ enum AIProvider {
   AZURE_OPENAI
   COHERE
   HUGGINGFACE
+  OPENROUTER
   CUSTOM
 }
 
@@ -111,6 +112,8 @@ model User {
   createdTemplates  SurveyTemplate[]
   aiProviders       UserAIProvider[]
   mlModels          MLModel[]
+  aiUsageLogs       AIUsageLog[]
+  aiConversations   AIChatConversation[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -134,6 +137,115 @@ model UserAIProvider {
   @@unique([userId, provider])
   @@index([userId])
   @@index([isDefault])
+}
+
+// License Management
+enum LicenseTier {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  SUSPENDED
+}
+
+model License {
+  id                String        @id @default(cuid())
+  licenseKey        String        @unique // Full encrypted license key
+  customerId        String        // Customer identifier from license payload
+  email             String
+  companyName       String
+  tier              LicenseTier
+  status            LicenseStatus @default(ACTIVE)
+
+  // License validity
+  issuedAt          DateTime
+  expiresAt         DateTime
+  activatedAt       DateTime?     // When customer first activated the license
+  lastVerifiedAt    DateTime      @default(now()) // Last successful verification
+
+  // Limits (from license payload)
+  maxUsers          Int           @default(-1) // -1 means unlimited
+  maxSurveys        Int           @default(-1)
+  maxResponses      Int           @default(-1)
+
+  // Features (JSON array of feature flags)
+  features          Json          // ["sso", "white_label", "api_access", etc.]
+
+  // Instance binding (optional - ties license to specific installation)
+  instanceId        String?       @unique
+  instanceFingerprint String?     // Machine/server fingerprint
+
+  // Usage tracking
+  currentUsers      Int           @default(0)
+  currentSurveys    Int           @default(0)
+  currentResponses  Int           @default(0) // Monthly counter, resets each month
+  lastUsageUpdate   DateTime      @default(now())
+
+  // Grace period for offline operation
+  gracePeriodDays   Int           @default(30)
+  offlineSince      DateTime?     // When license verification last failed
+
+  // Metadata
+  notes             String?       // Internal notes
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  verificationLogs  LicenseVerificationLog[]
+
+  @@index([licenseKey])
+  @@index([email])
+  @@index([customerId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// License verification audit log
+model LicenseVerificationLog {
+  id            String    @id @default(cuid())
+  licenseId     String
+  success       Boolean
+  errorMessage  String?
+  verifiedAt    DateTime  @default(now())
+  ipAddress     String?
+  userAgent     String?
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@index([licenseId])
+  @@index([verifiedAt])
+}
+
+// Platform configuration (for license enforcement, analytics, etc.)
+model PlatformConfig {
+  id                      String   @id @default(cuid())
+
+  // License enforcement
+  licenseEnforced         Boolean  @default(false)  // Toggle license requirement
+  licenseGracePeriod      Boolean  @default(true)   // Allow grace period
+
+  // Analytics
+  analyticsEnabled        Boolean  @default(false)
+  googleAnalyticsId       String?  // GA4 Measurement ID (e.g., G-XXXXXXXXXX)
+
+  // Telemetry
+  telemetryEnabled        Boolean  @default(false)  // Anonymous usage stats
+
+  // Instance info
+  instanceName            String?
+  instanceDescription     String?
+  adminEmail              String?
+
+  // Metadata
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("platform_config")
 }
 
 model Session {
@@ -233,6 +345,7 @@ model Survey {
   pages         SurveyPage[]
   questions     Question[]
   responses     Response[]
+  logic         SurveyLogic[]
   theme         SurveyTheme?
   analytics     SurveyAnalytics?
   aiInsights    AiInsight[]
@@ -241,6 +354,8 @@ model Survey {
   mlModels      MLModel[]
   predictions   Prediction[]
   surveyLogics  SurveyLogic[]
+  featureOverrides MLFeatureSurveyOverride[]
+  sentimentScores SentimentScore[]
 
   @@index([createdBy])
   @@index([workspaceId])
@@ -353,6 +468,8 @@ model Response {
   survey      Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   answers     Answer[]
   predictions Prediction[]
+  qualityScores ResponseQualityScore[]
+  dropoutPredictions DropoutPrediction[]
 
   @@index([surveyId])
   @@index([completedAt])
@@ -374,6 +491,7 @@ model Answer {
   response Response        @relation(fields: [responseId], references: [id], onDelete: Cascade)
   question Question        @relation(fields: [questionId], references: [id])
   option   QuestionOption? @relation(fields: [optionId], references: [id])
+  sentimentScore SentimentScore?
 
   @@index([responseId])
   @@index([questionId])
@@ -569,6 +687,50 @@ enum ModelStatus {
   ARCHIVED
 }
 
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  INVITED
+}
+
+// Download Access Request (for pre-monetization audience building)
+model DownloadAccessRequest {
+  id                    String              @id @default(cuid())
+  email                 String
+  githubUsername        String              // To invite to private repo
+  fullName              String?
+
+  // Social media verification
+  youtubeSubscribed     Boolean             @default(false)
+  instagramFollowed     Boolean             @default(false)
+  proofScreenshotUrl    String?             // Optional: Screenshot proof
+
+  // Status
+  status                AccessRequestStatus @default(PENDING)
+  statusNote            String?             // Admin notes
+
+  // GitHub invitation
+  githubInviteSent      Boolean             @default(false)
+  githubInvitedAt       DateTime?
+  githubInviteAccepted  Boolean             @default(false)
+
+  // Metadata
+  ipAddress             String?
+  userAgent             String?
+  referralSource        String?             // Where they found PulseGen
+
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  reviewedAt            DateTime?
+  reviewedBy            String?             // Admin user ID who reviewed
+
+  @@index([email])
+  @@index([githubUsername])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model AIToolConfig {
   id          String      @id @default(cuid())
   type        AIToolType
@@ -585,6 +747,7 @@ model AIToolConfig {
   updatedAt   DateTime    @updatedAt
 
   models      MLModel[]
+  featureConfigs MLFeatureConfig[]
 
   @@unique([type, name])
   @@index([isEnabled])
@@ -642,6 +805,7 @@ model Prediction {
   @@index([createdAt])
 }
 
+<<<<<<< HEAD
 // Translations
 model SurveyTranslation {
   id          String   @id @default(cuid())
@@ -685,4 +849,269 @@ model QuestionOptionTranslation {
 
   @@unique([optionId, language])
   @@index([optionId])
+=======
+// =============================================================================
+// AI USAGE TRACKING
+// =============================================================================
+
+// AI Usage Tracking
+enum AIFeatureType {
+  SURVEY_GENERATE
+  QUESTION_SUGGEST
+  QUESTION_OPTIMIZE
+  RESPONSE_ANALYZE
+  SENTIMENT_ANALYZE
+  REPORT_GENERATE
+  SURVEY_IMPROVE
+  ANALYTICS_SUMMARY
+  CHAT
+  OTHER
+}
+
+model AIUsageLog {
+  id            String        @id @default(cuid())
+  userId        String
+  provider      AIProvider
+  model         String?       // Specific model used (e.g., gpt-4, claude-3, gemini-pro)
+  feature       AIFeatureType
+
+  // Token usage
+  inputTokens   Int           @default(0)
+  outputTokens  Int           @default(0)
+  totalTokens   Int           @default(0)
+
+  // Cost tracking (even for free models, track estimated cost)
+  estimatedCost Float         @default(0) // In USD
+  isFreeModel   Boolean       @default(false)
+
+  // Request details
+  requestSize   Int?          // Size of request in bytes
+  responseSize  Int?          // Size of response in bytes
+  latencyMs     Int?          // Response time in milliseconds
+
+  // Status
+  success       Boolean       @default(true)
+  errorMessage  String?
+
+  // Metadata
+  metadata      Json?         // Additional context (survey ID, etc.)
+  createdAt     DateTime      @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([provider])
+  @@index([feature])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+// AI Chat Messages
+model AIChatConversation {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String?   // Auto-generated or user-provided title
+  provider    AIProvider?
+  model       String?
+  isArchived  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    AIChatMessage[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model AIChatMessage {
+  id              String    @id @default(cuid())
+  conversationId  String
+  role            String    // 'user' or 'assistant'
+  content         String    @db.Text
+
+  // Token tracking for this message
+  tokensUsed      Int?
+
+  // Metadata
+  metadata        Json?     // Additional context
+  createdAt       DateTime  @default(now())
+
+  conversation    AIChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// ML FEATURE SYSTEM - Configurable ML-powered features
+// =============================================================================
+
+enum MLFeatureType {
+  RESPONSE_QUALITY
+  SENTIMENT_ANALYSIS
+  DROPOUT_PREDICTION
+}
+
+enum MLProviderType {
+  MINDSDB
+  TENSORFLOW_SERVING
+  CUSTOM_REST
+  LOCAL
+}
+
+// Configuration for an ML-powered feature
+model MLFeatureConfig {
+  id              String          @id @default(cuid())
+  featureType     MLFeatureType
+  name            String          // Display name
+  description     String?         @db.Text
+  isEnabled       Boolean         @default(false)
+  isGlobal        Boolean         @default(true) // Apply to all surveys if true
+
+  // Provider configuration
+  providerId      String?         // Reference to AIToolConfig if using external provider
+  providerType    MLProviderType  @default(MINDSDB)
+  modelName       String?         // Model name in provider
+
+  // Feature-specific settings stored as JSON
+  settings        Json            @default("{}")
+
+  // Thresholds and limits
+  confidenceThreshold Float?      @default(0.7)
+  batchSize       Int?            @default(100)
+  timeoutMs       Int?            @default(30000)
+
+  // Audit fields
+  createdBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  provider        AIToolConfig?   @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  surveyOverrides MLFeatureSurveyOverride[]
+  qualityScores   ResponseQualityScore[]
+  sentimentScores SentimentScore[]
+  dropoutPredictions DropoutPrediction[]
+
+  @@unique([featureType, name])
+  @@index([featureType])
+  @@index([isEnabled])
+  @@index([providerId])
+}
+
+// Per-survey overrides for ML features
+model MLFeatureSurveyOverride {
+  id              String          @id @default(cuid())
+  featureConfigId String
+  surveyId        String
+  isEnabled       Boolean         @default(true)
+  settings        Json?           // Override settings for this survey
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  featureConfig   MLFeatureConfig @relation(fields: [featureConfigId], references: [id], onDelete: Cascade)
+  survey          Survey          @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@unique([featureConfigId, surveyId])
+  @@index([surveyId])
+}
+
+// Response Quality Scores
+model ResponseQualityScore {
+  id              String          @id @default(cuid())
+  responseId      String
+  featureConfigId String
+
+  // Quality metrics
+  qualityScore    Float           // 0-100
+  recommendation  String          // ACCEPT, REVIEW, REJECT
+  confidence      Float?
+
+  // Individual flags
+  flags           Json            // Array of quality flags
+
+  // Processing metadata
+  processingTimeMs Int?
+  modelVersion    String?
+
+  createdAt       DateTime        @default(now())
+
+  response        Response        @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  featureConfig   MLFeatureConfig @relation(fields: [featureConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([responseId, featureConfigId])
+  @@index([responseId])
+  @@index([qualityScore])
+  @@index([recommendation])
+}
+
+// Sentiment Analysis Scores
+model SentimentScore {
+  id              String          @id @default(cuid())
+  featureConfigId String
+
+  // Source can be answer or general text
+  answerId        String?         @unique
+  surveyId        String?
+  sourceText      String?         @db.Text
+
+  // Sentiment results
+  sentiment       String          // positive, negative, neutral, mixed
+  score           Float           // -1 to 1
+  confidence      Float?
+  emotions        Json?           // { joy: 0.8, anger: 0.1, ... }
+  keywords        String[]        // Extracted keywords
+
+  // Processing metadata
+  processingTimeMs Int?
+  modelVersion    String?
+  language        String?
+
+  createdAt       DateTime        @default(now())
+
+  featureConfig   MLFeatureConfig @relation(fields: [featureConfigId], references: [id], onDelete: Cascade)
+  answer          Answer?         @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  survey          Survey?         @relation(fields: [surveyId], references: [id], onDelete: SetNull)
+
+  @@index([featureConfigId])
+  @@index([sentiment])
+  @@index([surveyId])
+}
+
+// Dropout Predictions (real-time during survey)
+model DropoutPrediction {
+  id              String          @id @default(cuid())
+  responseId      String
+  featureConfigId String
+
+  // Prediction at a specific point in the survey
+  currentPage     Int
+  questionsAnswered Int
+
+  // Prediction results
+  dropoutProbability Float        // 0-1
+  riskLevel       String          // low, medium, high, critical
+  confidence      Float?
+
+  // Contributing factors
+  factors         Json?           // Array of contributing factors
+
+  // Intervention taken (if any)
+  interventionType String?        // NONE, PROGRESS_BAR, ENCOURAGEMENT, etc.
+  interventionShown Boolean       @default(false)
+
+  // Processing metadata
+  processingTimeMs Int?
+  modelVersion    String?
+
+  createdAt       DateTime        @default(now())
+
+  response        Response        @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  featureConfig   MLFeatureConfig @relation(fields: [featureConfigId], references: [id], onDelete: Cascade)
+
+  @@index([responseId])
+  @@index([riskLevel])
+  @@index([featureConfigId])
+>>>>>>> origin/main
 }

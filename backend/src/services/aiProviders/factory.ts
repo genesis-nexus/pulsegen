@@ -3,6 +3,7 @@ import { BaseAIProvider, AIProviderConfig } from './base';
 import { AnthropicProvider } from './anthropic';
 import { OpenAIProvider } from './openai';
 import { GoogleProvider } from './google';
+import { OpenRouterProvider } from './openrouter';
 import logger from '../../utils/logger';
 
 export class AIProviderFactory {
@@ -27,6 +28,9 @@ export class AIProviderFactory {
           endpoint: config.endpoint || process.env.AZURE_OPENAI_ENDPOINT,
         });
 
+      case 'OPENROUTER':
+        return new OpenRouterProvider(config);
+
       case 'COHERE':
       case 'HUGGINGFACE':
       case 'CUSTOM':
@@ -38,7 +42,7 @@ export class AIProviderFactory {
   }
 
   static getSupportedProviders(): AIProvider[] {
-    return ['OPENAI', 'ANTHROPIC', 'GOOGLE', 'AZURE_OPENAI'];
+    return ['OPENAI', 'ANTHROPIC', 'GOOGLE', 'AZURE_OPENAI', 'OPENROUTER'];
   }
 
   static getProviderInfo(provider: AIProvider) {
@@ -66,6 +70,23 @@ export class AIProviderFactory {
         models: ['gpt-4', 'gpt-35-turbo'],
         defaultModel: 'gpt-4',
         requiresEndpoint: true,
+      },
+      OPENROUTER: {
+        name: 'OpenRouter',
+        models: [
+          'google/gemini-2.0-flash-exp:free',
+          'meta-llama/llama-3.2-3b-instruct:free',
+          'microsoft/phi-3-mini-128k-instruct:free',
+          'openchat/openchat-7b:free',
+          'gryphe/mythomist-7b:free',
+          'openai/gpt-4-turbo',
+          'anthropic/claude-3.5-sonnet',
+          'google/gemini-pro-1.5',
+        ],
+        defaultModel: 'google/gemini-2.0-flash-exp:free',
+        requiresEndpoint: true,
+        defaultEndpoint: 'https://openrouter.ai/api/v1',
+        description: 'Access multiple AI models through OpenRouter. Free tier available with models marked ":free"',
       },
       COHERE: {
         name: 'Cohere',

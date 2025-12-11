@@ -7,11 +7,11 @@ export class ResponseController {
   static async submit(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { surveyId } = req.params;
-      const data = submitResponseSchema.parse(req.body);
+      const validatedData = submitResponseSchema.parse(req.body);
 
       const response = await ResponseService.submit(
         surveyId,
-        data,
+        validatedData as any,
         req.ip,
         req.headers['user-agent']
       );
@@ -44,14 +44,22 @@ export class ResponseController {
       const { surveyId } = req.params;
       const { isComplete, startDate, endDate } = req.query;
 
+      // Build filters object only with defined values
+      const filters: any = {};
+      if (isComplete !== undefined) {
+        filters.isComplete = isComplete === 'true';
+      }
+      if (startDate) {
+        filters.startDate = startDate as string;
+      }
+      if (endDate) {
+        filters.endDate = endDate as string;
+      }
+
       const responses = await ResponseService.getBySurvey(
         surveyId,
         req.user!.id,
-        {
-          isComplete: isComplete === 'true',
-          startDate: startDate as string,
-          endDate: endDate as string,
-        }
+        Object.keys(filters).length > 0 ? filters : undefined
       );
 
       res.json({

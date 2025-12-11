@@ -31,12 +31,7 @@ export enum QuestionType {
   LIKERT_SCALE = 'LIKERT_SCALE',
 }
 
-export enum LogicType {
-  SKIP_LOGIC = 'SKIP_LOGIC',
-  BRANCHING = 'BRANCHING',
-  PIPING = 'PIPING',
-  DISPLAY_LOGIC = 'DISPLAY_LOGIC',
-}
+
 
 export interface User {
   id: string;
@@ -94,26 +89,7 @@ export interface Question {
   logic?: SurveyLogic[];
 }
 
-export interface SurveyLogic {
-  id: string;
-  surveyId: string;
-  sourceQuestionId: string;
-  targetQuestionId?: string;
-  type: LogicType;
-  conditions: LogicCondition[];
-  actions: LogicAction[];
-}
 
-export interface LogicCondition {
-  operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
-  value: string | number | boolean;
-  field?: string; // For complex types
-}
-
-export interface LogicAction {
-  type: 'skip_to' | 'end_survey' | 'hide_question' | 'show_question';
-  targetId?: string;
-}
 
 export interface QuestionOption {
   id: string;
@@ -189,4 +165,116 @@ export interface AIInsight {
   confidence?: number;
   metadata?: Record<string, any>;
   createdAt: string;
+}
+
+export enum LogicType {
+  SKIP_LOGIC = 'SKIP_LOGIC',
+  BRANCHING = 'BRANCHING',
+  PIPING = 'PIPING',
+  DISPLAY_LOGIC = 'DISPLAY_LOGIC',
+}
+
+export enum ConditionOperator {
+  EQUALS = 'EQUALS',
+  NOT_EQUALS = 'NOT_EQUALS',
+  CONTAINS = 'CONTAINS',
+  NOT_CONTAINS = 'NOT_CONTAINS',
+  GREATER_THAN = 'GREATER_THAN',
+  LESS_THAN = 'LESS_THAN',
+  IS_ANSWERED = 'IS_ANSWERED',
+  IS_NOT_ANSWERED = 'IS_NOT_ANSWERED',
+}
+
+export enum LogicAction {
+  SKIP_TO_QUESTION = 'SKIP_TO_QUESTION',
+  SKIP_TO_END = 'SKIP_TO_END',
+  SHOW_QUESTION = 'SHOW_QUESTION',
+  HIDE_QUESTION = 'HIDE_QUESTION',
+}
+
+export interface LogicCondition {
+  questionId: string;
+  operator: ConditionOperator;
+  value?: string | number | string[] | boolean;
+}
+
+export interface LogicActionData {
+  action: LogicAction;
+  targetQuestionId?: string;
+}
+
+export interface SurveyLogic {
+  id: string;
+  surveyId: string;
+  sourceQuestionId: string;
+  targetQuestionId?: string;
+  type: LogicType;
+  conditions: LogicCondition[];
+  actions: LogicActionData;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Automation Types
+export interface PersonaAttribute {
+  age: number;
+  gender: string;
+  occupation: string;
+  experience: string;
+  techSavviness: 'low' | 'medium' | 'high';
+  educationLevel: string;
+  location: string;
+}
+
+export interface IndustryPersona {
+  id: string;
+  industry: string;
+  name: string;
+  description: string;
+  targetAudience: string;
+  surveyTopics: string[];
+  questionTypes: string[];
+  typicalQuestions: string[];
+  attributes: PersonaAttribute[];
+  responsePatterns: {
+    completionRate: number;
+    averageTime: number;
+    dropoffPoints: number[];
+  };
+}
+
+export interface AutomationConfig {
+  personaId: string;
+  surveyTitle?: string;
+  questionCount?: number;
+  useAI?: boolean;
+  includeLogic?: boolean;
+  scenarioCount?: number;
+}
+
+export interface GeneratedSurvey {
+  surveyId: string;
+  slug: string;
+  title: string;
+  questionCount: number;
+  url: string;
+}
+
+export interface SimulatedResponse {
+  responseId: string;
+  scenario: PersonaAttribute;
+  completionTime: number;
+  completed: boolean;
+}
+
+export interface AutomationResult {
+  survey: GeneratedSurvey;
+  responses: SimulatedResponse[];
+  analytics: any;
+  summary: {
+    totalResponses: number;
+    completedResponses: number;
+    averageCompletionTime: number;
+    completionRate: number;
+  };
 }

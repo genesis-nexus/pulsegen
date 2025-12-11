@@ -21,4 +21,10 @@ router.put('/questions/:questionId', authenticate, SurveyController.updateQuesti
 router.delete('/questions/:questionId', authenticate, SurveyController.deleteQuestion as unknown as RequestHandler);
 router.post('/:id/questions/reorder', authenticate, SurveyController.reorderQuestions as unknown as RequestHandler);
 
+// Logic rules
+router.post('/:id/logic', authenticate, SurveyController.addLogic);
+router.get('/:id/logic', SurveyController.getLogic);
+router.put('/logic/:logicId', authenticate, SurveyController.updateLogic);
+router.delete('/logic/:logicId', authenticate, SurveyController.deleteLogic);
+
 export default router;
