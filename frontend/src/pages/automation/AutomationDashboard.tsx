@@ -104,7 +104,7 @@ export default function AutomationDashboard() {
                 <Building2 className="w-5 h-5 mr-2 text-primary-600" />
                 {industry}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {industryPersonas.map((persona) => (
                   <div
                     key={persona.id}

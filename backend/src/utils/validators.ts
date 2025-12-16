@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { QuestionType } from '@prisma/client';
+import { QuestionType, LogicType } from '@prisma/client';
 
 // Auth validators
 export const registerSchema = z.object({

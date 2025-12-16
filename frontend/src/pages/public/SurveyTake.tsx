@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -6,10 +6,48 @@ import api from '../../lib/api';
 import { Survey, QuestionType } from '../../types';
 import { SurveyProgressWrapper } from '../../components/survey/SurveyProgressWrapper';
 
+// localStorage utilities
+const STORAGE_KEY_PREFIX = 'survey_response_';
+
+const saveResponseToStorage = (slug: string, answers: Record<string, any>) => {
+  try {
+    const data = {
+      answers,
+      timestamp: new Date().toISOString(),
+    };
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${slug}`, JSON.stringify(data));
+  } catch (error) {
+    console.error('Failed to save to localStorage:', error);
+  }
+};
+
+const loadResponseFromStorage = (slug: string) => {
+  try {
+    const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}${slug}`);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Failed to load from localStorage:', error);
+  }
+  return null;
+};
+
+const clearResponseFromStorage = (slug: string) => {
+  try {
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}${slug}`);
+  } catch (error) {
+    console.error('Failed to clear localStorage:', error);
+  }
+};
+
 export default function SurveyTake() {
   const { slug } = useParams();
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { data: survey, isLoading, error } = useQuery({
     queryKey: ['public-survey', slug],
@@ -20,11 +58,46 @@ export default function SurveyTake() {
     retry: false, // Don't retry on error
   });
 
+  // Load saved responses on mount
+  useEffect(() => {
+    if (!slug) return;
+
+    const savedData = loadResponseFromStorage(slug);
+    if (savedData && savedData.answers) {
+      setAnswers(savedData.answers);
+      setLastSaved(new Date(savedData.timestamp));
+      toast.success('We restored your previous answers', {
+        icon: '💾',
+        duration: 4000,
+      });
+    }
+  }, [slug]);
+
+  // Debounced auto-save function
+  const debouncedSave = useCallback((answersToSave: Record<string, any>) => {
+    if (!slug) return;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    setIsSaving(true);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveResponseToStorage(slug, answersToSave);
+      setLastSaved(new Date());
+      setIsSaving(false);
+    }, 500); // 500ms debounce
+  }, [slug]);
+
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
       return api.post(`/responses/surveys/${survey?.id}/submit`, data);
     },
     onSuccess: () => {
+      // Clear localStorage on successful submission
+      if (slug) {
+        clearResponseFromStorage(slug);
+      }
       setSubmitted(true);
       toast.success('Thank you for your response!');
     },
@@ -34,7 +107,12 @@ export default function SurveyTake() {
   });
 
   const handleAnswerChange = (questionId: string, value: any) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+    setAnswers((prev) => {
+      const newAnswers = { ...prev, [questionId]: value };
+      // Auto-save to localStorage
+      debouncedSave(newAnswers);
+      return newAnswers;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -445,6 +523,26 @@ export default function SurveyTake() {
               </div>
             ))}
             <div className="card">
+              {/* Auto-save indicator */}
+              {lastSaved && (
+                <div className="mb-4 flex items-center justify-center text-sm text-gray-600">
+                  {isSaving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600 mr-2"></div>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span>
+                        Auto-saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={submitMutation.isPending}

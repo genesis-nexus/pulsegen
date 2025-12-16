@@ -353,7 +353,6 @@ model Survey {
   exports       Export[]
   mlModels      MLModel[]
   predictions   Prediction[]
-  surveyLogics  SurveyLogic[]
   featureOverrides MLFeatureSurveyOverride[]
   sentimentScores SentimentScore[]
 
@@ -805,7 +804,6 @@ model Prediction {
   @@index([createdAt])
 }
 
-<<<<<<< HEAD
 // Translations
 model SurveyTranslation {
   id          String   @id @default(cuid())
@@ -849,7 +847,8 @@ model QuestionOptionTranslation {
 
   @@unique([optionId, language])
   @@index([optionId])
-=======
+}
+
 // =============================================================================
 // AI USAGE TRACKING
 // =============================================================================
@@ -867,6 +866,7 @@ enum AIFeatureType {
   CHAT
   OTHER
 }
+
 
 model AIUsageLog {
   id            String        @id @default(cuid())
@@ -1113,5 +1113,4 @@ model DropoutPrediction {
   @@index([responseId])
   @@index([riskLevel])
   @@index([featureConfigId])
->>>>>>> origin/main
 }
