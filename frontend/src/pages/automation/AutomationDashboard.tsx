@@ -38,14 +38,7 @@ export default function AutomationDashboard() {
     navigate('/admin/automation/run', { state: { personaId } });
   };
 
-  // Group personas by industry
-  const personasByIndustry = personas.reduce((acc, persona) => {
-    if (!acc[persona.industry]) {
-      acc[persona.industry] = [];
-    }
-    acc[persona.industry].push(persona);
-    return acc;
-  }, {} as Record<string, IndustryPersona[]>);
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -97,75 +90,72 @@ export default function AutomationDashboard() {
 
       {/* Personas Grid */}
       {!isLoading && !error && (
-        <div className="space-y-8">
-          {Object.entries(personasByIndustry).map(([industry, industryPersonas]) => (
-            <div key={industry}>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <Building2 className="w-5 h-5 mr-2 text-primary-600" />
-                {industry}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {industryPersonas.map((persona) => (
-                  <div
-                    key={persona.id}
-                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
-                  >
-                    <div className="p-6">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        {persona.name}
-                      </h4>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                        {persona.description}
-                      </p>
 
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm text-gray-700">
-                          <Users className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{persona.targetAudience}</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-700">
-                          <FileText className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{persona.typicalQuestions.length} Questions</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-700">
-                          <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>~{Math.floor(persona.responsePatterns.averageTime / 60)} min avg</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-700">
-                          <TrendingUp className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{persona.responsePatterns.completionRate}% completion</span>
-                        </div>
-                      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
+          {personas.map((persona) => (
+            <div
+              key={persona.id}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 flex flex-col h-full"
+            >
+              <div className="p-6 flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {persona.industry}
+                  </span>
+                </div>
 
-                      <div className="mb-4">
-                        <p className="text-xs font-medium text-gray-500 mb-2">Topics:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {persona.surveyTopics.slice(0, 3).map((topic, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-1 bg-primary-50 text-primary-700 text-xs rounded-full"
-                            >
-                              {topic}
-                            </span>
-                          ))}
-                          {persona.surveyTopics.length > 3 && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                              +{persona.surveyTopics.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  {persona.name}
+                </h4>
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-grow">
+                  {persona.description}
+                </p>
 
-                      <button
-                        onClick={() => handleSelectPersona(persona.id)}
-                        className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors"
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        Run Automation
-                      </button>
-                    </div>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-700">
+                    <Users className="w-4 h-4 mr-2 text-gray-400" />
+                    <span>{persona.targetAudience}</span>
                   </div>
-                ))}
+                  <div className="flex items-center text-sm text-gray-700">
+                    <FileText className="w-4 h-4 mr-2 text-gray-400" />
+                    <span>{persona.typicalQuestions.length} Questions</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-700">
+                    <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                    <span>~{Math.floor(persona.responsePatterns.averageTime / 60)} min avg</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-700">
+                    <TrendingUp className="w-4 h-4 mr-2 text-gray-400" />
+                    <span>{persona.responsePatterns.completionRate}% completion</span>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-gray-500 mb-2">Topics:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {persona.surveyTopics.slice(0, 3).map((topic, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-1 bg-primary-50 text-primary-700 text-xs rounded-full"
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                    {persona.surveyTopics.length > 3 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                        +{persona.surveyTopics.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleSelectPersona(persona.id)}
+                  className="w-full mt-auto bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Run Automation
+                </button>
               </div>
             </div>
           ))}

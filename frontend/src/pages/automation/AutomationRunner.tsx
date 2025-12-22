@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { automationApi } from '../../lib/api';
 import type { IndustryPersona, AutomationConfig, AutomationResult } from '../../types';
 import {
@@ -17,6 +18,7 @@ import {
 export default function AutomationRunner() {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const personaIdFromState = (location.state as any)?.personaId;
 
   const [persona, setPersona] = useState<IndustryPersona | null>(null);
@@ -52,6 +54,25 @@ export default function AutomationRunner() {
     }
   };
 
+  // Keep track of timeouts to clear them if the process finishes early
+  // Keep track of timeouts to clear them if the process finishes early
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Use a ref to track mounted state to prevent state updates on unmount
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Clear timeouts helper
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  };
+
   const handleRunAutomation = async () => {
     if (!persona) return;
 
@@ -61,23 +82,42 @@ export default function AutomationRunner() {
       setResult(null);
       setProgress('Initializing automation...');
 
+      // Clear any existing timeouts just in case
+      clearAllTimeouts();
+
+      const newTimeouts: ReturnType<typeof setTimeout>[] = [];
+
       // Simulate progress updates
-      setTimeout(() => setProgress('Creating survey...'), 1000);
-      setTimeout(() => setProgress('Generating user scenarios...'), 3000);
-      setTimeout(() => setProgress('Simulating responses...'), 5000);
-      setTimeout(() => setProgress('Calculating analytics...'), 15000);
+      newTimeouts.push(setTimeout(() => setProgress('Creating survey...'), 1000));
+      newTimeouts.push(setTimeout(() => setProgress('Generating user scenarios...'), 3000));
+      newTimeouts.push(setTimeout(() => setProgress('Simulating responses...'), 5000));
+      newTimeouts.push(setTimeout(() => setProgress('Running analytics... this may take a moment'), 8000));
+
+      timeoutsRef.current = newTimeouts;
 
       const automationResult = await automationApi.runAutomation(config);
 
+      // Clear timeouts immediately upon success so we don't overwrite the success message
+      clearAllTimeouts();
+
       setResult(automationResult);
       setProgress('Automation completed successfully!');
+
+      // Invalidate surveys cache so the new survey appears immediately
+      queryClient.invalidateQueries({ queryKey: ['surveys'] });
     } catch (err: any) {
+      clearAllTimeouts();
       setError(err.response?.data?.error || 'Automation failed');
       setProgress('');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => clearAllTimeouts();
+  }, []);
 
   if (loadingPersona) {
     return (

@@ -163,7 +163,7 @@ export interface DropoutPredictionResult {
   dropoutProbability: number; // 0-1
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   suggestedIntervention?: {
-    type: 'NONE' | 'PROGRESS_BAR' | 'ENCOURAGEMENT' | 'SIMPLIFY' | 'SAVE_PROGRESS';
+    type: 'NONE' | 'PROGRESS_BAR' | 'ENCOURAGEMENT' | 'SIMPLIFY' | 'SAVE_PROGRESS' | 'TIME_ESTIMATE' | 'BREAK_SUGGESTION';
     message?: string;
   };
   confidence: number;

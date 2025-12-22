@@ -84,6 +84,20 @@ export class AnalyticsController {
       next(error);
     }
   }
+
+  static async getSourceAnalytics(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { surveyId } = req.params;
+      const sources = await AnalyticsService.getSourceAnalytics(surveyId, req.user!.id);
+
+      res.json({
+        success: true,
+        data: sources,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default AnalyticsController;

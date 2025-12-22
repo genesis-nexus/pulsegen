@@ -13,7 +13,10 @@ import Dashboard from './pages/Dashboard';
 import SurveyList from './pages/surveys/SurveyList';
 import SurveyBuilder from './pages/surveys/SurveyBuilder';
 import SurveyAnalytics from './pages/surveys/SurveyAnalytics';
+import SurveyParticipants from './pages/surveys/SurveyParticipants';
 import AIBuilder from './pages/surveys/AIBuilder';
+import SurveyWizard from './pages/surveys/SurveyWizard';
+import CreateWithAI from './pages/surveys/CreateWithAI';
 import SurveyTake from './pages/public/SurveyTake';
 import AISettings from './pages/settings/AISettings';
 import AIToolsSettings from './pages/settings/AIToolsSettings';
@@ -23,6 +26,7 @@ import SSOSettings from './pages/settings/SSOSettings';
 import SMTPSettings from './pages/settings/SMTPSettings';
 import BrandingSettings from './pages/settings/BrandingSettings';
 import MLModels from './pages/ml/MLModels';
+import UserManagement from './pages/admin/UserManagement';
 import AIChat from './pages/AIChat';
 import NotFound from './pages/NotFound';
 
@@ -67,10 +71,14 @@ function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/surveys" element={<SurveyList />} />
+        <Route path="/surveys/create-ai" element={<CreateWithAI />} />
         <Route path="/surveys/ai-builder" element={<AIBuilder />} />
+        <Route path="/surveys/ai-wizard" element={<SurveyWizard />} />
         <Route path="/surveys/new" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/edit" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/analytics" element={<SurveyAnalytics />} />
+
+        <Route path="/surveys/:id/participants" element={<SurveyParticipants />} />
         <Route path="/ml/models" element={<MLModels />} />
         <Route path="/ai/chat" element={<AIChat />} />
         <Route path="/settings/ai" element={<AISettings />} />
@@ -80,6 +88,7 @@ function App() {
         <Route path="/settings/sso" element={<SSOSettings />} />
         <Route path="/settings/smtp" element={<SMTPSettings />} />
         <Route path="/settings/branding" element={<BrandingSettings />} />
+        <Route path="/admin/users" element={<UserManagement />} />
 
         {/* Admin routes */}
         <Route
@@ -106,11 +115,11 @@ function App() {
             </AdminRoute>
           }
         />
-      </Route>
+      </Route >
 
       {/* 404 */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+      < Route path="*" element={< NotFound />} />
+    </Routes >
   );
 }
 

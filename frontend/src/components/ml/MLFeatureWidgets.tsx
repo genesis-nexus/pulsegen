@@ -133,13 +133,12 @@ export function ResponseQualityWidget({ surveyId, compact = false }: QualityWidg
         </div>
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className={`h-full ${
-              stats.averageScore >= 70
+            className={`h-full ${stats.averageScore >= 70
                 ? 'bg-green-500'
                 : stats.averageScore >= 50
-                ? 'bg-amber-500'
-                : 'bg-red-500'
-            }`}
+                  ? 'bg-amber-500'
+                  : 'bg-red-500'
+              }`}
             style={{ width: `${stats.averageScore}%` }}
           />
         </div>
@@ -414,10 +413,6 @@ export function DropoutPredictionWidget({ surveyId, compact = false }: DropoutWi
     );
   }
 
-  const total = stats.riskDistribution.low +
-    stats.riskDistribution.medium +
-    stats.riskDistribution.high +
-    stats.riskDistribution.critical;
 
   if (compact) {
     return (
@@ -502,10 +497,9 @@ export function DropoutPredictionWidget({ surveyId, compact = false }: DropoutWi
             {stats.dropoutsByPage.slice(0, 5).map(({ page, count, avgProbability }) => (
               <div key={page} className="flex justify-between text-sm">
                 <span className="text-gray-600">Page {page}</span>
-                <span className={`font-medium ${
-                  avgProbability > 0.7 ? 'text-red-600' :
-                  avgProbability > 0.5 ? 'text-amber-600' : 'text-gray-600'
-                }`}>
+                <span className={`font-medium ${avgProbability > 0.7 ? 'text-red-600' :
+                    avgProbability > 0.5 ? 'text-amber-600' : 'text-gray-600'
+                  }`}>
                   {(avgProbability * 100).toFixed(0)}% risk ({count} predictions)
                 </span>
               </div>

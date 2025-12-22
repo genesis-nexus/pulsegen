@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { QuestionType, SurveyStatus, LogicType } from '@prisma/client';
+import { QuestionType, LogicType } from '@prisma/client';
 
 // Auth validators
 export const registerSchema = z.object({
@@ -31,6 +31,12 @@ export const createSurveySchema = z.object({
   closeDate: z.string().datetime().optional(),
   welcomeText: z.string().optional(),
   thankYouText: z.string().optional(),
+  showProgressBar: z.boolean().optional(),
+  progressBarPosition: z.string().optional(),
+  progressBarStyle: z.string().optional(),
+  progressBarFormat: z.string().optional(),
+  paginationMode: z.string().optional(),
+  questionsPerPage: z.number().int().positive().optional(),
 });
 
 export const updateSurveySchema = createSurveySchema.partial();
@@ -40,6 +46,15 @@ export const publishSurveySchema = z.object({
 });
 
 // Question validators
+// Logic validator
+const logicSchema = z.object({
+  id: z.string().optional(),
+  type: z.enum(['SKIP_LOGIC', 'BRANCHING', 'PIPING', 'DISPLAY_LOGIC']),
+  targetQuestionId: z.string().optional(),
+  conditions: z.array(z.any()),
+  actions: z.array(z.any()),
+});
+
 export const createQuestionSchema = z.object({
   type: z.nativeEnum(QuestionType),
   text: z.string().min(1, 'Question text is required'),
@@ -58,6 +73,7 @@ export const createQuestionSchema = z.object({
       })
     )
     .optional(),
+  logic: z.array(logicSchema).optional(),
 });
 
 export const updateQuestionSchema = createQuestionSchema.partial();

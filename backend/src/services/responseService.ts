@@ -1,6 +1,7 @@
 import { prisma } from '../config/database';
 import { AppError } from '../middleware/errorHandler';
 import { redis } from '../config/redis';
+import { quotaService } from './quotaService';
 
 interface SubmitResponseData {
   answers: Array<{
@@ -13,6 +14,13 @@ interface SubmitResponseData {
     metadata?: any;
   }>;
   metadata?: any;
+  tracking?: {
+    source?: string;
+    sourceChannel?: string;
+    sourceCampaign?: string;
+    sourceMedium?: string;
+    referrer?: string;
+  };
 }
 
 export class ResponseService {
@@ -82,7 +90,59 @@ export class ResponseService {
       }
     }
 
-    // Create response
+    // Check quotas if enabled
+    let quotaStatus: 'NORMAL' | 'OVER_QUOTA' | 'SCREENED' = 'NORMAL';
+    let matchingQuotaIds: string[] = [];
+
+    if (survey.quotasEnabled) {
+      // Convert answers to format for quota checking
+      const answerMap: Record<string, any> = {};
+      for (const answer of data.answers) {
+        // Use the most appropriate value for matching
+        let value = answer.textValue || answer.numberValue;
+        if (answer.optionId) {
+          // For option-based questions, use the option text
+          const option = survey.questions
+            .find(q => q.id === answer.questionId)
+            ?.options.find(o => o.id === answer.optionId);
+          value = option?.text || answer.optionId;
+        }
+        answerMap[answer.questionId] = value;
+      }
+
+      const quotaCheck = await quotaService.checkQuotas(surveyId, answerMap);
+
+      if (quotaCheck.quotaReached && quotaCheck.quota) {
+        // Quota reached - handle based on action
+        switch (quotaCheck.quota.action) {
+          case 'END_SURVEY':
+            throw new AppError(403, quotaCheck.quota.message || 'Survey quota has been reached', {
+              code: 'QUOTA_REACHED',
+              quota: quotaCheck.quota
+            });
+
+          case 'REDIRECT':
+            throw new AppError(403, 'Survey quota has been reached', {
+              code: 'QUOTA_REDIRECT',
+              redirectUrl: quotaCheck.quota.url
+            });
+
+          case 'CONTINUE':
+            // Mark as over quota but continue
+            quotaStatus = 'OVER_QUOTA';
+            matchingQuotaIds = quotaCheck.matchingQuotas;
+            break;
+
+          default:
+            // For other actions or unhandled cases, continue normally
+            matchingQuotaIds = quotaCheck.matchingQuotas;
+        }
+      } else {
+        matchingQuotaIds = quotaCheck.matchingQuotas;
+      }
+    }
+
+    // Create response with tracking data
     const response = await prisma.response.create({
       data: {
         surveyId,
@@ -91,6 +151,13 @@ export class ResponseService {
         metadata: data.metadata,
         isComplete: true,
         completedAt: new Date(),
+        quotaStatus,
+        // Source tracking
+        source: data.tracking?.source,
+        sourceChannel: data.tracking?.sourceChannel,
+        sourceCampaign: data.tracking?.sourceCampaign,
+        sourceMedium: data.tracking?.sourceMedium,
+        referrer: data.tracking?.referrer,
       },
     });
 
@@ -107,6 +174,13 @@ export class ResponseService {
         metadata: answer.metadata,
       })),
     });
+
+    // Increment quota counts if there are matching quotas
+    if (matchingQuotaIds.length > 0) {
+      await quotaService.incrementQuotas(response.id, matchingQuotaIds).catch((error) => {
+        console.error('Error incrementing quotas:', error);
+      });
+    }
 
     // Update analytics (async)
     this.updateAnalytics(surveyId).catch((error) => {

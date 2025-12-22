@@ -40,6 +40,17 @@ enum QuestionType {
   YES_NO
   NPS
   LIKERT_SCALE
+  IMAGE_SELECT
+  SEMANTIC_DIFFERENTIAL
+  GEO_LOCATION
+  MULTIPLE_NUMERICAL
+  ARRAY_DUAL_SCALE
+  EQUATION
+  BOILERPLATE
+  HIDDEN
+  GENDER
+  LANGUAGE_SWITCHER
+  SIGNATURE
 }
 
 enum LogicType {
@@ -99,6 +110,7 @@ model User {
   emailVerified Boolean   @default(false)
   provider      IdentityProvider @default(LOCAL)
   providerId    String?   // ID from SSO provider
+  preferredLanguage String @default("en")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -328,6 +340,30 @@ model Survey {
   updatedAt     DateTime         @updatedAt
   publishedAt   DateTime?
 
+  // i18n
+  baseLanguage   String              @default("en")
+  translations   SurveyTranslation[]
+
+  // Progress Bar
+  showProgressBar     Boolean @default(true)
+  progressBarPosition String  @default("top") // "top", "bottom", "both"
+  progressBarStyle    String  @default("bar") // "bar", "steps", "minimal", "combined"
+  progressBarFormat   String  @default("percentage") // "percentage", "count", "both"
+
+  // Save & Continue settings
+  allowSaveAndContinue  Boolean  @default(false)
+  autoSaveEnabled       Boolean  @default(false)
+  autoSaveFrequency     String   @default("page") // "question", "page", "off"
+  saveExpirationDays    Int      @default(7)      // 0 = never expires
+  requireEmailForSave   Boolean  @default(false)
+
+  // Quota Management
+  quotasEnabled         Boolean  @default(false)
+
+  // Question Pagination
+  paginationMode        String   @default("all") // "all", "single", "custom"
+  questionsPerPage      Int      @default(1)     // Used when paginationMode is "custom"
+
   // Relations
   creator       User             @relation(fields: [createdBy], references: [id])
   workspace     Workspace?       @relation(fields: [workspaceId], references: [id])
@@ -344,6 +380,17 @@ model Survey {
   predictions   Prediction[]
   featureOverrides MLFeatureSurveyOverride[]
   sentimentScores SentimentScore[]
+  partialResponses PartialResponse[]
+  quotas        Quota[]
+  
+  // Participant Management
+  participantsEnabled    Boolean @default(false)
+  participantTokenMode   TokenMode @default(SINGLE_USE)
+  allowAnonymousWithToken Boolean @default(false) // Token validates but doesn't link response
+  requireToken           Boolean @default(false)  // Only token holders can respond
+
+  participants           Participant[]
+  emailTemplates         SurveyEmailTemplate[]
 
   @@index([createdBy])
   @@index([workspaceId])
@@ -387,6 +434,8 @@ model Question {
   answers Answer[]
   logic   SurveyLogic[]    @relation("SourceQuestion")
   targets SurveyLogic[]    @relation("TargetQuestion")
+  translations QuestionTranslation[]
+  quotaConditions QuotaCondition[]
 
   @@index([surveyId])
   @@index([pageId])
@@ -403,6 +452,7 @@ model QuestionOption {
 
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   answers  Answer[]
+  translations QuestionOptionTranslation[]
 
   @@index([questionId])
   @@index([order])
@@ -423,6 +473,98 @@ model SurveyLogic {
 
   @@index([surveyId])
   @@index([sourceQuestionId])
+}
+
+// =============================================================================
+// QUOTA MANAGEMENT
+// =============================================================================
+
+enum QuotaAction {
+  END_SURVEY      // Show message and end
+  REDIRECT        // Redirect to URL
+  HIDE_QUESTIONS  // Hide specific questions but continue
+  CONTINUE        // Mark as over-quota but collect anyway
+}
+
+enum ConditionOperator {
+  EQUALS
+  NOT_EQUALS
+  IN
+  NOT_IN
+  GREATER_THAN
+  LESS_THAN
+  BETWEEN
+  CONTAINS
+}
+
+enum QuotaStatus {
+  NORMAL      // Within quota
+  OVER_QUOTA  // Response collected but quota was full
+  SCREENED    // Response rejected due to quota
+}
+
+model Quota {
+  id          String   @id @default(cuid())
+  surveyId    String
+  survey      Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  limit       Int      // Maximum responses for this quota
+  isActive    Boolean  @default(true)
+
+  // Action when quota is reached
+  action      QuotaAction @default(END_SURVEY)
+  actionMessage String?  // Custom message for END_SURVEY
+  actionUrl   String?    // URL for REDIRECT action
+
+  // Tracking
+  currentCount Int      @default(0)
+
+  // Alert settings
+  alertAt50   Boolean  @default(false)
+  alertAt80   Boolean  @default(true)
+  alertAt100  Boolean  @default(true)
+  alertEmails String[] // Email addresses for alerts
+
+  conditions  QuotaCondition[]
+  responses   QuotaResponse[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([surveyId])
+}
+
+model QuotaCondition {
+  id          String   @id @default(cuid())
+  quotaId     String
+  quota       Quota    @relation(fields: [quotaId], references: [id], onDelete: Cascade)
+
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  operator    ConditionOperator @default(EQUALS)
+  value       String   // The answer value(s) to match
+  values      String[] // For IN operator, multiple values
+
+  // For compound quotas, conditions are ANDed together
+  // For interlocked quotas, use separate Quota records
+
+  @@index([quotaId])
+  @@index([questionId])
+}
+
+model QuotaResponse {
+  id          String   @id @default(cuid())
+  quotaId     String
+  quota       Quota    @relation(fields: [quotaId], references: [id], onDelete: Cascade)
+  responseId  String
+  response    Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  countedAt   DateTime @default(now())
+
+  @@unique([quotaId, responseId])
+  @@index([quotaId])
 }
 
 model SurveyTheme {
@@ -451,15 +593,31 @@ model Response {
   isComplete  Boolean  @default(false)
   metadata    Json?    // Additional metadata
 
+  participantId String?     @unique
+  participant   Participant?
+
+  // Source tracking for analytics
+  source        String?    // 'direct', 'social', 'email', 'embed', 'qr', 'api'
+  sourceChannel String?    // 'twitter', 'facebook', 'linkedin', 'whatsapp', etc.
+  sourceCampaign String?   // Campaign identifier (UTM campaign equivalent)
+  sourceMedium  String?    // Medium type (UTM medium equivalent)
+  referrer      String?    // HTTP referrer URL
+
+  // Quota tracking
+  quotaStatus     QuotaStatus @default(NORMAL)
+
   survey      Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   answers     Answer[]
   predictions Prediction[]
   qualityScores ResponseQualityScore[]
   dropoutPredictions DropoutPrediction[]
+  quotaResponses  QuotaResponse[]
 
   @@index([surveyId])
   @@index([completedAt])
   @@index([isComplete])
+  @@index([source])
+  @@index([sourceChannel])
 }
 
 model Answer {
@@ -791,6 +949,51 @@ model Prediction {
   @@index([createdAt])
 }
 
+// Translations
+model SurveyTranslation {
+  id          String   @id @default(cuid())
+  surveyId    String
+  survey      Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  language    String   // ISO language code
+  title       String
+  description String?
+  welcomeText String?
+  thankYouText String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([surveyId, language])
+  @@index([surveyId])
+}
+
+model QuestionTranslation {
+  id          String   @id @default(cuid())
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  language    String
+  text        String
+  description String?
+  placeholder String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([questionId, language])
+  @@index([questionId])
+}
+
+model QuestionOptionTranslation {
+  id        String         @id @default(cuid())
+  optionId  String
+  option    QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  language  String
+  text      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([optionId, language])
+  @@index([optionId])
+}
+
 // =============================================================================
 // AI USAGE TRACKING
 // =============================================================================
@@ -808,6 +1011,7 @@ enum AIFeatureType {
   CHAT
   OTHER
 }
+
 
 model AIUsageLog {
   id            String        @id @default(cuid())
@@ -1054,4 +1258,208 @@ model DropoutPrediction {
   @@index([responseId])
   @@index([riskLevel])
   @@index([featureConfigId])
+}
+
+// =============================================================================
+// SAVE & CONTINUE LATER - Partial Responses
+// =============================================================================
+
+enum PartialResponseStatus {
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  ABANDONED
+}
+
+model PartialResponse {
+  id                String   @id @default(cuid())
+  surveyId          String
+  survey            Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  // Resume token (unique, unguessable)
+  resumeToken       String   @unique @default(cuid())
+  resumeCode        String?  // Optional short code for manual entry (6 chars)
+
+  // Respondent identification (optional)
+  respondentEmail   String?
+  respondentName    String?
+
+  // Progress tracking
+  currentPageIndex  Int      @default(0)
+  lastQuestionId    String?
+
+  // Stored answers (JSON blob)
+  answers           Json     // { questionId: { value, updatedAt } }
+
+  // Metadata
+  ipAddress         String?
+  userAgent         String?
+  startedAt         DateTime @default(now())
+  lastSavedAt       DateTime @default(now())
+  expiresAt         DateTime
+
+  // Status
+  status            PartialResponseStatus @default(IN_PROGRESS)
+  convertedToResponseId String? // If completed, link to final Response
+
+  @@index([surveyId])
+  @@index([resumeToken])
+  @@index([resumeCode])
+  @@index([expiresAt])
+  @@index([respondentEmail])
+}
+
+// =============================================================================
+// PARTICIPANT MANAGEMENT
+// =============================================================================
+
+model Participant {
+  id            String   @id @default(cuid())
+  surveyId      String
+  survey        Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  // Identity
+  email         String
+  firstName     String?
+  lastName      String?
+
+  // Access token
+  token         String   @unique @default(cuid())
+  tokenUsed     Boolean  @default(false)
+  tokenUsedAt   DateTime?
+
+  // Settings
+  tokenUsageLimit Int    @default(1) // 0 = unlimited
+  tokenUsageCount Int    @default(0)
+  validFrom     DateTime @default(now())
+  validUntil    DateTime?
+
+  // Custom attributes (flexible key-value)
+  attributes    Json     @default("{}")
+
+  // Status tracking
+  status        ParticipantStatus @default(PENDING)
+  invitedAt     DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  optedOutAt    DateTime?
+
+  // Response link
+  responseId    String?  @unique
+  response      Response? @relation(fields: [responseId], references: [id])
+
+  // Communication tracking
+  invitations   ParticipantInvitation[]
+  reminders     ParticipantReminder[]
+
+  // Metadata
+  language      String   @default("en")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([surveyId, email])
+  @@index([surveyId])
+  @@index([token])
+  @@index([email])
+  @@index([status])
+}
+
+enum ParticipantStatus {
+  PENDING     // Added but not invited
+  INVITED     // Invitation sent
+  STARTED     // Started survey
+  COMPLETED   // Finished survey
+  OPTED_OUT   // Opted out
+  BOUNCED     // Email bounced
+  EXPIRED     // Token expired
+}
+
+enum TokenMode {
+  SINGLE_USE   // Token can only be used once
+  MULTI_USE    // Token can be used multiple times
+  TIME_LIMITED // Token valid for specific period
+}
+
+model ParticipantInvitation {
+  id              String   @id @default(cuid())
+  participantId   String
+  participant     Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  // Email details
+  subject         String
+  body            String
+  sentAt          DateTime @default(now())
+
+  // Delivery status
+  status          EmailStatus @default(PENDING)
+  deliveredAt     DateTime?
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  bouncedAt       DateTime?
+  bounceReason    String?
+
+  // Tracking
+  messageId       String?  // From email provider
+  trackingId      String   @unique @default(cuid())
+
+  @@index([participantId])
+}
+
+model ParticipantReminder {
+  id              String   @id @default(cuid())
+  participantId   String
+  participant     Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  reminderNumber  Int      // 1st, 2nd, 3rd reminder
+  scheduledFor    DateTime
+  sentAt          DateTime?
+  status          EmailStatus @default(PENDING)
+
+  @@index([participantId])
+  @@index([scheduledFor])
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+model SurveyEmailTemplate {
+  id          String   @id @default(cuid())
+  surveyId    String
+  survey      Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  type        EmailTemplateType
+  subject     String
+  body        String   // HTML with merge fields
+  isDefault   Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([surveyId, type, isDefault])
+  @@index([surveyId])
+}
+
+enum EmailTemplateType {
+  INVITATION
+  REMINDER_1
+  REMINDER_2
+  REMINDER_3
+  COMPLETION_THANK_YOU
+  OPT_OUT_CONFIRMATION
+}
+
+model GlobalOptOut {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  reason    String?
+  optedOutAt DateTime @default(now())
+
+  @@index([email])
 }

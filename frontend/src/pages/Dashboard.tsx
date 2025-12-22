@@ -23,7 +23,7 @@ export default function Dashboard() {
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div className="flex gap-2">
           <Link
-            to="/surveys/ai-builder"
+            to="/surveys/create-ai"
             className="btn bg-gradient-to-r from-primary-600 to-purple-600 text-white hover:from-primary-700 hover:to-purple-700 inline-flex items-center"
           >
             <Sparkles className="w-5 h-5 mr-2" />

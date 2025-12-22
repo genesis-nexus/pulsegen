@@ -83,14 +83,12 @@ const gracefulShutdown = async () => {
 
   try {
     await prisma.$disconnect();
-
     // Attempt to close Redis connection if available
     try {
       await redis.quit();
     } catch (error) {
       logger.warn('Redis connection already closed or unavailable');
     }
-
     logger.info('Database and Redis connections closed');
     process.exit(0);
   } catch (error) {
