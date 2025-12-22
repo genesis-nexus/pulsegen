@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { authenticate, AuthRequest } from '../middleware/auth';
 import { prisma } from '../config/database';
 
 const router = Router();
@@ -22,13 +22,13 @@ router.get('/languages', (req, res) => {
 });
 
 // Update user language preference
-router.put('/user/language', authenticate, async (req, res) => {
+router.put('/user/language', authenticate, async (req: AuthRequest, res) => {
   const { language } = req.body;
-  
+
   if (!req.user) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
-  
+
   const userId = req.user.id;
 
   await prisma.user.update({

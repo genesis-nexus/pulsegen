@@ -275,4 +275,72 @@ export const surveySharingService = {
 
     return { access: true };
   },
+
+  /**
+   * Generate tracked share links for social media platforms
+   * Includes PulseGen tracking parameters for analytics
+   */
+  async generateTrackedShareLinks(surveyId: string, userId: string, options?: {
+    campaign?: string;
+    platforms?: ('twitter' | 'facebook' | 'linkedin' | 'whatsapp' | 'email')[];
+  }) {
+    // Check ownership
+    const survey = await prisma.survey.findUnique({
+      where: { id: surveyId },
+    });
+
+    if (!survey) {
+      throw new AppError(404, 'Survey not found');
+    }
+
+    if (survey.createdBy !== userId) {
+      throw new AppError(403, 'Access denied');
+    }
+
+    // Generate shareable link if not exists
+    let linkCode = survey.shareableLink;
+    if (!linkCode) {
+      linkCode = crypto.randomBytes(8).toString('hex');
+      await prisma.survey.update({
+        where: { id: surveyId },
+        data: {
+          shareableLink: linkCode,
+        },
+      });
+    }
+
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const baseShareUrl = `${baseUrl}/s/${survey.slug}`;
+
+    const platforms = options?.platforms || ['twitter', 'facebook', 'linkedin', 'whatsapp', 'email'];
+    const campaign = options?.campaign || '';
+
+    const trackedLinks: Record<string, string> = {};
+
+    for (const platform of platforms) {
+      const url = new URL(baseShareUrl);
+      url.searchParams.set('pg_source', 'social');
+      url.searchParams.set('pg_channel', platform);
+      if (campaign) {
+        url.searchParams.set('pg_campaign', campaign);
+      }
+      trackedLinks[platform] = url.toString();
+    }
+
+    // Also create a direct link with tracking
+    const directUrl = new URL(baseShareUrl);
+    directUrl.searchParams.set('pg_source', 'direct');
+    trackedLinks.direct = directUrl.toString();
+
+    return {
+      baseUrl: baseShareUrl,
+      trackedLinks,
+      linkCode,
+      survey: {
+        id: survey.id,
+        title: survey.title,
+        slug: survey.slug,
+      },
+    };
+  },
 };

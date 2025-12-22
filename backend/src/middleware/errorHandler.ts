@@ -6,6 +6,7 @@ export class AppError extends Error {
   constructor(
     public statusCode: number,
     public message: string,
+    public data?: any,
     public isOperational = true
   ) {
     super(message);
@@ -43,6 +44,7 @@ export const errorHandler = (
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
+      ...(error.data && { ...error.data }),
     });
   }
 

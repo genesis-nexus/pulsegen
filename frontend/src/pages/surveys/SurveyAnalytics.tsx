@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Download, Sparkles, HelpCircle, Users } from 'lucide-react';
+import { Download, Sparkles, HelpCircle, Users, Share2 } from 'lucide-react';
 import api from '../../lib/api';
 import { Survey, Analytics, QuestionAnalytics } from '../../types';
 import { SmartAnalyzer } from '../../components/ai';
+import { SourceAnalytics, SocialLinkGenerator } from '../../components/social';
 import toast from 'react-hot-toast';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
@@ -15,6 +16,7 @@ export default function SurveyAnalytics() {
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
   const [showLogicInfo, setShowLogicInfo] = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
 
   const { data: survey } = useQuery({
     queryKey: ['survey', id],
@@ -44,6 +46,15 @@ export default function SurveyAnalytics() {
     queryKey: ['insights', id],
     queryFn: async () => {
       const response = await api.get(`/analytics/surveys/${id}/insights`);
+      return response.data.data;
+    },
+  });
+
+  // Source analytics query
+  const { data: sourceAnalytics } = useQuery({
+    queryKey: ['source-analytics', id],
+    queryFn: async () => {
+      const response = await api.get(`/analytics/surveys/${id}/sources`);
       return response.data.data;
     },
   });
@@ -177,6 +188,17 @@ export default function SurveyAnalytics() {
               Participants
             </button>
             <button
+              onClick={() => setShowSharePanel(!showSharePanel)}
+              className={`inline-flex items-center px-4 py-2 text-sm border rounded-lg transition-colors ${
+                showSharePanel
+                  ? 'bg-primary-50 text-primary-700 border-primary-300'
+                  : 'text-gray-700 hover:text-gray-900 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share
+            </button>
+            <button
               onClick={() => setShowLogicInfo(!showLogicInfo)}
               className="inline-flex items-center px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -193,6 +215,18 @@ export default function SurveyAnalytics() {
             </button>
           </div>
         </div>
+
+        {/* Share Panel */}
+        {showSharePanel && survey && (
+          <div className="mb-6">
+            <SocialLinkGenerator
+              surveyUrl={`${window.location.origin}/s/${survey.slug}`}
+              surveyTitle={survey.title}
+              surveyDescription={survey.description}
+              onClose={() => setShowSharePanel(false)}
+            />
+          </div>
+        )}
 
         {/* Logic Info Modal */}
         {showLogicInfo && (
@@ -274,6 +308,16 @@ export default function SurveyAnalytics() {
           </div>
         </div>
       </div>
+
+      {/* Source Analytics */}
+      {sourceAnalytics && (
+        <div className="mb-8">
+          <SourceAnalytics
+            data={sourceAnalytics}
+            totalResponses={analytics?.totalResponses || 0}
+          />
+        </div>
+      )}
 
       {/* Smart AI Analyzer */}
       {survey && id && (

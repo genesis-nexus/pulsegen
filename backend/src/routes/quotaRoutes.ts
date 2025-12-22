@@ -36,7 +36,21 @@ router.post('/surveys/:surveyId/quotas', authenticate, async (req, res) => {
   });
 
   try {
-    const data = schema.parse(req.body);
+    const data = schema.parse(req.body) as {
+      name: string;
+      description?: string;
+      limit: number;
+      action: 'END_SURVEY' | 'REDIRECT' | 'HIDE_QUESTIONS' | 'CONTINUE';
+      actionMessage?: string;
+      actionUrl?: string;
+      alertEmails?: string[];
+      conditions: Array<{
+        questionId: string;
+        operator: 'EQUALS' | 'NOT_EQUALS' | 'IN' | 'NOT_IN' | 'GREATER_THAN' | 'LESS_THAN' | 'BETWEEN' | 'CONTAINS';
+        value: string;
+        values?: string[];
+      }>;
+    };
     const quota = await quotaService.createQuota(req.params.surveyId, data);
     res.status(201).json(quota);
   } catch (error: any) {
@@ -111,7 +125,15 @@ router.post('/surveys/:surveyId/quotas/interlocked', authenticate, async (req, r
   });
 
   try {
-    const data = schema.parse(req.body);
+    const data = schema.parse(req.body) as {
+      name: string;
+      question1Id: string;
+      question1Values: string[];
+      question2Id: string;
+      question2Values: string[];
+      limits: Record<string, Record<string, number>>;
+      action: 'END_SURVEY' | 'REDIRECT' | 'HIDE_QUESTIONS' | 'CONTINUE';
+    };
     await quotaService.createInterlockedQuotas(req.params.surveyId, data);
     res.status(201).json({ success: true });
   } catch (error: any) {

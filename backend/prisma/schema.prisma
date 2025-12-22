@@ -592,9 +592,16 @@ model Response {
   duration    Int?     // Duration in seconds
   isComplete  Boolean  @default(false)
   metadata    Json?    // Additional metadata
-  
+
   participantId String?     @unique
   participant   Participant?
+
+  // Source tracking for analytics
+  source        String?    // 'direct', 'social', 'email', 'embed', 'qr', 'api'
+  sourceChannel String?    // 'twitter', 'facebook', 'linkedin', 'whatsapp', etc.
+  sourceCampaign String?   // Campaign identifier (UTM campaign equivalent)
+  sourceMedium  String?    // Medium type (UTM medium equivalent)
+  referrer      String?    // HTTP referrer URL
 
   // Quota tracking
   quotaStatus     QuotaStatus @default(NORMAL)
@@ -609,6 +616,8 @@ model Response {
   @@index([surveyId])
   @@index([completedAt])
   @@index([isComplete])
+  @@index([source])
+  @@index([sourceChannel])
 }
 
 model Answer {

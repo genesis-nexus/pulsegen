@@ -379,6 +379,80 @@ export class AnalyticsService {
       crosstab,
     };
   }
+
+  static async getSourceAnalytics(surveyId: string, userId: string) {
+    // Check ownership
+    const survey = await prisma.survey.findUnique({
+      where: { id: surveyId },
+    });
+
+    if (!survey || survey.createdBy !== userId) {
+      throw new AppError(403, 'Access denied');
+    }
+
+    const cacheKey = `survey:${surveyId}:analytics:sources`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    // Get responses grouped by source and channel
+    const responses = await prisma.response.findMany({
+      where: {
+        surveyId,
+        isComplete: true,
+      },
+    });
+
+    // Aggregate by source and channel
+    const sourceMap = new Map<string, {
+      source: string;
+      channel?: string;
+      count: number;
+      totalDuration: number;
+      completedCount: number;
+    }>();
+
+    responses.forEach((response) => {
+      const source = (response as any).source || 'direct';
+      const channel = (response as any).sourceChannel || undefined;
+      const key = channel ? `${source}:${channel}` : source;
+
+      const existing = sourceMap.get(key) || {
+        source,
+        channel,
+        count: 0,
+        totalDuration: 0,
+        completedCount: 0,
+      };
+
+      existing.count++;
+      existing.completedCount++;
+      if (response.duration) {
+        existing.totalDuration += response.duration;
+      }
+
+      sourceMap.set(key, existing);
+    });
+
+    // Calculate completion rates and average duration
+    const totalResponses = responses.length;
+    const result = Array.from(sourceMap.values()).map((item) => ({
+      source: item.source,
+      channel: item.channel,
+      count: item.count,
+      completionRate: totalResponses > 0
+        ? (item.completedCount / item.count) * 100
+        : 0,
+      avgDuration: item.completedCount > 0
+        ? item.totalDuration / item.completedCount
+        : 0,
+    })).sort((a, b) => b.count - a.count);
+
+    await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(result));
+
+    return result;
+  }
 }
 
 export default AnalyticsService;

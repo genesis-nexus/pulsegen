@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Question, QuestionType } from '../../../types';
-import { Sliders, Type, List, Trash2, Plus } from 'lucide-react';
+import { Sliders, Type, List, Trash2, Plus, Smartphone, Share2 } from 'lucide-react';
 
 interface SurveySettingsData {
   title: string;
@@ -12,6 +12,14 @@ interface SurveySettingsData {
   progressBarFormat: string;
   paginationMode: string;
   questionsPerPage: number;
+  // Mobile & Social Settings
+  mobileOptimized?: boolean;
+  swipeNavigation?: boolean;
+  largeTouchTargets?: boolean;
+  autoScrollToNext?: boolean;
+  showKeyboardShortcuts?: boolean;
+  socialShareEnabled?: boolean;
+  socialPreviewImage?: string;
 }
 
 interface PropertyInspectorProps {
@@ -173,6 +181,107 @@ export default function PropertyInspector({
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Mobile Optimization */}
+          <div className="pt-4 border-t border-gray-200">
+            <div className="flex items-center space-x-2 mb-4">
+              <Smartphone className="w-4 h-4 text-primary-600" />
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mobile Experience</h3>
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+                <div>
+                  <span className="block">Mobile Optimized</span>
+                  <span className="text-xs text-gray-500">Enhanced UI for mobile devices</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={surveySettings.mobileOptimized ?? true}
+                  onChange={(e) => onUpdateSurveySettings({ mobileOptimized: e.target.checked })}
+                  className="rounded text-primary-600 focus:ring-primary-500"
+                />
+              </label>
+
+              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+                <div>
+                  <span className="block">Swipe Navigation</span>
+                  <span className="text-xs text-gray-500">Swipe left/right between questions</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={surveySettings.swipeNavigation ?? false}
+                  onChange={(e) => onUpdateSurveySettings({ swipeNavigation: e.target.checked })}
+                  className="rounded text-primary-600 focus:ring-primary-500"
+                />
+              </label>
+
+              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+                <div>
+                  <span className="block">Large Touch Targets</span>
+                  <span className="text-xs text-gray-500">48px+ buttons for easy tapping</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={surveySettings.largeTouchTargets ?? true}
+                  onChange={(e) => onUpdateSurveySettings({ largeTouchTargets: e.target.checked })}
+                  className="rounded text-primary-600 focus:ring-primary-500"
+                />
+              </label>
+
+              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+                <div>
+                  <span className="block">Auto-scroll to Next</span>
+                  <span className="text-xs text-gray-500">Scroll to next question on answer</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={surveySettings.autoScrollToNext ?? false}
+                  onChange={(e) => onUpdateSurveySettings({ autoScrollToNext: e.target.checked })}
+                  className="rounded text-primary-600 focus:ring-primary-500"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Social Media Sharing */}
+          <div className="pt-4 border-t border-gray-200">
+            <div className="flex items-center space-x-2 mb-4">
+              <Share2 className="w-4 h-4 text-primary-600" />
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Social Sharing</h3>
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+                <div>
+                  <span className="block">Enable Social Share</span>
+                  <span className="text-xs text-gray-500">Show share buttons after submission</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={surveySettings.socialShareEnabled ?? true}
+                  onChange={(e) => onUpdateSurveySettings({ socialShareEnabled: e.target.checked })}
+                  className="rounded text-primary-600 focus:ring-primary-500"
+                />
+              </label>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Social Preview Image URL
+                </label>
+                <input
+                  type="url"
+                  value={surveySettings.socialPreviewImage || ''}
+                  onChange={(e) => onUpdateSurveySettings({ socialPreviewImage: e.target.value })}
+                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="https://example.com/preview.png"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Image shown when shared on social media (1200x630px recommended)
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div >

@@ -1,11 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { Survey, QuestionType } from '../../types';
 import { SurveyProgressWrapper } from '../../components/survey/SurveyProgressWrapper';
 import QuestionRenderer from '../../components/questions/QuestionRenderer';
+import SocialShareButtons from '../../components/social/SocialShareButtons';
+import { getTrackingData } from '../../lib/tracking';
+import { useSwipeNavigation } from '../../hooks/useSwipeNavigation';
 
 // localStorage utilities
 const STORAGE_KEY_PREFIX = 'survey_response_';
@@ -150,7 +155,13 @@ export default function SurveyTake() {
       return answer;
     }).flat();
 
-    submitMutation.mutate({ answers: formattedAnswers });
+    // Get source tracking data
+    const tracking = getTrackingData();
+
+    submitMutation.mutate({
+      answers: formattedAnswers,
+      tracking, // Include tracking data in submission
+    });
   };
 
   // Pagination helpers
@@ -224,6 +235,22 @@ export default function SurveyTake() {
     });
   };
 
+  // Swipe navigation for mobile
+  const swipeHandlers = useSwipeNavigation({
+    onSwipeLeft: () => {
+      if (canGoNext() && currentPage < calculateTotalPages()) {
+        handleNext();
+      }
+    },
+    onSwipeRight: () => {
+      if (currentPage > 1) {
+        handlePrevious();
+      }
+    },
+    threshold: 50,
+    enabled: (survey?.paginationMode || 'all') !== 'all',
+  });
+
 
   if (isLoading) {
     return (
@@ -263,8 +290,10 @@ export default function SurveyTake() {
   }
 
   if (submitted) {
+    const shareUrl = window.location.href;
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md text-center">
           <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,13 +301,30 @@ export default function SurveyTake() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-8">
             {survey.thankYouText || 'Your response has been submitted successfully.'}
           </p>
+
+          {/* Social Share Section */}
+          <div className="pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-600 mb-4">
+              Know someone who should take this survey? Share it with them!
+            </p>
+            <SocialShareButtons
+              url={shareUrl}
+              title={survey.title}
+              description={survey.description || 'Take this survey'}
+              layout="horizontal"
+            />
+          </div>
         </div>
       </div>
     );
   }
+
+  // Generate canonical URL for meta tags
+  const surveyUrl = `${window.location.origin}/s/${slug}`;
+  const previewImage = (survey as any).theme?.logoUrl || `${window.location.origin}/survey-preview.png`;
 
   return (
     <SurveyProgressWrapper
@@ -288,7 +334,36 @@ export default function SurveyTake() {
       currentQuestion={Object.keys(answers).length}
       totalQuestions={survey.questions.length}
     >
-      <div className="min-h-screen bg-gray-50 py-12">
+      {/* OpenGraph and Twitter Card Meta Tags */}
+      <Helmet>
+        <title>{survey.title} | Survey</title>
+        <meta name="description" content={survey.description || 'Take this survey'} />
+
+        {/* OpenGraph */}
+        <meta property="og:title" content={survey.title} />
+        <meta property="og:description" content={survey.description || 'Take this survey'} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={surveyUrl} />
+        <meta property="og:image" content={previewImage} />
+        <meta property="og:site_name" content="PulseGen Survey" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={survey.title} />
+        <meta name="twitter:description" content={survey.description || 'Take this survey'} />
+        <meta name="twitter:image" content={previewImage} />
+
+        {/* Mobile viewport optimization */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="theme-color" content="#3B82F6" />
+      </Helmet>
+
+      <div
+        className="min-h-screen bg-gray-50 py-8 sm:py-12"
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
+      >
         <div className="max-w-3xl mx-auto px-4">
           <div className="card mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{survey.title}</h1>
@@ -402,15 +477,15 @@ export default function SurveyTake() {
 
 
                   {question.type === QuestionType.RATING_SCALE && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                       {[1, 2, 3, 4, 5].map((rating) => (
                         <button
                           key={rating}
                           type="button"
                           onClick={() => handleAnswerChange(question.id, rating)}
-                          className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === rating
+                          className={`w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg border-2 font-medium transition-colors ${answers[question.id] === rating
                             ? 'border-primary-600 bg-primary-600 text-white'
-                            : 'border-gray-300 hover:border-primary-600'
+                            : 'border-gray-300 hover:border-primary-600 active:bg-gray-100'
                             }`}
                         >
                           {rating}
@@ -494,7 +569,8 @@ export default function SurveyTake() {
 
                   {question.type === QuestionType.NPS && (
                     <div className="space-y-2">
-                      <div className="flex gap-1 justify-between">
+                      {/* Mobile: 2 rows (0-5 and 6-10), Desktop: single row */}
+                      <div className="hidden sm:flex gap-1 justify-between">
                         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
                           <button
                             key={score}
@@ -512,6 +588,41 @@ export default function SurveyTake() {
                             {score}
                           </button>
                         ))}
+                      </div>
+                      {/* Mobile layout: 2 rows for better touch targets */}
+                      <div className="sm:hidden space-y-2">
+                        <div className="grid grid-cols-6 gap-2">
+                          {[0, 1, 2, 3, 4, 5].map((score) => (
+                            <button
+                              key={score}
+                              type="button"
+                              onClick={() => handleAnswerChange(question.id, score)}
+                              className={`min-h-[48px] rounded-lg border-2 font-medium transition-colors ${answers[question.id] === score
+                                ? 'border-red-600 bg-red-600 text-white'
+                                : 'border-gray-300 hover:border-primary-600 active:bg-gray-100'
+                                }`}
+                            >
+                              {score}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                          {[6, 7, 8, 9, 10].map((score) => (
+                            <button
+                              key={score}
+                              type="button"
+                              onClick={() => handleAnswerChange(question.id, score)}
+                              className={`min-h-[48px] rounded-lg border-2 font-medium transition-colors ${answers[question.id] === score
+                                ? score <= 8
+                                  ? 'border-yellow-600 bg-yellow-600 text-white'
+                                  : 'border-green-600 bg-green-600 text-white'
+                                : 'border-gray-300 hover:border-primary-600 active:bg-gray-100'
+                                }`}
+                            >
+                              {score}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       <div className="flex justify-between text-xs text-gray-500">
                         <span>Not likely</span>
@@ -540,38 +651,65 @@ export default function SurveyTake() {
 
 
                   {question.type === QuestionType.MATRIX && (
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr>
-                            <th className="border border-gray-300 p-2 bg-gray-50"></th>
-                            {question.options.slice(0, 5).map((option) => (
-                              <th key={option.id} className="border border-gray-300 p-2 bg-gray-50 text-sm">
-                                {option.text}
-                              </th>
+                    <>
+                      {/* Desktop: Table layout */}
+                      <div className="hidden sm:block overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr>
+                              <th className="border border-gray-300 p-2 bg-gray-50"></th>
+                              {question.options.slice(0, 5).map((option) => (
+                                <th key={option.id} className="border border-gray-300 p-2 bg-gray-50 text-sm">
+                                  {option.text}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {question.options.slice(0, 5).map((rowOption) => (
+                              <tr key={rowOption.id}>
+                                <td className="border border-gray-300 p-2 font-medium text-sm">
+                                  {rowOption.text}
+                                </td>
+                                {question.options.slice(0, 5).map((colOption) => (
+                                  <td key={colOption.id} className="border border-gray-300 p-2 text-center">
+                                    <input
+                                      type="radio"
+                                      name={`${question.id}_${rowOption.id}`}
+                                      onChange={() => handleAnswerChange(`${question.id}_${rowOption.id}`, colOption.id)}
+                                    />
+                                  </td>
+                                ))}
+                              </tr>
                             ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {question.options.slice(0, 5).map((rowOption) => (
-                            <tr key={rowOption.id}>
-                              <td className="border border-gray-300 p-2 font-medium text-sm">
-                                {rowOption.text}
-                              </td>
+                          </tbody>
+                        </table>
+                      </div>
+                      {/* Mobile: Card-based layout */}
+                      <div className="sm:hidden space-y-4">
+                        {question.options.slice(0, 5).map((rowOption) => (
+                          <div key={rowOption.id} className="bg-gray-50 rounded-lg p-4">
+                            <div className="font-medium text-gray-900 mb-3">{rowOption.text}</div>
+                            <div className="space-y-2">
                               {question.options.slice(0, 5).map((colOption) => (
-                                <td key={colOption.id} className="border border-gray-300 p-2 text-center">
+                                <label
+                                  key={colOption.id}
+                                  className="flex items-center p-3 bg-white rounded-lg border border-gray-200 cursor-pointer hover:border-primary-300 active:bg-gray-50"
+                                >
                                   <input
                                     type="radio"
                                     name={`${question.id}_${rowOption.id}`}
                                     onChange={() => handleAnswerChange(`${question.id}_${rowOption.id}`, colOption.id)}
+                                    className="mr-3 w-4 h-4"
                                   />
-                                </td>
+                                  <span className="text-sm text-gray-700">{colOption.text}</span>
+                                </label>
                               ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   )}
 
 
@@ -654,40 +792,105 @@ export default function SurveyTake() {
               )}
 
               {calculateTotalPages() > 1 ? (
-                <div className="flex justify-between items-center pt-4">
-                  <button
-                    type="button"
-                    onClick={handlePrevious}
-                    disabled={currentPage === 1}
-                    className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ← Previous
-                  </button>
-
-                  <span className="text-sm text-gray-600 font-medium">
-                    Page {currentPage} of {calculateTotalPages()}
-                  </span>
-
-                  {currentPage < calculateTotalPages() ? (
+                <>
+                  {/* Desktop navigation */}
+                  <div className="hidden sm:flex justify-between items-center pt-4">
                     <button
                       type="button"
-                      onClick={handleNext}
-                      disabled={!canGoNext()}
-                      className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={!canGoNext() ? 'Please answer all required questions' : ''}
+                      onClick={handlePrevious}
+                      disabled={currentPage === 1}
+                      className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Next →
+                      ← Previous
                     </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={submitMutation.isPending || !canSubmit()}
-                      className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
-                    </button>
-                  )}
-                </div>
+
+                    <span className="text-sm text-gray-600 font-medium">
+                      Page {currentPage} of {calculateTotalPages()}
+                    </span>
+
+                    {currentPage < calculateTotalPages() ? (
+                      <button
+                        type="button"
+                        onClick={handleNext}
+                        disabled={!canGoNext()}
+                        className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={!canGoNext() ? 'Please answer all required questions' : ''}
+                      >
+                        Next →
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={submitMutation.isPending || !canSubmit()}
+                        className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mobile navigation - fixed at bottom */}
+                  <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 safe-area-inset-bottom">
+                    <div className="flex justify-between items-center max-w-3xl mx-auto">
+                      <button
+                        type="button"
+                        onClick={handlePrevious}
+                        disabled={currentPage === 1}
+                        className="p-3 rounded-full bg-gray-100 disabled:opacity-30 active:bg-gray-200 transition-colors"
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft className="w-6 h-6 text-gray-700" />
+                      </button>
+
+                      {/* Progress dots */}
+                      <div className="flex gap-1.5 items-center">
+                        {Array.from({ length: Math.min(calculateTotalPages(), 10) }, (_, i) => {
+                          const pageNum = i + 1;
+                          const isActive = pageNum === currentPage;
+                          const isFilled = pageNum <= currentPage;
+                          return (
+                            <div
+                              key={i}
+                              className={`w-2 h-2 rounded-full transition-all ${isActive
+                                ? 'w-4 bg-primary-600'
+                                : isFilled
+                                  ? 'bg-primary-400'
+                                  : 'bg-gray-300'
+                                }`}
+                            />
+                          );
+                        })}
+                        {calculateTotalPages() > 10 && (
+                          <span className="text-xs text-gray-500 ml-1">
+                            {currentPage}/{calculateTotalPages()}
+                          </span>
+                        )}
+                      </div>
+
+                      {currentPage < calculateTotalPages() ? (
+                        <button
+                          type="button"
+                          onClick={handleNext}
+                          disabled={!canGoNext()}
+                          className="p-3 rounded-full bg-primary-600 disabled:opacity-30 active:bg-primary-700 transition-colors"
+                          aria-label="Next page"
+                        >
+                          <ChevronRight className="w-6 h-6 text-white" />
+                        </button>
+                      ) : (
+                        <button
+                          type="submit"
+                          disabled={submitMutation.isPending || !canSubmit()}
+                          className="px-5 py-3 rounded-full bg-primary-600 text-white font-medium disabled:opacity-30 active:bg-primary-700 transition-colors text-sm"
+                        >
+                          {submitMutation.isPending ? '...' : 'Submit'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {/* Spacer for fixed mobile nav */}
+                  <div className="h-20 sm:hidden" />
+                </>
               ) : (
                 <button
                   type="submit"

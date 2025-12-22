@@ -14,6 +14,13 @@ interface SubmitResponseData {
     metadata?: any;
   }>;
   metadata?: any;
+  tracking?: {
+    source?: string;
+    sourceChannel?: string;
+    sourceCampaign?: string;
+    sourceMedium?: string;
+    referrer?: string;
+  };
 }
 
 export class ResponseService {
@@ -135,7 +142,7 @@ export class ResponseService {
       }
     }
 
-    // Create response
+    // Create response with tracking data
     const response = await prisma.response.create({
       data: {
         surveyId,
@@ -145,6 +152,12 @@ export class ResponseService {
         isComplete: true,
         completedAt: new Date(),
         quotaStatus,
+        // Source tracking
+        source: data.tracking?.source,
+        sourceChannel: data.tracking?.sourceChannel,
+        sourceCampaign: data.tracking?.sourceCampaign,
+        sourceMedium: data.tracking?.sourceMedium,
+        referrer: data.tracking?.referrer,
       },
     });
 

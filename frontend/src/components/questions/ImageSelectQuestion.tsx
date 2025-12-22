@@ -59,15 +59,16 @@ export default function ImageSelectQuestion({ question, onChange, value, disable
     }
   };
 
+  // Responsive grid columns: 1 col on mobile, scales up on larger screens
   const gridCols = {
-    2: 'grid-cols-2',
-    3: 'grid-cols-3',
-    4: 'grid-cols-4',
-    5: 'grid-cols-5',
+    2: 'grid-cols-1 sm:grid-cols-2',
+    3: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
+    4: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4',
+    5: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
   };
 
   return (
-    <div className={`grid ${gridCols[columns as keyof typeof gridCols] || 'grid-cols-3'} gap-4`}>
+    <div className={`grid ${gridCols[columns as keyof typeof gridCols] || 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'} gap-3 sm:gap-4`}>
       {question.options.map((option: QuestionOption) => {
         const isSelected = selectedOptions.includes(option.id);
 
