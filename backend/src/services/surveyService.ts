@@ -14,6 +14,12 @@ interface CreateSurveyData {
   welcomeText?: string;
   thankYouText?: string;
   status?: SurveyStatus;
+  showProgressBar?: boolean;
+  progressBarPosition?: string;
+  progressBarStyle?: string;
+  progressBarFormat?: string;
+  paginationMode?: string;
+  questionsPerPage?: number;
 }
 
 interface CreateQuestionData {
@@ -54,6 +60,12 @@ export class SurveyService {
         welcomeText: data.welcomeText,
         thankYouText: data.thankYouText,
         status: data.status ?? 'DRAFT',
+        showProgressBar: data.showProgressBar ?? true,
+        progressBarPosition: data.progressBarPosition ?? 'top',
+        progressBarStyle: data.progressBarStyle ?? 'bar',
+        progressBarFormat: data.progressBarFormat ?? 'percentage',
+        paginationMode: data.paginationMode ?? 'all',
+        questionsPerPage: data.questionsPerPage ?? 1,
       },
       include: {
         creator: {
@@ -194,6 +206,12 @@ export class SurveyService {
         closeDate: data.closeDate ? new Date(data.closeDate) : undefined,
         welcomeText: data.welcomeText,
         thankYouText: data.thankYouText,
+        showProgressBar: data.showProgressBar,
+        progressBarPosition: data.progressBarPosition,
+        progressBarStyle: data.progressBarStyle,
+        progressBarFormat: data.progressBarFormat,
+        paginationMode: data.paginationMode,
+        questionsPerPage: data.questionsPerPage,
       },
       include: {
         questions: {
@@ -233,6 +251,12 @@ export class SurveyService {
         allowMultiple: original.allowMultiple,
         welcomeText: original.welcomeText,
         thankYouText: original.thankYouText,
+        showProgressBar: original.showProgressBar,
+        progressBarPosition: original.progressBarPosition,
+        progressBarStyle: original.progressBarStyle,
+        progressBarFormat: original.progressBarFormat,
+        paginationMode: original.paginationMode,
+        questionsPerPage: original.questionsPerPage,
       },
     });
 

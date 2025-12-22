@@ -19,6 +19,7 @@ router.post('/:id/publish', authenticate, SurveyController.publish as unknown as
 router.post('/:id/questions', authenticate, SurveyController.addQuestion as unknown as RequestHandler);
 router.put('/questions/:questionId', authenticate, SurveyController.updateQuestion as unknown as RequestHandler);
 router.delete('/questions/:questionId', authenticate, SurveyController.deleteQuestion as unknown as RequestHandler);
+router.delete('/:id/questions/:questionId', authenticate, SurveyController.deleteQuestion as unknown as RequestHandler);
 router.post('/:id/questions/reorder', authenticate, SurveyController.reorderQuestions as unknown as RequestHandler);
 
 // Logic rules

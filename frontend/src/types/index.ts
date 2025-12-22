@@ -29,6 +29,17 @@ export enum QuestionType {
   YES_NO = 'YES_NO',
   NPS = 'NPS',
   LIKERT_SCALE = 'LIKERT_SCALE',
+  IMAGE_SELECT = 'IMAGE_SELECT',
+  SEMANTIC_DIFFERENTIAL = 'SEMANTIC_DIFFERENTIAL',
+  GEO_LOCATION = 'GEO_LOCATION',
+  MULTIPLE_NUMERICAL = 'MULTIPLE_NUMERICAL',
+  ARRAY_DUAL_SCALE = 'ARRAY_DUAL_SCALE',
+  EQUATION = 'EQUATION',
+  BOILERPLATE = 'BOILERPLATE',
+  HIDDEN = 'HIDDEN',
+  GENDER = 'GENDER',
+  LANGUAGE_SWITCHER = 'LANGUAGE_SWITCHER',
+  SIGNATURE = 'SIGNATURE',
 }
 
 
@@ -65,6 +76,10 @@ export interface Survey {
   progressBarPosition?: 'top' | 'bottom' | 'both';
   progressBarStyle?: 'bar' | 'steps' | 'minimal' | 'combined';
   progressBarFormat?: 'percentage' | 'count' | 'both';
+
+  // Pagination
+  paginationMode?: 'all' | 'single' | 'custom';
+  questionsPerPage?: number;
 
   questions: Question[];
   theme?: SurveyTheme;
@@ -278,3 +293,58 @@ export interface AutomationResult {
     completionRate: number;
   };
 }
+
+// Participant Management Types
+export enum ParticipantStatus {
+  PENDING = 'PENDING',
+  INVITED = 'INVITED',
+  STARTED = 'STARTED',
+  COMPLETED = 'COMPLETED',
+  OPTED_OUT = 'OPTED_OUT',
+  BOUNCED = 'BOUNCED',
+  EXPIRED = 'EXPIRED',
+}
+
+export enum EmailStatus {
+  PENDING = 'PENDING',
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  OPENED = 'OPENED',
+  CLICKED = 'CLICKED',
+  BOUNCED = 'BOUNCED',
+  FAILED = 'FAILED',
+}
+
+export enum EmailTemplateType {
+  INVITATION = 'INVITATION',
+  REMINDER_1 = 'REMINDER_1',
+  REMINDER_2 = 'REMINDER_2',
+  REMINDER_3 = 'REMINDER_3',
+  COMPLETION_THANK_YOU = 'COMPLETION_THANK_YOU',
+  OPT_OUT_CONFIRMATION = 'OPT_OUT_CONFIRMATION',
+}
+
+export interface Participant {
+  id: string;
+  surveyId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  token: string;
+  tokenUsed: boolean;
+  status: ParticipantStatus;
+  invitedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  attributes: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ParticipantStats {
+  total: number;
+  byStatus: Record<ParticipantStatus, number>;
+  responseRate: number;
+  averageTimeToComplete: number | null;
+}
+

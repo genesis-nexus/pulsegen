@@ -400,6 +400,66 @@ export const INDUSTRY_PERSONAS: IndustryPersona[] = [
       averageTime: 285,
       dropoffPoints: [14]
     }
+  },
+  {
+    id: 'qa-testing-all-types',
+    industry: 'Quality Assurance',
+    name: 'Full Feature Test Survey',
+    description: 'Comprehensive test survey containing every available question type for validation purposes.',
+    targetAudience: 'QA Engineers and System Testers',
+    surveyTopics: [
+      'Component Validation',
+      'Input Handling',
+      'Logic Verification',
+      'Media Rendering',
+      'Data Persistence'
+    ],
+    questionTypes: [
+      'MULTIPLE_CHOICE', 'CHECKBOXES', 'DROPDOWN', 'RATING_SCALE', 'MATRIX',
+      'RANKING', 'SHORT_TEXT', 'LONG_TEXT', 'EMAIL', 'NUMBER', 'DATE', 'TIME',
+      'FILE_UPLOAD', 'SLIDER', 'YES_NO', 'NPS', 'LIKERT_SCALE', 'IMAGE_SELECT',
+      'SEMANTIC_DIFFERENTIAL', 'GEO_LOCATION', 'MULTIPLE_NUMERICAL',
+      'ARRAY_DUAL_SCALE', 'EQUATION', 'BOILERPLATE', 'HIDDEN', 'GENDER',
+      'LANGUAGE_SWITCHER', 'SIGNATURE'
+    ],
+    typicalQuestions: [
+      'Standard Multiple Choice Question',
+      'Checkboxes Question',
+      'Dropdown Selection',
+      'Rating Scale 1-5',
+      'Matrix Grid Question',
+      'Ranking Items',
+      'Short Text Input',
+      'Long Text Area',
+      'Email Input',
+      'Number Input',
+      'Date Selection',
+      'Time Selection',
+      'File Upload',
+      'Slider Value',
+      'Yes/No Question',
+      'Net Promoter Score',
+      'Likert Scale Agreement',
+      'Image Selection',
+      'Semantic Differential Scale',
+      'Geo Location',
+      'Multiple Numerical Input',
+      'Array Dual Scale',
+      'Equation/Calculation',
+      'Boilerplate Text',
+      'Hidden Field',
+      'Gender Selection',
+      'Language Switcher',
+      'Digital Signature'
+    ],
+    attributes: [
+      { age: 30, gender: 'Any', occupation: 'QA Tester', experience: 'Testing', techSavviness: 'high', educationLevel: 'N/A', location: 'Lab' }
+    ],
+    responsePatterns: {
+      completionRate: 100,
+      averageTime: 300,
+      dropoffPoints: []
+    }
   }
 ];
 

@@ -62,7 +62,16 @@ export default function QuestionWizard({
     const showOptionsStep =
         questionData.type === QuestionType.MULTIPLE_CHOICE ||
         questionData.type === QuestionType.CHECKBOXES ||
-        questionData.type === QuestionType.DROPDOWN;
+        questionData.type === QuestionType.DROPDOWN ||
+        questionData.type === QuestionType.RANKING ||
+        questionData.type === QuestionType.IMAGE_SELECT ||
+        questionData.type === QuestionType.LIKERT_SCALE ||
+        questionData.type === QuestionType.MATRIX ||
+        questionData.type === QuestionType.ARRAY_DUAL_SCALE ||
+        questionData.type === QuestionType.GENDER ||
+        questionData.type === QuestionType.SEMANTIC_DIFFERENTIAL ||
+        questionData.type === QuestionType.MULTIPLE_NUMERICAL ||
+        questionData.type === QuestionType.RATING_SCALE;
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">

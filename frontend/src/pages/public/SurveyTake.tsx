@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { Survey, QuestionType } from '../../types';
 import { SurveyProgressWrapper } from '../../components/survey/SurveyProgressWrapper';
+import QuestionRenderer from '../../components/questions/QuestionRenderer';
 
 // localStorage utilities
 const STORAGE_KEY_PREFIX = 'survey_response_';
@@ -47,7 +48,8 @@ export default function SurveyTake() {
   const [submitted, setSubmitted] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: survey, isLoading, error } = useQuery({
     queryKey: ['public-survey', slug],
@@ -151,6 +153,78 @@ export default function SurveyTake() {
     submitMutation.mutate({ answers: formattedAnswers });
   };
 
+  // Pagination helpers
+  const calculateTotalPages = () => {
+    if (!survey || !survey.questions) return 1;
+
+    const { paginationMode = 'all', questionsPerPage = 1 } = survey;
+
+    if (paginationMode === 'all') return 1;
+    if (paginationMode === 'single') return survey.questions.length;
+    if (paginationMode === 'custom') {
+      return Math.ceil(survey.questions.length / questionsPerPage);
+    }
+
+    return 1;
+  };
+
+  const getVisibleQuestions = () => {
+    if (!survey || !survey.questions) return [];
+
+    const { paginationMode = 'all', questionsPerPage = 1 } = survey;
+
+    if (paginationMode === 'all') {
+      return survey.questions;
+    }
+
+    if (paginationMode === 'single') {
+      const startIndex = currentPage - 1;
+      return survey.questions.slice(startIndex, startIndex + 1);
+    }
+
+    if (paginationMode === 'custom') {
+      const startIndex = (currentPage - 1) * questionsPerPage;
+      const endIndex = startIndex + questionsPerPage;
+      return survey.questions.slice(startIndex, endIndex);
+    }
+
+    return survey.questions;
+  };
+
+  const canGoNext = () => {
+    const visibleQuestions = getVisibleQuestions();
+    const requiredQuestions = visibleQuestions.filter(q => q.isRequired);
+    return requiredQuestions.every(q => {
+      const answer = answers[q.id];
+      return answer !== undefined && answer !== '' && answer !== null;
+    });
+  };
+
+  const handleNext = () => {
+    const totalPages = calculateTotalPages();
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const canSubmit = () => {
+    if (!survey) return false;
+    const requiredQuestions = survey.questions.filter(q => q.isRequired);
+    return requiredQuestions.every(q => {
+      const answer = answers[q.id];
+      return answer !== undefined && answer !== '' && answer !== null;
+    });
+  };
+
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -209,8 +283,8 @@ export default function SurveyTake() {
   return (
     <SurveyProgressWrapper
       survey={survey}
-      currentPage={1}
-      totalPages={1}
+      currentPage={currentPage}
+      totalPages={calculateTotalPages()}
       currentQuestion={Object.keys(answers).length}
       totalQuestions={survey.questions.length}
     >
@@ -227,301 +301,336 @@ export default function SurveyTake() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {survey.questions.map((question, index) => (
-              <div key={question.id} className="card">
-                <label className="block mb-4">
-                  <span className="text-lg font-medium text-gray-900">
-                    {index + 1}. {question.text}
-                    {question.isRequired && <span className="text-red-600 ml-1">*</span>}
-                  </span>
-                  {question.description && (
-                    <span className="block text-sm text-gray-600 mt-1">
-                      {question.description}
+            {getVisibleQuestions().map((question, index) => {
+              const globalIndex = survey.paginationMode === 'all'
+                ? index + 1
+                : ((currentPage - 1) * (survey.questionsPerPage || 1)) + index + 1;
+
+              return (
+                <div key={question.id} className="card">
+                  <label className="block mb-4">
+                    <span className="text-lg font-medium text-gray-900">
+                      {globalIndex}. {question.text}
+                      {question.isRequired && <span className="text-red-600 ml-1">*</span>}
                     </span>
+                    {question.description && (
+                      <span className="block text-sm text-gray-600 mt-1">
+                        {question.description}
+                      </span>
+                    )}
+                  </label>
+
+                  {question.type === QuestionType.MULTIPLE_CHOICE && (
+                    <div className="space-y-2">
+                      {question.options.map((option) => (
+                        <label key={option.id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name={question.id}
+                            value={option.id}
+                            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                            className="mr-2"
+                          />
+                          <span>{option.text}</span>
+                        </label>
+                      ))}
+                    </div>
                   )}
-                </label>
 
-                {question.type === QuestionType.MULTIPLE_CHOICE && (
-                  <div className="space-y-2">
-                    {question.options.map((option) => (
-                      <label key={option.id} className="flex items-center">
-                        <input
-                          type="radio"
-                          name={question.id}
-                          value={option.id}
-                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                          className="mr-2"
-                        />
-                        <span>{option.text}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                  {question.type === QuestionType.CHECKBOXES && (
+                    <div className="space-y-2">
+                      {question.options.map((option) => (
+                        <label key={option.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            value={option.id}
+                            onChange={(e) => {
+                              const current = answers[question.id] || [];
+                              if (e.target.checked) {
+                                handleAnswerChange(question.id, [...current, option.id]);
+                              } else {
+                                handleAnswerChange(
+                                  question.id,
+                                  current.filter((id: string) => id !== option.id)
+                                );
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span>{option.text}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
 
-                {question.type === QuestionType.CHECKBOXES && (
-                  <div className="space-y-2">
-                    {question.options.map((option) => (
-                      <label key={option.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          value={option.id}
-                          onChange={(e) => {
-                            const current = answers[question.id] || [];
-                            if (e.target.checked) {
-                              handleAnswerChange(question.id, [...current, option.id]);
-                            } else {
-                              handleAnswerChange(
-                                question.id,
-                                current.filter((id: string) => id !== option.id)
-                              );
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <span>{option.text}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                  {question.type === QuestionType.SHORT_TEXT && (
+                    <input
+                      type="text"
+                      className="input"
+                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                      required={question.isRequired}
+                    />
+                  )}
 
-                {question.type === QuestionType.SHORT_TEXT && (
-                  <input
-                    type="text"
-                    className="input"
-                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    required={question.isRequired}
-                  />
-                )}
+                  {question.type === QuestionType.LONG_TEXT && (
+                    <textarea
+                      className="input"
+                      rows={4}
+                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                      required={question.isRequired}
+                    />
+                  )}
 
-                {question.type === QuestionType.LONG_TEXT && (
-                  <textarea
-                    className="input"
-                    rows={4}
-                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    required={question.isRequired}
-                  />
-                )}
+                  {question.type === QuestionType.EMAIL && (
+                    <input
+                      type="email"
+                      className="input"
+                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                      required={question.isRequired}
+                    />
+                  )}
 
-                {question.type === QuestionType.EMAIL && (
-                  <input
-                    type="email"
-                    className="input"
-                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    required={question.isRequired}
-                  />
-                )}
+                  {question.type === QuestionType.NUMBER && (
+                    <input
+                      type="number"
+                      className="input"
+                      onChange={(e) => handleAnswerChange(question.id, parseFloat(e.target.value))}
+                      required={question.isRequired}
+                    />
+                  )}
 
-                {question.type === QuestionType.NUMBER && (
-                  <input
-                    type="number"
-                    className="input"
-                    onChange={(e) => handleAnswerChange(question.id, parseFloat(e.target.value))}
-                    required={question.isRequired}
-                  />
-                )}
 
-                {question.type === QuestionType.DATE && (
-                  <input
-                    type="date"
-                    className="input"
-                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    required={question.isRequired}
-                  />
-                )}
 
-                {question.type === QuestionType.RATING_SCALE && (
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((rating) => (
+                  {question.type === QuestionType.RATING_SCALE && (
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <button
+                          key={rating}
+                          type="button"
+                          onClick={() => handleAnswerChange(question.id, rating)}
+                          className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === rating
+                            ? 'border-primary-600 bg-primary-600 text-white'
+                            : 'border-gray-300 hover:border-primary-600'
+                            }`}
+                        >
+                          {rating}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === QuestionType.YES_NO && (
+                    <div className="flex gap-4">
                       <button
-                        key={rating}
                         type="button"
-                        onClick={() => handleAnswerChange(question.id, rating)}
-                        className={`w-12 h-12 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === rating
+                        onClick={() => handleAnswerChange(question.id, 'yes')}
+                        className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'yes'
                           ? 'border-primary-600 bg-primary-600 text-white'
                           : 'border-gray-300 hover:border-primary-600'
                           }`}
                       >
-                        {rating}
+                        Yes
                       </button>
-                    ))}
-                  </div>
-                )}
-
-                {question.type === QuestionType.YES_NO && (
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      onClick={() => handleAnswerChange(question.id, 'yes')}
-                      className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'yes'
-                        ? 'border-primary-600 bg-primary-600 text-white'
-                        : 'border-gray-300 hover:border-primary-600'
-                        }`}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAnswerChange(question.id, 'no')}
-                      className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'no'
-                        ? 'border-primary-600 bg-primary-600 text-white'
-                        : 'border-gray-300 hover:border-primary-600'
-                        }`}
-                    >
-                      No
-                    </button>
-                  </div>
-                )}
-                {question.type === QuestionType.DROPDOWN && (
-                  <select
-                    className="input"
-                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    required={question.isRequired}
-                    value={answers[question.id] || ''}
-                  >
-                    <option value="">Select an option...</option>
-                    {question.options.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.text}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {question.type === QuestionType.TIME && (
-                  <input
-                    type="time"
-                    className="input"
-                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    required={question.isRequired}
-                  />
-                )}
-
-                {question.type === QuestionType.FILE_UPLOAD && (
-                  <input
-                    type="file"
-                    className="input"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleAnswerChange(question.id, file.name);
-                      }
-                    }}
-                    required={question.isRequired}
-                  />
-                )}
-
-                {question.type === QuestionType.SLIDER && (
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={answers[question.id] || 50}
-                      onChange={(e) => handleAnswerChange(question.id, parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="text-center text-sm text-gray-600">
-                      Value: {answers[question.id] || 50}
+                      <button
+                        type="button"
+                        onClick={() => handleAnswerChange(question.id, 'no')}
+                        className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === 'no'
+                          ? 'border-primary-600 bg-primary-600 text-white'
+                          : 'border-gray-300 hover:border-primary-600'
+                          }`}
+                      >
+                        No
+                      </button>
                     </div>
-                  </div>
-                )}
+                  )}
+                  {question.type === QuestionType.DROPDOWN && (
+                    <select
+                      className="input"
+                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                      required={question.isRequired}
+                      value={answers[question.id] || ''}
+                    >
+                      <option value="">Select an option...</option>
+                      {question.options.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.text}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-                {question.type === QuestionType.NPS && (
-                  <div className="space-y-2">
-                    <div className="flex gap-1 justify-between">
-                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
-                        <button
-                          key={score}
-                          type="button"
-                          onClick={() => handleAnswerChange(question.id, score)}
-                          className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === score
-                            ? score <= 6
-                              ? 'border-red-600 bg-red-600 text-white'
-                              : score <= 8
-                                ? 'border-yellow-600 bg-yellow-600 text-white'
-                                : 'border-green-600 bg-green-600 text-white'
-                            : 'border-gray-300 hover:border-primary-600'
-                            }`}
-                        >
-                          {score}
-                        </button>
+
+
+                  {question.type === QuestionType.FILE_UPLOAD && (
+                    <input
+                      type="file"
+                      className="input"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleAnswerChange(question.id, file.name);
+                        }
+                      }}
+                      required={question.isRequired}
+                    />
+                  )}
+
+                  {question.type === QuestionType.SLIDER && (
+                    <div className="space-y-2">
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={answers[question.id] || 50}
+                        onChange={(e) => handleAnswerChange(question.id, parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-center text-sm text-gray-600">
+                        Value: {answers[question.id] || 50}
+                      </div>
+                    </div>
+                  )}
+
+                  {question.type === QuestionType.NPS && (
+                    <div className="space-y-2">
+                      <div className="flex gap-1 justify-between">
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
+                          <button
+                            key={score}
+                            type="button"
+                            onClick={() => handleAnswerChange(question.id, score)}
+                            className={`flex-1 py-3 rounded-lg border-2 font-medium transition-colors ${answers[question.id] === score
+                              ? score <= 6
+                                ? 'border-red-600 bg-red-600 text-white'
+                                : score <= 8
+                                  ? 'border-yellow-600 bg-yellow-600 text-white'
+                                  : 'border-green-600 bg-green-600 text-white'
+                              : 'border-gray-300 hover:border-primary-600'
+                              }`}
+                          >
+                            {score}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Not likely</span>
+                        <span>Extremely likely</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {question.type === QuestionType.LIKERT_SCALE && (
+                    <div className="space-y-2">
+                      {question.options.map((option) => (
+                        <label key={option.id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name={question.id}
+                            value={option.id}
+                            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                            className="mr-2"
+                          />
+                          <span>{option.text}</span>
+                        </label>
                       ))}
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>Not likely</span>
-                      <span>Extremely likely</span>
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {question.type === QuestionType.LIKERT_SCALE && (
-                  <div className="space-y-2">
-                    {question.options.map((option) => (
-                      <label key={option.id} className="flex items-center">
-                        <input
-                          type="radio"
-                          name={question.id}
-                          value={option.id}
-                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                          className="mr-2"
-                        />
-                        <span>{option.text}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
 
-                {question.type === QuestionType.RANKING && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600 mb-2">Drag to reorder or select in order of preference</p>
-                    {question.options.map((option, idx) => (
-                      <div key={option.id} className="flex items-center gap-2">
-                        <span className="text-gray-500 font-medium w-6">{idx + 1}.</span>
-                        <div className="flex-1 p-3 border-2 border-gray-300 rounded-lg bg-white cursor-move hover:border-primary-600">
-                          {option.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
 
-                {question.type === QuestionType.MATRIX && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="border border-gray-300 p-2 bg-gray-50"></th>
-                          {question.options.slice(0, 5).map((option) => (
-                            <th key={option.id} className="border border-gray-300 p-2 bg-gray-50 text-sm">
-                              {option.text}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {question.options.slice(0, 5).map((rowOption) => (
-                          <tr key={rowOption.id}>
-                            <td className="border border-gray-300 p-2 font-medium text-sm">
-                              {rowOption.text}
-                            </td>
-                            {question.options.slice(0, 5).map((colOption) => (
-                              <td key={colOption.id} className="border border-gray-300 p-2 text-center">
-                                <input
-                                  type="radio"
-                                  name={`${question.id}_${rowOption.id}`}
-                                  onChange={() => handleAnswerChange(`${question.id}_${rowOption.id}`, colOption.id)}
-                                />
-                              </td>
+                  {question.type === QuestionType.MATRIX && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr>
+                            <th className="border border-gray-300 p-2 bg-gray-50"></th>
+                            {question.options.slice(0, 5).map((option) => (
+                              <th key={option.id} className="border border-gray-300 p-2 bg-gray-50 text-sm">
+                                {option.text}
+                              </th>
                             ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            ))}
+                        </thead>
+                        <tbody>
+                          {question.options.slice(0, 5).map((rowOption) => (
+                            <tr key={rowOption.id}>
+                              <td className="border border-gray-300 p-2 font-medium text-sm">
+                                {rowOption.text}
+                              </td>
+                              {question.options.slice(0, 5).map((colOption) => (
+                                <td key={colOption.id} className="border border-gray-300 p-2 text-center">
+                                  <input
+                                    type="radio"
+                                    name={`${question.id}_${rowOption.id}`}
+                                    onChange={() => handleAnswerChange(`${question.id}_${rowOption.id}`, colOption.id)}
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+
+                  {/* Handle all other types using QuestionRenderer */}
+                  {[
+                    QuestionType.RANKING,
+                    QuestionType.DATE,
+                    QuestionType.TIME,
+                    QuestionType.IMAGE_SELECT,
+                    QuestionType.SEMANTIC_DIFFERENTIAL,
+                    QuestionType.GEO_LOCATION,
+                    QuestionType.MULTIPLE_NUMERICAL,
+                    QuestionType.ARRAY_DUAL_SCALE,
+                    QuestionType.EQUATION,
+                    QuestionType.BOILERPLATE,
+                    QuestionType.HIDDEN,
+                    QuestionType.GENDER,
+                    QuestionType.LANGUAGE_SWITCHER,
+                    QuestionType.SIGNATURE,
+                  ].includes(question.type) && (
+                      <QuestionRenderer
+                        question={question}
+                        value={(() => {
+                          const val = answers[question.id];
+                          if (val === undefined) return undefined;
+                          // Adapter: Store -> Renderer Prop
+                          switch (question.type) {
+                            case QuestionType.RANKING: return { optionIds: val };
+                            case QuestionType.DATE: return { dateValue: val };
+                            case QuestionType.TIME: return { textValue: val };
+                            case QuestionType.IMAGE_SELECT: return { optionId: val }; // Assuming single select
+                            case QuestionType.SEMANTIC_DIFFERENTIAL: return { numberValue: val };
+                            case QuestionType.SIGNATURE: return {
+                              textValue: typeof val === 'string' ? val :
+                                (val?.textValue || val?.value)
+                            };
+                              // Default fallback
+                              return typeof val === 'object' ? val : { value: val, textValue: val };
+                          }
+                        })()}
+                        onChange={(val) => {
+                          // Adapter: Renderer Event -> Store
+                          let cleanVal = val;
+                          if (val && typeof val === 'object') {
+                            if ('optionIds' in val) cleanVal = val.optionIds;
+                            else if ('dateValue' in val) cleanVal = val.dateValue;
+                            else if ('textValue' in val) cleanVal = val.textValue;
+                            else if ('numberValue' in val) cleanVal = val.numberValue;
+                            else if ('optionId' in val) cleanVal = val.optionId;
+                            else if ('metadata' in val) cleanVal = val.metadata;
+                          }
+                          handleAnswerChange(question.id, cleanVal);
+                        }}
+                        disabled={submitted}
+                      />
+                    )}
+                </div>
+              );
+            })}
             <div className="card">
               {/* Auto-save indicator */}
               {lastSaved && (
@@ -543,17 +652,55 @@ export default function SurveyTake() {
                   )}
                 </div>
               )}
-              <button
-                type="submit"
-                disabled={submitMutation.isPending}
-                className="w-full btn btn-primary"
-              >
-                {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
-              </button>
+
+              {calculateTotalPages() > 1 ? (
+                <div className="flex justify-between items-center pt-4">
+                  <button
+                    type="button"
+                    onClick={handlePrevious}
+                    disabled={currentPage === 1}
+                    className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ← Previous
+                  </button>
+
+                  <span className="text-sm text-gray-600 font-medium">
+                    Page {currentPage} of {calculateTotalPages()}
+                  </span>
+
+                  {currentPage < calculateTotalPages() ? (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={!canGoNext()}
+                      className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={!canGoNext() ? 'Please answer all required questions' : ''}
+                    >
+                      Next →
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={submitMutation.isPending || !canSubmit()}
+                      className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={submitMutation.isPending || !canSubmit()}
+                  className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
+                </button>
+              )}
             </div>
           </form>
         </div>
-      </div>
-    </SurveyProgressWrapper>
+      </div >
+    </SurveyProgressWrapper >
   );
 }

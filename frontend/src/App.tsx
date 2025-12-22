@@ -13,7 +13,10 @@ import Dashboard from './pages/Dashboard';
 import SurveyList from './pages/surveys/SurveyList';
 import SurveyBuilder from './pages/surveys/SurveyBuilder';
 import SurveyAnalytics from './pages/surveys/SurveyAnalytics';
+import SurveyParticipants from './pages/surveys/SurveyParticipants';
 import AIBuilder from './pages/surveys/AIBuilder';
+import SurveyWizard from './pages/surveys/SurveyWizard';
+import CreateWithAI from './pages/surveys/CreateWithAI';
 import SurveyTake from './pages/public/SurveyTake';
 import AISettings from './pages/settings/AISettings';
 import AIToolsSettings from './pages/settings/AIToolsSettings';
@@ -68,10 +71,14 @@ function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/surveys" element={<SurveyList />} />
+        <Route path="/surveys/create-ai" element={<CreateWithAI />} />
         <Route path="/surveys/ai-builder" element={<AIBuilder />} />
+        <Route path="/surveys/ai-wizard" element={<SurveyWizard />} />
         <Route path="/surveys/new" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/edit" element={<SurveyBuilder />} />
         <Route path="/surveys/:id/analytics" element={<SurveyAnalytics />} />
+
+        <Route path="/surveys/:id/participants" element={<SurveyParticipants />} />
         <Route path="/ml/models" element={<MLModels />} />
         <Route path="/ai/chat" element={<AIChat />} />
         <Route path="/settings/ai" element={<AISettings />} />

@@ -153,6 +153,57 @@ export class AutomationService {
     persona: IndustryPersona,
     config: AutomationConfig
   ) {
+    // Special handling for QA Testing persona to ensure all types are created
+    if (persona.id === 'qa-testing-all-types') {
+      const types = persona.questionTypes;
+      const texts = persona.typicalQuestions;
+
+      for (let i = 0; i < types.length; i++) {
+        const type = types[i];
+        const text = texts[i] || `Test Question for ${type}`;
+
+        const questionData: any = {
+          text,
+          type: type as QuestionType,
+          isRequired: false,
+          order: i
+        };
+
+        if (this.needsOptions(type)) {
+          questionData.options = this.generateOptions(text, type, persona);
+        }
+
+        // Add specific settings for types that need them
+        if (type === 'RATING_SCALE') {
+          questionData.settings = { minValue: 1, maxValue: 5, minLabel: 'Poor', maxLabel: 'Excellent' };
+        } else if (type === 'NPS') {
+          questionData.settings = { minValue: 0, maxValue: 10, minLabel: 'Not likely', maxLabel: 'Likely' };
+        } else if (type === 'SLIDER') {
+          questionData.settings = { minValue: 0, maxValue: 100, step: 1 };
+        } else if (type === 'DATE') {
+          questionData.settings = { format: 'MM/DD/YYYY' };
+        } else if (type === 'TIME') {
+          questionData.settings = { format: '12h' };
+        } else if (type === 'FILE_UPLOAD') {
+          questionData.settings = { maxSize: 10, allowedTypes: ['image/png', 'image/jpeg', 'application/pdf'] };
+        } else if (type === 'GEO_LOCATION') {
+          questionData.settings = { accuracy: 'high' };
+        } else if (type === 'MATRIX') {
+          questionData.settings = {
+            rows: ['Row 1', 'Row 2', 'Row 3'],
+            multiSelect: false
+          };
+        } else if (type === 'MULTIPLE_NUMERICAL') {
+          questionData.settings = {
+            fields: [{ name: 'num1', label: 'First Number', min: 0, max: 100 }, { name: 'num2', label: 'Second Number', min: 0, max: 100 }]
+          };
+        }
+
+        await SurveyService.addQuestion(surveyId, userId, questionData);
+      }
+      return;
+    }
+
     const questions = persona.typicalQuestions;
     const questionTypes = persona.questionTypes;
 
@@ -247,7 +298,11 @@ export class AutomationService {
    * Check if question type needs options
    */
   private static needsOptions(questionType: string): boolean {
-    return ['MULTIPLE_CHOICE', 'CHECKBOXES', 'DROPDOWN'].includes(questionType);
+    return [
+      'MULTIPLE_CHOICE', 'CHECKBOXES', 'DROPDOWN', 'RANKING',
+      'LIKERT_SCALE', 'IMAGE_SELECT', 'SEMANTIC_DIFFERENTIAL',
+      'ARRAY_DUAL_SCALE', 'GENDER', 'MATRIX'
+    ].includes(questionType);
   }
 
   /**
@@ -255,6 +310,62 @@ export class AutomationService {
    */
   private static generateOptions(questionText: string, questionType: string, persona: IndustryPersona): any[] {
     const text = questionText.toLowerCase();
+
+    // QA Testing defaults
+    if (persona.id === 'qa-testing-all-types') {
+      if (questionType === 'MATRIX' || questionType === 'LIKERT_SCALE') {
+        return [
+          { text: 'Strongly Disagree', order: 0 },
+          { text: 'Disagree', order: 1 },
+          { text: 'Neutral', order: 2 },
+          { text: 'Agree', order: 3 },
+          { text: 'Strongly Agree', order: 4 }
+        ];
+      }
+      if (questionType === 'IMAGE_SELECT') {
+        return [
+          { text: 'Option A', value: 'opt_a', imageUrl: 'https://placehold.co/400?text=Option+A', order: 0 },
+          { text: 'Option B', value: 'opt_b', imageUrl: 'https://placehold.co/400?text=Option+B', order: 1 }
+        ];
+      }
+      if (questionType === 'SEMANTIC_DIFFERENTIAL') {
+        return [
+          { text: 'Efficient', value: 'Inefficient', order: 0 },
+          { text: 'Modern', value: 'Outdated', order: 1 },
+          { text: 'Friendly', value: 'Unfriendly', order: 2 }
+        ];
+      }
+      if (questionType === 'RANKING') {
+        return [
+          { text: 'Item 1', order: 0 },
+          { text: 'Item 2', order: 1 },
+          { text: 'Item 3', order: 2 }
+        ];
+      }
+      if (questionType === 'GENDER') {
+        return [
+          { text: 'Male', order: 0 },
+          { text: 'Female', order: 1 },
+          { text: 'Non-binary', order: 2 },
+          { text: 'Prefer not to say', order: 3 }
+        ];
+      }
+      if (questionType === 'ARRAY_DUAL_SCALE') {
+        return [
+          { text: 'Feature A', value: 'feature_a', order: 0 },
+          { text: 'Feature B', value: 'feature_b', order: 1 },
+          { text: 'Feature C', value: 'feature_c', order: 2 }
+        ];
+      }
+      if (['MULTIPLE_CHOICE', 'CHECKBOXES', 'DROPDOWN'].includes(questionType)) {
+        return [
+          { text: 'Option 1', order: 0 },
+          { text: 'Option 2', order: 1 },
+          { text: 'Option 3', order: 2 },
+          { text: 'Option 4', order: 3 }
+        ];
+      }
+    }
 
     // Industry-specific options
     if (persona.industry === 'Healthcare') {

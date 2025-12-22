@@ -31,6 +31,12 @@ export const createSurveySchema = z.object({
   closeDate: z.string().datetime().optional(),
   welcomeText: z.string().optional(),
   thankYouText: z.string().optional(),
+  showProgressBar: z.boolean().optional(),
+  progressBarPosition: z.string().optional(),
+  progressBarStyle: z.string().optional(),
+  progressBarFormat: z.string().optional(),
+  paginationMode: z.string().optional(),
+  questionsPerPage: z.number().int().positive().optional(),
 });
 
 export const updateSurveySchema = createSurveySchema.partial();

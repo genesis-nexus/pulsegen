@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, Eye, Split, Layout } from 'lucide-react';
+import { Save, Eye, Split, Layout, Users } from 'lucide-react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
@@ -40,6 +40,8 @@ export default function SurveyBuilder() {
   const [progressBarPosition, setProgressBarPosition] = useState('top');
   const [progressBarStyle, setProgressBarStyle] = useState('bar');
   const [progressBarFormat, setProgressBarFormat] = useState('percentage');
+  const [paginationMode, setPaginationMode] = useState('all');
+  const [questionsPerPage, setQuestionsPerPage] = useState(1);
 
   // AI & Logic State
   const [showQuestionOptimizer, setShowQuestionOptimizer] = useState(false);
@@ -54,6 +56,8 @@ export default function SurveyBuilder() {
     progressBarPosition: string;
     progressBarStyle: string;
     progressBarFormat: string;
+    paginationMode: string;
+    questionsPerPage: number;
   }
 
   const { data: survey, isLoading } = useQuery({
@@ -69,6 +73,8 @@ export default function SurveyBuilder() {
       setProgressBarPosition(data.progressBarPosition || 'top');
       setProgressBarStyle(data.progressBarStyle || 'bar');
       setProgressBarFormat(data.progressBarFormat || 'percentage');
+      setPaginationMode(data.paginationMode || 'all');
+      setQuestionsPerPage(data.questionsPerPage || 1);
 
       // Fetch logic rules
       try {
@@ -175,7 +181,9 @@ export default function SurveyBuilder() {
       showProgressBar,
       progressBarPosition,
       progressBarStyle,
-      progressBarFormat
+      progressBarFormat,
+      paginationMode,
+      questionsPerPage
     };
     if (id && id !== 'new') {
       updateMutation.mutate(data);
@@ -367,13 +375,23 @@ export default function SurveyBuilder() {
           )}
 
           {survey && (
-            <button
-              onClick={() => window.open(`/s/${survey.slug}`, '_blank')}
-              className="btn btn-secondary btn-sm"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </button>
+            <>
+              <button
+                onClick={() => window.open(`/s/${survey.slug}`, '_blank')}
+                className="btn btn-secondary btn-sm"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </button>
+              <button
+                onClick={() => navigate(`/surveys/${survey.id}/participants`)}
+                className="btn btn-secondary btn-sm"
+                title="Manage Participants"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Participants
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -427,13 +445,17 @@ export default function SurveyBuilder() {
               showProgressBar,
               progressBarPosition,
               progressBarStyle,
-              progressBarFormat
+              progressBarFormat,
+              paginationMode,
+              questionsPerPage
             }}
             onUpdateSurveySettings={(settings: Partial<SurveySettingsData>) => {
               if (settings.showProgressBar !== undefined) setShowProgressBar(settings.showProgressBar);
               if (settings.progressBarPosition !== undefined) setProgressBarPosition(settings.progressBarPosition);
               if (settings.progressBarStyle !== undefined) setProgressBarStyle(settings.progressBarStyle);
               if (settings.progressBarFormat !== undefined) setProgressBarFormat(settings.progressBarFormat);
+              if (settings.paginationMode !== undefined) setPaginationMode(settings.paginationMode);
+              if (settings.questionsPerPage !== undefined) setQuestionsPerPage(settings.questionsPerPage);
               if (settings.title !== undefined) setTitle(settings.title);
               if (settings.description !== undefined) setDescription(settings.description);
             }}

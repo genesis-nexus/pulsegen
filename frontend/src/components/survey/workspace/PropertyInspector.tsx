@@ -10,6 +10,8 @@ interface SurveySettingsData {
   progressBarPosition: string;
   progressBarStyle: string;
   progressBarFormat: string;
+  paginationMode: string;
+  questionsPerPage: number;
 }
 
 interface PropertyInspectorProps {
@@ -131,8 +133,49 @@ export default function PropertyInspector({
               </div>
             )}
           </div>
+
+          <div className="pt-4 border-t border-gray-200">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Question Pagination</h3>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Display Mode</label>
+              <select
+                value={surveySettings.paginationMode}
+                onChange={(e) => onUpdateSurveySettings({ paginationMode: e.target.value })}
+                className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              >
+                <option value="all">All questions at once</option>
+                <option value="single">One question per page</option>
+                <option value="custom">Custom questions per page</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                {surveySettings.paginationMode === 'all' && 'Show all questions on a single page'}
+                {surveySettings.paginationMode === 'single' && 'Show one question at a time'}
+                {surveySettings.paginationMode === 'custom' && 'Specify how many questions per page'}
+              </p>
+            </div>
+
+            {surveySettings.paginationMode === 'custom' && (
+              <div className="mt-4">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Questions Per Page
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={surveySettings.questionsPerPage}
+                  onChange={(e) => onUpdateSurveySettings({ questionsPerPage: parseInt(e.target.value) || 1 })}
+                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Show {surveySettings.questionsPerPage} question{surveySettings.questionsPerPage > 1 ? 's' : ''} per page
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </div >
     );
   }
 

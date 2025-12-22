@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Copy, BarChart, Edit } from 'lucide-react';
+import { Plus, Trash2, Copy, BarChart, Edit, Sparkles, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { Survey } from '../../types';
@@ -46,10 +46,19 @@ export default function SurveyList() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Surveys</h1>
-        <Link to="/surveys/new" className="btn btn-primary inline-flex items-center">
-          <Plus className="w-5 h-5 mr-2" />
-          Create Survey
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            to="/surveys/create-ai"
+            className="btn bg-gradient-to-r from-primary-600 to-purple-600 text-white hover:from-primary-700 hover:to-purple-700 inline-flex items-center"
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Create with AI
+          </Link>
+          <Link to="/surveys/new" className="btn btn-primary inline-flex items-center">
+            <Plus className="w-5 h-5 mr-2" />
+            Blank Survey
+          </Link>
+        </div>
       </div>
 
       {surveys && surveys.length > 0 ? (
@@ -60,10 +69,10 @@ export default function SurveyList() {
                 <h3 className="text-lg font-semibold text-gray-900">{survey.title}</h3>
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-full ${survey.status === 'ACTIVE'
-                      ? 'bg-green-100 text-green-800'
-                      : survey.status === 'DRAFT'
-                        ? 'bg-gray-100 text-gray-800'
-                        : 'bg-red-100 text-red-800'
+                    ? 'bg-green-100 text-green-800'
+                    : survey.status === 'DRAFT'
+                      ? 'bg-gray-100 text-gray-800'
+                      : 'bg-red-100 text-red-800'
                     }`}
                 >
                   {survey.status}
@@ -104,6 +113,13 @@ export default function SurveyList() {
                 >
                   <BarChart className="w-4 h-4 mr-1" />
                   Analytics
+                </Link>
+                <Link
+                  to={`/surveys/${survey.id}/participants`}
+                  className="flex-1 btn btn-secondary text-sm inline-flex items-center justify-center p-2"
+                  title="Participants"
+                >
+                  <Users className="w-4 h-4" />
                 </Link>
               </div>
 
