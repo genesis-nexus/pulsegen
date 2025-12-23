@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="pulse-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="50%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="60" cy="60" r="56" fill="url(#pulse-gradient)"/>
+
+  <!-- Inner Circle -->
+  <circle cx="60" cy="60" r="48" fill="white" fill-opacity="0.15"/>
+
+  <!-- Pulse Wave -->
+  <path d="M20 60 L35 60 L42 40 L50 80 L58 35 L66 75 L74 45 L82 60 L100 60"
+        stroke="white"
+        stroke-width="4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"/>
+
+  <!-- Subtle glow effect -->
+  <circle cx="60" cy="60" r="56" fill="none" stroke="white" stroke-width="2" opacity="0.3"/>
+</svg>
