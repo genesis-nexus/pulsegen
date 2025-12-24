@@ -3,38 +3,199 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light mode (default) */
+  :root {
+    --color-bg-primary: #f8fafc;
+    --color-bg-secondary: #ffffff;
+    --color-bg-tertiary: #f1f5f9;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #64748b;
+    --color-text-muted: #94a3b8;
+    --color-border: #e2e8f0;
+    --color-accent: #6366f1;
+    --color-accent-hover: #4f46e5;
+  }
+
+  /* Dark mode */
+  .dark {
+    --color-bg-primary: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-bg-tertiary: #1e1b4b;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #64748b;
+    --color-border: #334155;
+    --color-accent: #818cf8;
+    --color-accent-hover: #6366f1;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gradient-light dark:bg-gradient-dark text-slate-900 dark:text-white antialiased;
+    min-height: 100vh;
   }
 }
 
 @layer components {
+  /* Buttons */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply bg-gradient-accent text-white hover:shadow-glow focus:ring-primary-500;
+  }
+
+  .btn-primary:hover {
+    @apply bg-gradient-accent-hover;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500;
+    @apply bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600 focus:ring-slate-500;
   }
 
   .btn-danger {
     @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
   }
 
-  .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  .btn-ghost {
+    @apply bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-primary-500;
   }
 
-  .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  /* Form inputs */
+  .input {
+    @apply w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg
+           text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           transition-colors duration-200;
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6
+           transition-colors duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 cursor-pointer;
+  }
+
+  /* Stats card (like in hero banner) */
+  .stats-card {
+    @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5
+           transition-all duration-200;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg
+           text-slate-700 dark:text-slate-300
+           hover:bg-slate-100 dark:hover:bg-slate-800
+           transition-colors duration-200;
+  }
+
+  .nav-link-active {
+    @apply bg-gradient-accent text-white shadow-glow;
+  }
+
+  /* Sidebar styles (matching hero banner) */
+  .sidebar {
+    @apply bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700;
+  }
+
+  .sidebar-link {
+    @apply flex items-center px-4 py-3 text-sm font-medium rounded-lg mx-2
+           text-slate-700 dark:text-slate-400
+           hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white
+           transition-colors duration-200;
+  }
+
+  .sidebar-link-active {
+    @apply bg-gradient-accent text-white shadow-glow;
+  }
+
+  /* Header bar */
+  .header {
+    @apply bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700
+           transition-colors duration-200;
+  }
+
+  /* Dropdown menu */
+  .dropdown-menu {
+    @apply bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700
+           overflow-hidden;
+  }
+
+  .dropdown-item {
+    @apply flex items-center px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300
+           hover:bg-slate-100 dark:hover:bg-slate-700
+           transition-colors duration-200;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300;
+  }
+
+  .badge-success {
+    @apply bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300;
+  }
+
+  .badge-danger {
+    @apply bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300;
+  }
+
+  /* AI/Accent badge */
+  .badge-accent {
+    @apply bg-gradient-accent text-white text-xs font-semibold px-3 py-1 rounded-full;
+  }
+
+  /* Chart container */
+  .chart-container {
+    @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6;
+  }
+
+  /* Table styles */
+  .table-container {
+    @apply bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden;
+  }
+
+  .table-header {
+    @apply bg-slate-50 dark:bg-slate-900/50;
+  }
+
+  .table-row {
+    @apply border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50
+           transition-colors duration-200;
+  }
+
+  /* Section heading */
+  .section-heading {
+    @apply text-lg font-semibold text-slate-900 dark:text-white;
+  }
+
+  .section-subheading {
+    @apply text-sm text-slate-500 dark:text-slate-400;
+  }
+
+  /* Insight card (like in hero banner AI Insights) */
+  .insight-card {
+    @apply bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4;
   }
 }
 
@@ -60,4 +221,40 @@
 [dir="rtl"] .space-x-4 > * + * {
   margin-left: 0;
   margin-right: 1rem;
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Grid pattern overlay (optional, for hero sections) */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Glow effects for accent elements */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
 }

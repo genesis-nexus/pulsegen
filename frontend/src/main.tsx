@@ -6,8 +6,12 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
+import { useThemeStore } from './stores/themeStore';
 import './lib/i18n';
 import './index.css';
+
+// Initialize theme before rendering
+useThemeStore.getState().initTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {
