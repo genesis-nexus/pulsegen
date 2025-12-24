@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/logo.png" alt="PulseGen" width="120" />
+<img src="docs/assets/logo.svg" alt="PulseGen" width="120" />
 
 # PulseGen
 
@@ -8,14 +8,16 @@
 
 Create beautiful surveys, collect responses at scale, and unlock insights with AI—all self-hosted on your infrastructure.
 
+[![CI](https://github.com/your-org/pulsegen/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/pulsegen/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20-339933)](https://nodejs.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 [Features](#features) • [Quick Start](#quick-start) • [AI Features](#-supercharge-with-ai) • [Documentation](#documentation)
 
-<img src="docs/assets/dashboard-preview.png" alt="PulseGen Dashboard" width="800" />
+<img src="docs/assets/hero-banner.svg" alt="PulseGen Dashboard" width="800" />
 
 </div>
 
