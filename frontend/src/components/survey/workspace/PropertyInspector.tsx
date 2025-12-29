@@ -57,54 +57,54 @@ export default function PropertyInspector({
 
   if (!question) {
     return (
-      <div className="w-80 bg-white border-l border-gray-200 h-full flex flex-col">
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-sm font-semibold text-gray-700">Survey Settings</h2>
+      <div className="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 h-full flex flex-col">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Survey Settings</h2>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Survey Title</label>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Survey Title</label>
             <input
               type="text"
               value={surveySettings.title}
               onChange={(e) => onUpdateSurveySettings({ title: e.target.value })}
-              className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1.5"
+              className="w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1.5"
               placeholder="Enter title"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
             <textarea
               value={surveySettings.description}
               onChange={(e) => onUpdateSurveySettings({ description: e.target.value })}
-              className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              className="w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
               rows={3}
               placeholder="Enter description"
             />
           </div>
 
-          <div className="pt-4 border-t border-gray-200">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Progress Bar</h3>
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Progress Bar</h3>
 
-            <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer mb-4">
+            <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer mb-4">
               <span>Show Progress Bar</span>
               <input
                 type="checkbox"
                 checked={surveySettings.showProgressBar}
                 onChange={(e) => onUpdateSurveySettings({ showProgressBar: e.target.checked })}
-                className="rounded text-primary-600 focus:ring-primary-500"
+                className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
               />
             </label>
 
             {surveySettings.showProgressBar && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Position</label>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Position</label>
                   <select
                     value={surveySettings.progressBarPosition}
                     onChange={(e) => onUpdateSurveySettings({ progressBarPosition: e.target.value })}
-                    className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    className="block w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   >
                     <option value="top">Top</option>
                     <option value="bottom">Bottom</option>
@@ -113,11 +113,11 @@ export default function PropertyInspector({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Style</label>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Style</label>
                   <select
                     value={surveySettings.progressBarStyle}
                     onChange={(e) => onUpdateSurveySettings({ progressBarStyle: e.target.value })}
-                    className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    className="block w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   >
                     <option value="bar">Bar</option>
                     <option value="steps">Steps</option>
@@ -127,11 +127,11 @@ export default function PropertyInspector({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Format</label>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Format</label>
                   <select
                     value={surveySettings.progressBarFormat}
                     onChange={(e) => onUpdateSurveySettings({ progressBarFormat: e.target.value })}
-                    className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    className="block w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   >
                     <option value="percentage">Percentage %</option>
                     <option value="count">Count (1/5)</option>
@@ -142,21 +142,21 @@ export default function PropertyInspector({
             )}
           </div>
 
-          <div className="pt-4 border-t border-gray-200">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Question Pagination</h3>
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Question Pagination</h3>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Display Mode</label>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Display Mode</label>
               <select
                 value={surveySettings.paginationMode}
                 onChange={(e) => onUpdateSurveySettings({ paginationMode: e.target.value })}
-                className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                className="block w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
               >
                 <option value="all">All questions at once</option>
                 <option value="single">One question per page</option>
                 <option value="custom">Custom questions per page</option>
               </select>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {surveySettings.paginationMode === 'all' && 'Show all questions on a single page'}
                 {surveySettings.paginationMode === 'single' && 'Show one question at a time'}
                 {surveySettings.paginationMode === 'custom' && 'Specify how many questions per page'}
@@ -165,7 +165,7 @@ export default function PropertyInspector({
 
             {surveySettings.paginationMode === 'custom' && (
               <div className="mt-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Questions Per Page
                 </label>
                 <input
@@ -174,9 +174,9 @@ export default function PropertyInspector({
                   max="20"
                   value={surveySettings.questionsPerPage}
                   onChange={(e) => onUpdateSurveySettings({ questionsPerPage: parseInt(e.target.value) || 1 })}
-                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="block w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Show {surveySettings.questionsPerPage} question{surveySettings.questionsPerPage > 1 ? 's' : ''} per page
                 </p>
               </div>
@@ -184,100 +184,100 @@ export default function PropertyInspector({
           </div>
 
           {/* Mobile Optimization */}
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
             <div className="flex items-center space-x-2 mb-4">
-              <Smartphone className="w-4 h-4 text-primary-600" />
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mobile Experience</h3>
+              <Smartphone className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mobile Experience</h3>
             </div>
 
             <div className="space-y-3">
-              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                 <div>
                   <span className="block">Mobile Optimized</span>
-                  <span className="text-xs text-gray-500">Enhanced UI for mobile devices</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Enhanced UI for mobile devices</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={surveySettings.mobileOptimized ?? true}
                   onChange={(e) => onUpdateSurveySettings({ mobileOptimized: e.target.checked })}
-                  className="rounded text-primary-600 focus:ring-primary-500"
+                  className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                 />
               </label>
 
-              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                 <div>
                   <span className="block">Swipe Navigation</span>
-                  <span className="text-xs text-gray-500">Swipe left/right between questions</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Swipe left/right between questions</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={surveySettings.swipeNavigation ?? false}
                   onChange={(e) => onUpdateSurveySettings({ swipeNavigation: e.target.checked })}
-                  className="rounded text-primary-600 focus:ring-primary-500"
+                  className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                 />
               </label>
 
-              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                 <div>
                   <span className="block">Large Touch Targets</span>
-                  <span className="text-xs text-gray-500">48px+ buttons for easy tapping</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">48px+ buttons for easy tapping</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={surveySettings.largeTouchTargets ?? true}
                   onChange={(e) => onUpdateSurveySettings({ largeTouchTargets: e.target.checked })}
-                  className="rounded text-primary-600 focus:ring-primary-500"
+                  className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                 />
               </label>
 
-              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                 <div>
                   <span className="block">Auto-scroll to Next</span>
-                  <span className="text-xs text-gray-500">Scroll to next question on answer</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Scroll to next question on answer</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={surveySettings.autoScrollToNext ?? false}
                   onChange={(e) => onUpdateSurveySettings({ autoScrollToNext: e.target.checked })}
-                  className="rounded text-primary-600 focus:ring-primary-500"
+                  className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                 />
               </label>
             </div>
           </div>
 
           {/* Social Media Sharing */}
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
             <div className="flex items-center space-x-2 mb-4">
-              <Share2 className="w-4 h-4 text-primary-600" />
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Social Sharing</h3>
+              <Share2 className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Social Sharing</h3>
             </div>
 
             <div className="space-y-3">
-              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                 <div>
                   <span className="block">Enable Social Share</span>
-                  <span className="text-xs text-gray-500">Show share buttons after submission</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Show share buttons after submission</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={surveySettings.socialShareEnabled ?? true}
                   onChange={(e) => onUpdateSurveySettings({ socialShareEnabled: e.target.checked })}
-                  className="rounded text-primary-600 focus:ring-primary-500"
+                  className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                 />
               </label>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Social Preview Image URL
                 </label>
                 <input
                   type="url"
                   value={surveySettings.socialPreviewImage || ''}
                   onChange={(e) => onUpdateSurveySettings({ socialPreviewImage: e.target.value })}
-                  className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="block w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   placeholder="https://example.com/preview.png"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Image shown when shared on social media (1200x630px recommended)
                 </p>
               </div>
@@ -289,18 +289,18 @@ export default function PropertyInspector({
   }
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 h-full flex flex-col">
+    <div className="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold uppercase text-gray-500 tracking-wider">
+          <span className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
             {question.type.replace('_', ' ')}
           </span>
-          <span className="text-xs text-gray-400 font-mono">ID: {question.id.slice(0, 6)}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">ID: {question.id.slice(0, 6)}</span>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-200 p-1 rounded-md">
+        <div className="flex space-x-1 bg-slate-200 dark:bg-slate-700 p-1 rounded-md">
           <TabButton
             active={activeTab === 'properties'}
             onClick={() => setActiveTab('properties')}
@@ -329,43 +329,43 @@ export default function PropertyInspector({
         {activeTab === 'properties' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Question Text</label>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Question Text</label>
               <textarea
                 value={question.text}
                 onChange={(e) => onUpdate({ text: e.target.value })}
-                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                className="w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 rows={3}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
               <textarea
                 value={question.description || ''}
                 onChange={(e) => onUpdate({ description: e.target.value })}
-                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                className="w-full text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 rows={2}
               />
             </div>
 
-            <div className="pt-4 border-t border-gray-200 space-y-3">
-              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+              <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                 <span>Required</span>
                 <input
                   type="checkbox"
                   checked={question.isRequired}
                   onChange={(e) => onUpdate({ isRequired: e.target.checked })}
-                  className="rounded text-primary-600 focus:ring-primary-500"
+                  className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                 />
               </label>
 
-              <label className="flex items-center justify-between text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                 <span>Randomize Options</span>
                 <input
                   type="checkbox"
                   checked={question.isRandomized}
                   onChange={(e) => onUpdate({ isRandomized: e.target.checked })}
-                  className="rounded text-primary-600 focus:ring-primary-500"
+                  className="rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                 />
               </label>
             </div>
@@ -385,7 +385,7 @@ export default function PropertyInspector({
                       newOptions[index] = { ...option, text: e.target.value, value: e.target.value };
                       onUpdate({ options: newOptions });
                     }}
-                    className="w-full px-2 py-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                    className="w-full px-2 py-1 text-sm border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                 </div>
                 <button
@@ -393,7 +393,7 @@ export default function PropertyInspector({
                     const newOptions = question.options.filter((_, i) => i !== index);
                     onUpdate({ options: newOptions });
                   }}
-                  className="p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -403,7 +403,7 @@ export default function PropertyInspector({
             <button
               onClick={() => {
                 const newOption = {
-                  id: Math.random().toString(36).substr(2, 9),
+                  id: Math.random().toString(36).substring(2, 11),
                   questionId: question.id,
                   text: `Option ${question.options.length + 1} `,
                   value: `option_${question.options.length + 1} `,
@@ -411,7 +411,7 @@ export default function PropertyInspector({
                 };
                 onUpdate({ options: [...question.options, newOption] });
               }}
-              className="w-full mt-2 flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              className="w-full mt-2 flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Option
@@ -420,10 +420,10 @@ export default function PropertyInspector({
         )}
 
         {activeTab === 'logic' && (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
             <p className="mb-2">Advanced Skip Logic</p>
             <p className="text-xs">Configure where the user goes next based on their answer.</p>
-            <div className="mt-4 p-4 bg-yellow-50 rounded border border-yellow-100 text-yellow-800 text-xs">
+            <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-100 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs">
               Coming soon: Visual logic builder
             </div>
           </div>
@@ -441,8 +441,8 @@ function TabButton({ active, onClick, icon: Icon, label }: any) {
         flex-1 flex items-center justify-center py-1.5 text-xs font-medium rounded
         transition-colors
         ${active
-          ? 'bg-white text-gray-900 shadow-sm'
-          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+          ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
+          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600/50'
         }
       `}
     >

@@ -105,8 +105,8 @@ export default function AISettings() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">AI Settings</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white">AI Settings</h1>
+        <p className="text-slate-600 dark:text-slate-400">
           Configure AI providers for survey generation and analysis. Bring your own API keys.
         </p>
       </div>
@@ -114,7 +114,7 @@ export default function AISettings() {
       {/* Current Providers */}
       <div className="card mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Your AI Providers</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Your AI Providers</h2>
           <button
             onClick={() => setShowAddForm(true)}
             className="btn btn-primary inline-flex items-center"
@@ -131,27 +131,27 @@ export default function AISettings() {
               return (
                 <div
                   key={provider.id}
-                  className="border border-gray-200 rounded-lg p-4 flex items-center justify-between"
+                  className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex items-center justify-between bg-white dark:bg-slate-800"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{info?.name || provider.provider}</h3>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">{info?.name || provider.provider}</h3>
                       {provider.isDefault && (
-                        <span className="px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full">
+                        <span className="px-2 py-1 text-xs bg-primary-100 dark:bg-primary-900/50 text-primary-800 dark:text-primary-300 rounded-full">
                           Default
                         </span>
                       )}
                       {!provider.isActive && (
-                        <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
+                        <span className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-300 rounded-full">
                           Inactive
                         </span>
                       )}
                     </div>
                     {provider.modelName && (
-                      <p className="text-sm text-gray-600 mt-1">Model: {provider.modelName}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Model: {provider.modelName}</p>
                     )}
                     {provider.endpoint && (
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                         Endpoint: {provider.endpoint}
                       </p>
                     )}
@@ -186,7 +186,7 @@ export default function AISettings() {
             })}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-600">
+          <div className="text-center py-8 text-slate-600 dark:text-slate-400">
             <p>No AI providers configured yet.</p>
             <p className="text-sm mt-2">Add an API key to enable AI features.</p>
           </div>
@@ -195,13 +195,13 @@ export default function AISettings() {
 
       {/* Add Provider Form */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
           <div className="card max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Add AI Provider</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add AI Provider</h2>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -241,7 +241,7 @@ export default function AISettings() {
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -271,7 +271,7 @@ export default function AISettings() {
                   <label className="label">
                     Endpoint URL
                     {(selectedProviderInfo as any)?.defaultEndpoint && (
-                      <span className="text-sm font-normal text-gray-500 ml-2">
+                      <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2">
                         (Optional - defaults to {(selectedProviderInfo as any).defaultEndpoint})
                       </span>
                     )}
@@ -285,7 +285,7 @@ export default function AISettings() {
                     required={!(selectedProviderInfo as any)?.defaultEndpoint}
                   />
                   {(selectedProviderInfo as any)?.defaultEndpoint && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       Leave empty to use the default endpoint
                     </p>
                   )}
@@ -293,14 +293,14 @@ export default function AISettings() {
               )}
 
               <div>
-                <label className="inline-flex items-center">
+                <label className="inline-flex items-center text-slate-700 dark:text-slate-300">
                   <input
                     type="checkbox"
                     checked={formData.isDefault}
                     onChange={(e) =>
                       setFormData({ ...formData, isDefault: e.target.checked })
                     }
-                    className="mr-2"
+                    className="mr-2 rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
                   />
                   <span className="text-sm">Set as default provider</span>
                 </label>
@@ -324,20 +324,20 @@ export default function AISettings() {
       )}
 
       {/* Info Section */}
-      <div className="card bg-blue-50 border-blue-200">
-        <h3 className="font-semibold mb-2">About AI Providers</h3>
-        <p className="text-sm text-gray-700 mb-3">
+      <div className="card bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+        <h3 className="font-semibold mb-2 text-slate-900 dark:text-white">About AI Providers</h3>
+        <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
           PulseGen uses AI to help you create better surveys and analyze responses. You'll need an
           API key from at least one provider to use AI features.
         </p>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
           <p>
             <strong>OpenRouter (Recommended - Free Tier Available):</strong> Get your API key from{' '}
             <a
               href="https://openrouter.ai/keys"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-600 hover:underline"
+              className="text-primary-600 dark:text-primary-400 hover:underline"
             >
               openrouter.ai
             </a>
@@ -349,7 +349,7 @@ export default function AISettings() {
               href="https://platform.openai.com/api-keys"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-600 hover:underline"
+              className="text-primary-600 dark:text-primary-400 hover:underline"
             >
               platform.openai.com
             </a>
@@ -360,7 +360,7 @@ export default function AISettings() {
               href="https://console.anthropic.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-600 hover:underline"
+              className="text-primary-600 dark:text-primary-400 hover:underline"
             >
               console.anthropic.com
             </a>
@@ -371,7 +371,7 @@ export default function AISettings() {
               href="https://makersuite.google.com/app/apikey"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-600 hover:underline"
+              className="text-primary-600 dark:text-primary-400 hover:underline"
             >
               makersuite.google.com
             </a>

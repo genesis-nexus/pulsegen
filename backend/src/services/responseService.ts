@@ -28,7 +28,8 @@ export class ResponseService {
     surveyId: string,
     data: SubmitResponseData,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
+    userId?: string // NEW parameter for authenticated users
   ) {
     // Get survey
     const survey = await prisma.survey.findUnique({
@@ -148,7 +149,10 @@ export class ResponseService {
         surveyId,
         ipAddress: survey.isAnonymous ? null : ipAddress,
         userAgent,
-        metadata: data.metadata,
+        metadata: {
+          ...data.metadata,
+          authenticatedUserId: userId, // Store authenticated user ID in metadata
+        },
         isComplete: true,
         completedAt: new Date(),
         quotaStatus,
@@ -179,6 +183,21 @@ export class ResponseService {
     if (matchingQuotaIds.length > 0) {
       await quotaService.incrementQuotas(response.id, matchingQuotaIds).catch((error) => {
         console.error('Error incrementing quotas:', error);
+      });
+    }
+
+    // NEW: Cleanup partial response if authenticated user
+    if (userId) {
+      await prisma.partialResponse.updateMany({
+        where: {
+          userId,
+          surveyId,
+          status: 'IN_PROGRESS',
+        },
+        data: {
+          status: 'COMPLETED',
+          convertedToResponseId: response.id,
+        },
       });
     }
 

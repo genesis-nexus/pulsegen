@@ -98,24 +98,24 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
   };
 
   return (
-    <div className="card bg-white">
+    <div className="card bg-white dark:bg-slate-800">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
             <Share2 className="w-5 h-5 mr-2 text-primary-600" />
             Traffic Sources
           </h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
             Where your survey responses are coming from
           </p>
         </div>
-        <div className="flex bg-gray-100 rounded-lg p-1">
+        <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
           <button
             onClick={() => setViewMode('source')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               viewMode === 'source'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             By Source
@@ -124,8 +124,8 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
             onClick={() => setViewMode('channel')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               viewMode === 'channel'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             By Channel
@@ -134,7 +134,7 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
       </div>
 
       {chartData.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-slate-500 dark:text-slate-400">
           <Share2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p className="text-lg font-medium">No source data available yet</p>
           <p className="text-sm mt-2">
@@ -144,8 +144,8 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bar Chart */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-4">Response Volume</h4>
+          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Response Volume</h4>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -181,8 +181,8 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
           </div>
 
           {/* Pie Chart */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-4">Distribution</h4>
+          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Distribution</h4>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -214,7 +214,7 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
                   verticalAlign="bottom"
                   height={36}
                   formatter={(value) => (
-                    <span className="text-sm text-gray-700 capitalize">{value}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300 capitalize">{value}</span>
                   )}
                 />
               </PieChart>
@@ -226,25 +226,25 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
       {/* Detailed Stats Table */}
       {chartData.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-4">Detailed Metrics</h4>
+          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Detailed Metrics</h4>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Source</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">Responses</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">Share</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">
+                <tr className="bg-slate-50 dark:bg-slate-900/50">
+                  <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400">Source</th>
+                  <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-400">Responses</th>
+                  <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-400">Share</th>
+                  <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-400">
                     Completion Rate
                   </th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">Avg. Duration</th>
+                  <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-400">Avg. Duration</th>
                 </tr>
               </thead>
               <tbody>
                 {chartData.map((item) => {
                   const Icon = getIcon(item.name);
                   return (
-                    <tr key={item.name} className="border-t border-gray-200 hover:bg-gray-50">
+                    <tr key={item.name} className="border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/30">
                       <td className="px-4 py-3">
                         <div className="flex items-center space-x-2">
                           <div
@@ -256,13 +256,13 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
                           >
                             <Icon className="w-3.5 h-3.5 text-white" />
                           </div>
-                          <span className="font-medium text-gray-900 capitalize">{item.name}</span>
+                          <span className="font-medium text-slate-900 dark:text-white capitalize">{item.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-900 font-medium">
+                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white font-medium">
                         {item.value}
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-600">{item.percentage}%</td>
+                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-400">{item.percentage}%</td>
                       <td className="px-4 py-3 text-right">
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -276,7 +276,7 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
                           {item.completionRate}%
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-600">{item.avgDuration}m</td>
+                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-400">{item.avgDuration}m</td>
                     </tr>
                   );
                 })}
@@ -287,33 +287,33 @@ export default function SourceAnalytics({ data, totalResponses }: SourceAnalytic
       )}
 
       {/* Mobile vs Desktop */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <h4 className="text-sm font-medium text-gray-700 mb-4">Device Breakdown</h4>
+      <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Device Breakdown</h4>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-lg p-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-500 rounded-lg">
                 <Smartphone className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-blue-700">Mobile</p>
-                <p className="text-2xl font-bold text-blue-900">--</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">Mobile</p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">--</p>
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/30 rounded-lg p-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-purple-500 rounded-lg">
                 <Monitor className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-purple-700">Desktop</p>
-                <p className="text-2xl font-bold text-purple-900">--</p>
+                <p className="text-sm text-purple-700 dark:text-purple-300">Desktop</p>
+                <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">--</p>
               </div>
             </div>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2 text-center">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
           Device breakdown data will appear as responses come in
         </p>
       </div>
@@ -327,7 +327,7 @@ export function SourceAnalyticsMini({ data }: { data: SourceData[] }) {
 
   if (topSources.length === 0) {
     return (
-      <div className="text-center py-4 text-gray-500 text-sm">
+      <div className="text-center py-4 text-slate-500 dark:text-slate-400 text-sm">
         No source data yet
       </div>
     );
@@ -340,12 +340,12 @@ export function SourceAnalyticsMini({ data }: { data: SourceData[] }) {
         return (
           <div key={source.channel || source.source} className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Icon className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-700 capitalize">
+              <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span className="text-sm text-slate-700 dark:text-slate-300 capitalize">
                 {source.channel || source.source}
               </span>
             </div>
-            <span className="text-sm font-medium text-gray-900">{source.count}</span>
+            <span className="text-sm font-medium text-slate-900 dark:text-white">{source.count}</span>
           </div>
         );
       })}

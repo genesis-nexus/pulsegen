@@ -1,9 +1,16 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/database';
-import { generateResumeCode, sendResumeEmail } from '../services/partialResponseService';
+import {
+  generateResumeCode,
+  sendResumeEmail,
+  saveAuthenticatedProgress,
+  getAuthenticatedProgress,
+  linkAnonymousToAuthenticated,
+} from '../services/partialResponseService';
 import { AppError } from '../middleware/errorHandler';
 import { addDays } from 'date-fns';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -276,5 +283,99 @@ router.post('/:token/complete', async (req: Request, res: Response, next: NextFu
     next(error);
   }
 });
+
+// ========== NEW AUTHENTICATED ROUTES ==========
+
+// Save authenticated user's progress
+router.post(
+  '/save-authenticated',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const data = z
+        .object({
+          surveyId: z.string(),
+          answers: z.record(z.any()),
+          currentPageIndex: z.number(),
+          lastQuestionId: z.string().optional(),
+        })
+        .parse(req.body);
+
+      const partialResponse = await saveAuthenticatedProgress({
+        userId: req.user!.id,
+        surveyId: data.surveyId,
+        answers: data.answers,
+        currentPageIndex: data.currentPageIndex,
+        lastQuestionId: data.lastQuestionId,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+
+      res.json({
+        success: true,
+        data: {
+          id: partialResponse.id,
+          answers: partialResponse.answers,
+          currentPageIndex: partialResponse.currentPageIndex,
+          lastSavedAt: partialResponse.lastSavedAt,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Get authenticated user's progress
+router.get(
+  '/surveys/:surveyId/progress',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { surveyId } = req.params;
+
+      const progress = await getAuthenticatedProgress(req.user!.id, surveyId);
+
+      res.json({
+        success: true,
+        data: progress || null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Link anonymous progress to authenticated user
+router.post(
+  '/link-to-user',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const data = z
+        .object({
+          resumeToken: z.string(),
+        })
+        .parse(req.body);
+
+      const linked = await linkAnonymousToAuthenticated({
+        resumeToken: data.resumeToken,
+        userId: req.user!.id,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          id: linked.id,
+          answers: linked.answers,
+          currentPageIndex: linked.currentPageIndex,
+          lastSavedAt: linked.lastSavedAt,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 export default router;

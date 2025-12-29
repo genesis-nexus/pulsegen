@@ -13,7 +13,8 @@ export class ResponseController {
         surveyId,
         validatedData as any,
         req.ip,
-        req.headers['user-agent']
+        req.headers['user-agent'],
+        req.user?.id // Pass userId if authenticated
       );
 
       res.status(201).json({

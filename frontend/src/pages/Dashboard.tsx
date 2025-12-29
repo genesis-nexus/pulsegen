@@ -28,12 +28,12 @@ export default function Dashboard() {
         <div className="flex gap-3">
           <Link
             to="/surveys/create-ai"
-            className="btn-primary inline-flex items-center"
+            className="btn btn-primary"
           >
             <Sparkles className="w-5 h-5 mr-2" />
             Create with AI
           </Link>
-          <Link to="/surveys/new" className="btn btn-secondary inline-flex items-center">
+          <Link to="/surveys/new" className="btn btn-secondary">
             <Plus className="w-5 h-5 mr-2" />
             Blank Survey
           </Link>
@@ -146,11 +146,12 @@ export default function Dashboard() {
               Get started by creating your first survey. Use AI to generate questions or start from scratch.
             </p>
             <div className="flex justify-center gap-3">
-              <Link to="/surveys/create-ai" className="btn-primary inline-flex items-center">
+              <Link to="/surveys/create-ai" className="btn btn-primary">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Create with AI
               </Link>
               <Link to="/surveys/new" className="btn btn-secondary">
+                <Plus className="w-4 h-4 mr-2" />
                 Blank Survey
               </Link>
             </div>

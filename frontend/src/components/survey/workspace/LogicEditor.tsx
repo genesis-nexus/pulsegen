@@ -69,11 +69,11 @@ export default function LogicEditor({
     };
 
     return (
-        <div className="flex h-full bg-gray-50">
+        <div className="flex h-full bg-slate-50 dark:bg-slate-900">
             {/* Sidebar: Question List */}
-            <div className="w-1/4 bg-white border-r border-gray-200 overflow-y-auto">
-                <div className="p-4 border-b border-gray-200">
-                    <h3 className="font-medium text-gray-900">Select Question</h3>
+            <div className="w-1/4 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+                    <h3 className="font-medium text-slate-900 dark:text-white">Select Question</h3>
                 </div>
                 <div className="p-2">
                     {questions.map((q, index) => (
@@ -82,13 +82,13 @@ export default function LogicEditor({
                             onClick={() => onSelectQuestion(q.id)}
                             className={`
                                 p-3 mb-1 rounded cursor-pointer text-sm
-                                ${selectedQuestionId === q.id ? 'bg-primary-50 text-primary-700 font-medium' : 'hover:bg-gray-50 text-gray-700'}
+                                ${selectedQuestionId === q.id ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 font-medium' : 'hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}
                             `}
                         >
-                            <span className="mr-2 text-gray-400">{index + 1}.</span>
+                            <span className="mr-2 text-slate-400 dark:text-slate-500">{index + 1}.</span>
                             {q.text}
                             {q.logic && q.logic.length > 0 && (
-                                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
                                     {q.logic.length} rules
                                 </span>
                             )}
@@ -102,19 +102,19 @@ export default function LogicEditor({
                 {selectedQuestion ? (
                     <div>
                         <div className="mb-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-1">Logic for: {selectedQuestion.text}</h2>
-                            <p className="text-sm text-gray-500">Define what happens based on the answer to this question.</p>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Logic for: {selectedQuestion.text}</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Define what happens based on the answer to this question.</p>
                         </div>
 
                         {/* Logic Rules List */}
                         <div className="space-y-4">
                             {(selectedQuestion.logic || []).map((rule, ruleIndex) => (
-                                <div key={rule.id || ruleIndex} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm relative">
-                                    <div className="flex justify-between items-center mb-4 border-b pb-2">
-                                        <h4 className="font-medium text-gray-900">Rule {ruleIndex + 1}</h4>
+                                <div key={rule.id || ruleIndex} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-sm relative">
+                                    <div className="flex justify-between items-center mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+                                        <h4 className="font-medium text-slate-900 dark:text-white">Rule {ruleIndex + 1}</h4>
                                         <button
                                             onClick={() => handleDeleteRule(rule.id)}
-                                            className="text-gray-400 hover:text-red-500"
+                                            className="text-slate-400 hover:text-red-500 dark:hover:text-red-400"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -123,10 +123,10 @@ export default function LogicEditor({
                                     <div className="flex flex-col space-y-4">
                                         {/* IF Condition */}
                                         <div className="flex items-center space-x-3">
-                                            <span className="text-sm font-semibold text-gray-700 w-12">IF</span>
+                                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 w-12">IF</span>
 
                                             <select
-                                                className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                                className="block rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                                                 value={rule.conditions[0]?.operator}
                                                 onChange={(e) => updateCondition(rule.id, 0, 'operator', e.target.value)}
                                             >
@@ -138,7 +138,7 @@ export default function LogicEditor({
                                             {/* Value Input: Depends on Question Type */}
                                             {(selectedQuestion.type === QuestionType.MULTIPLE_CHOICE || selectedQuestion.type === QuestionType.CHECKBOXES) ? (
                                                 <select
-                                                    className="block flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                                    className="block flex-1 rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                                                     value={String(rule.conditions[0]?.value)}
                                                     onChange={(e) => updateCondition(rule.id, 0, 'value', e.target.value)}
                                                 >
@@ -150,7 +150,7 @@ export default function LogicEditor({
                                             ) : (
                                                 <input
                                                     type="text"
-                                                    className="block flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                                    className="block flex-1 rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                                                     value={String(rule.conditions[0]?.value)}
                                                     onChange={(e) => updateCondition(rule.id, 0, 'value', e.target.value)}
                                                     placeholder="Value"
@@ -160,9 +160,9 @@ export default function LogicEditor({
 
                                         {/* THEN Action */}
                                         <div className="flex items-center space-x-2">
-                                            <span className="text-sm font-medium text-gray-700">Then</span>
+                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Then</span>
                                             <select
-                                                className="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                                                className="block w-40 pl-3 pr-10 py-2 text-base border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
                                                 value={rule.actions.action}
                                                 onChange={(e) => updateAction(rule.id, 'action', e.target.value)}
                                             >
@@ -174,7 +174,7 @@ export default function LogicEditor({
 
                                             {rule.actions.action !== LogicAction.SKIP_TO_END && (
                                                 <select
-                                                    className="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                                                    className="block w-40 pl-3 pr-10 py-2 text-base border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
                                                     value={rule.actions.targetQuestionId || ''}
                                                     onChange={(e) => updateAction(rule.id, 'targetQuestionId', e.target.value)}
                                                 >
@@ -192,8 +192,8 @@ export default function LogicEditor({
                             ))}
 
                             {(!selectedQuestion.logic || selectedQuestion.logic.length === 0) && (
-                                <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                                    <p className="text-gray-500 mb-2">No logic rules defined yet.</p>
+                                <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700">
+                                    <p className="text-slate-500 dark:text-slate-400 mb-2">No logic rules defined yet.</p>
                                     <button
                                         onClick={handleAddRule}
                                         className="btn btn-primary btn-sm"
@@ -217,7 +217,7 @@ export default function LogicEditor({
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
+                    <div className="flex items-center justify-center h-full text-slate-400 dark:text-slate-500">
                         Select a question to edit its logic
                     </div>
                 )}

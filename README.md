@@ -8,7 +8,7 @@
 
 Create beautiful surveys, collect responses at scale, and unlock insights with AI—all self-hosted on your infrastructure.
 
-[![CI](https://github.com/your-org/pulsegen/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/pulsegen/actions/workflows/ci.yml)
+[![CI](https://github.com/genesis-nexus/pulsegen/actions/workflows/ci.yml/badge.svg)](https://github.com/genesis-nexus/pulsegen/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org/)
@@ -137,7 +137,7 @@ Instantly translate surveys to 12+ languages with quality review.
 ### Docker (Recommended)
 
 ```bash
-git clone https://github.com/your-org/pulsegen.git
+git clone https://github.com/genesis-nexus/pulsegen.git
 cd pulsegen
 
 # Configure environment
@@ -204,7 +204,7 @@ PulseGen is open-source under the [MIT License](LICENSE). Use it freely for pers
 
 <div align="center">
 
-**[Get Started](#quick-start)** • **[Report Bug](https://github.com/your-org/pulsegen/issues)** • **[Request Feature](https://github.com/your-org/pulsegen/issues)**
+**[Get Started](#quick-start)** • **[Report Bug](https://github.com/genesis-nexus/pulsegen/issues)** • **[Request Feature](https://github.com/genesis-nexus/pulsegen/issues)**
 
 Built with ❤️ for the open-source community
 
