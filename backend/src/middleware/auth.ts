@@ -65,6 +65,40 @@ export const authorize = (...roles: UserRole[]) => {
 
 export const requireAdmin = authorize(UserRole.ADMIN);
 
+export const optionalAuthenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      req.user = undefined;
+      return next();
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET!
+    ) as { userId: string };
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, email: true, role: true, isActive: true },
+    });
+
+    if (user && user.isActive) {
+      req.user = user;
+    }
+
+    next();
+  } catch (error) {
+    req.user = undefined;
+    next();
+  }
+};
+
 export const apiKeyAuth = async (
   req: AuthRequest,
   res: Response,

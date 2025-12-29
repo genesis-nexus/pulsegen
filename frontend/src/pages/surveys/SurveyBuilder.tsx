@@ -309,26 +309,28 @@ export default function SurveyBuilder() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-100 dark:bg-slate-900 h-[calc(100vh-64px)] overflow-hidden">
       {/* Workspace Header */}
-      <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
+      <div className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center space-x-4">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-lg font-bold text-gray-900 border-none focus:ring-0 p-0 hover:bg-gray-50 rounded px-2"
+            className="text-lg font-bold text-slate-900 dark:text-white bg-transparent border-none focus:ring-0 p-0 hover:bg-slate-100 dark:hover:bg-slate-700 rounded px-2 transition-colors"
             placeholder="Survey Title"
           />
         </div>
 
         {/* View Toggle */}
-        <div className="flex bg-gray-100 rounded-lg p-1">
+        <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
           <button
             onClick={() => setCurrentView('design')}
             className={`
               flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-              ${currentView === 'design' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}
+              ${currentView === 'design'
+                ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}
             `}
           >
             <Layout className="w-4 h-4 mr-2" />
@@ -338,7 +340,9 @@ export default function SurveyBuilder() {
             onClick={() => setCurrentView('logic')}
             className={`
               flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-              ${currentView === 'logic' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}
+              ${currentView === 'logic'
+                ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}
             `}
           >
             <Split className="w-4 h-4 mr-2" />
@@ -346,29 +350,33 @@ export default function SurveyBuilder() {
           </button>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           {selectedQuestionId && (
-            <span className="text-xs text-gray-500 mr-2">Unsaved changes? Click Save &rarr;</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 mr-1">Unsaved changes?</span>
           )}
-          <button onClick={saveSelectedQuestion} className="btn btn-secondary btn-sm" disabled={!selectedQuestionId}>
+          <button
+            onClick={saveSelectedQuestion}
+            className="btn btn-secondary btn-sm"
+            disabled={!selectedQuestionId}
+          >
             Save Selected
           </button>
           <button onClick={handleSave} className="btn btn-primary btn-sm">
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4 mr-1.5" />
             Save Survey
           </button>
 
           {survey?.status === 'ACTIVE' ? (
             <button
               onClick={handleUnpublish}
-              className="btn btn-warning btn-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-300"
+              className="btn btn-warning btn-sm"
             >
               Unpublish
             </button>
           ) : (
             <button
               onClick={handlePublish}
-              className="btn btn-success btn-sm bg-green-600 text-white hover:bg-green-700"
+              className="btn btn-success btn-sm"
             >
               Publish
             </button>
@@ -378,17 +386,17 @@ export default function SurveyBuilder() {
             <>
               <button
                 onClick={() => window.open(`/s/${survey.slug}`, '_blank')}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-outline btn-sm"
               >
-                <Eye className="w-4 h-4 mr-2" />
+                <Eye className="w-4 h-4 mr-1.5" />
                 Preview
               </button>
               <button
                 onClick={() => navigate(`/surveys/${survey.id}/participants`)}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-outline btn-sm"
                 title="Manage Participants"
               >
-                <Users className="w-4 h-4 mr-2" />
+                <Users className="w-4 h-4 mr-1.5" />
                 Participants
               </button>
             </>

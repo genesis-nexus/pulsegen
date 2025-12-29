@@ -125,6 +125,7 @@ model User {
   mlModels          MLModel[]
   aiUsageLogs       AIUsageLog[]
   aiConversations   AIChatConversation[]
+  partialResponses  PartialResponse[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -1284,6 +1285,10 @@ model PartialResponse {
   respondentEmail   String?
   respondentName    String?
 
+  // Link to authenticated user (optional)
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Progress tracking
   currentPageIndex  Int      @default(0)
   lastQuestionId    String?
@@ -1307,6 +1312,8 @@ model PartialResponse {
   @@index([resumeCode])
   @@index([expiresAt])
   @@index([respondentEmail])
+  @@index([userId])
+  @@index([surveyId, userId])
 }
 
 // =============================================================================

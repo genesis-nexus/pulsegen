@@ -40,30 +40,30 @@ export const InviteComposer: React.FC<InviteComposerProps> = ({ participantIds, 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
-                    <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Send className="w-5 h-5 mr-2 text-blue-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 dark:bg-opacity-70">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl dark:shadow-slate-900/50 max-w-2xl w-full">
+                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 rounded-t-lg">
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center">
+                        <Send className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                         Compose Invitation
                     </h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+                    <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 <div className="p-6 space-y-4">
-                    <div className="bg-blue-50 p-3 rounded-md border border-blue-100 mb-4">
-                        <p className="text-sm text-blue-800">
+                    <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-md border border-blue-100 dark:border-blue-800 mb-4">
+                        <p className="text-sm text-blue-800 dark:text-blue-300">
                             Sending to <strong>{participantIds.length}</strong> participants.
                         </p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Subject Line</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subject Line</label>
                         <input
                             type="text"
-                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                            className="w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                             placeholder="You are invited to take a survey..."
                             value={subject}
                             onChange={(e) => setSubject(e.target.value)}
@@ -71,12 +71,12 @@ export const InviteComposer: React.FC<InviteComposerProps> = ({ participantIds, 
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Message</label>
-                        <div className="text-xs text-gray-500 mb-2">
-                            Supported merge tags: <code className="bg-gray-100 px-1 rounded">{`{{firstName}}`}</code>, <code className="bg-gray-100 px-1 rounded">{`{{lastName}}`}</code>, <code className="bg-gray-100 px-1 rounded">{`{{surveyTitle}}`}</code>, <code className="bg-gray-100 px-1 rounded text-red-500">{`{{surveyUrl}}`}</code> (Required)
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Message</label>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                            Supported merge tags: <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{`{{firstName}}`}</code>, <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{`{{lastName}}`}</code>, <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded text-slate-700 dark:text-slate-300">{`{{surveyTitle}}`}</code>, <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded text-red-500 dark:text-red-400">{`{{surveyUrl}}`}</code> (Required)
                         </div>
                         <textarea
-                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border h-48 font-mono text-sm"
+                            className="w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border h-48 font-mono text-sm"
                             placeholder="<p>Dear {{firstName}},</p><p>...</p>"
                             value={body}
                             onChange={(e) => setBody(e.target.value)}
@@ -84,17 +84,17 @@ export const InviteComposer: React.FC<InviteComposerProps> = ({ participantIds, 
                     </div>
 
                     {!body.includes('{{surveyUrl}}') && body.length > 0 && (
-                        <div className="flex items-start text-amber-600 text-sm bg-amber-50 p-2 rounded">
+                        <div className="flex items-start text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-950/50 p-2 rounded">
                             <AlertCircle className="w-4 h-4 mr-1.5 mt-0.5 flex-shrink-0" />
                             Warning: Your message does not contain the {'{{surveyUrl}}'} merge tag. The system will append a default link button.
                         </div>
                     )}
                 </div>
 
-                <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
+                <div className="bg-slate-50 dark:bg-slate-900/50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-white"
+                        className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700"
                     >
                         Cancel
                     </button>

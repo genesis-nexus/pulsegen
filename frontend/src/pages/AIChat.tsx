@@ -180,14 +180,14 @@ export default function AIChat() {
 
   return (
     <AIProviderCheck>
-      <div className="h-[calc(100vh-4rem)] flex">
+      <div className="h-[calc(100vh-4rem)] flex bg-white dark:bg-slate-900">
         {/* Sidebar */}
         <div
           className={`${
             sidebarOpen ? 'w-72' : 'w-0'
-          } bg-gray-50 border-r border-gray-200 transition-all duration-300 overflow-hidden flex flex-col`}
+          } bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 overflow-hidden flex flex-col`}
         >
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <button
               onClick={handleNewConversation}
               disabled={createMutation.isPending}
@@ -206,11 +206,11 @@ export default function AIChat() {
             {loadingConversations ? (
               <div className="p-4 space-y-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
+                  <div key={i} className="h-12 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
                 ))}
               </div>
             ) : conversations.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No conversations yet</p>
               </div>
@@ -221,14 +221,14 @@ export default function AIChat() {
                     key={conv.id}
                     className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
                       selectedConversation === conv.id
-                        ? 'bg-primary-100 text-primary-900'
-                        : 'hover:bg-gray-100'
+                        ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-900 dark:text-primary-100'
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                     onClick={() => setSelectedConversation(conv.id)}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{conv.title}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm font-medium truncate text-slate-900 dark:text-white">{conv.title}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {conv._count.messages} messages - {formatDate(conv.updatedAt)}
                       </p>
                     </div>
@@ -237,9 +237,9 @@ export default function AIChat() {
                         e.stopPropagation();
                         deleteMutation.mutate(conv.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-opacity"
                     >
-                      <Trash2 className="w-4 h-4 text-gray-500" />
+                      <Trash2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     </button>
                   </div>
                 ))}
@@ -249,28 +249,28 @@ export default function AIChat() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col bg-white dark:bg-slate-900">
           {/* Header */}
-          <div className="h-14 px-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="h-14 px-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg lg:hidden"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg lg:hidden text-slate-700 dark:text-slate-300"
               >
                 {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg hidden lg:block"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg hidden lg:block text-slate-700 dark:text-slate-300"
               >
                 <Menu className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary-600" />
-                <span className="font-semibold">AI Chat</span>
+                <Sparkles className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <span className="font-semibold text-slate-900 dark:text-white">AI Chat</span>
               </div>
               {conversation?.model && (
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded">
                   {conversation.model}
                 </span>
               )}
@@ -281,13 +281,13 @@ export default function AIChat() {
               <div className="relative">
                 <button
                   onClick={() => setShowProviderDropdown(!showProviderDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg transition-colors"
                 >
                   <span>{getCurrentProviderName()}</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 {showProviderDropdown && (
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-50">
                     <div className="py-1">
                       {providers.map((p) => (
                         <button
@@ -296,20 +296,20 @@ export default function AIChat() {
                             setSelectedProvider(p.provider);
                             setShowProviderDropdown(false);
                           }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 ${
                             (selectedProvider === p.provider || (!selectedProvider && p.isDefault))
-                              ? 'bg-primary-50 text-primary-700'
-                              : 'text-gray-700'
+                              ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300'
+                              : 'text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span>{p.provider}</span>
                             {p.isDefault && (
-                              <span className="text-xs text-gray-400">default</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500">default</span>
                             )}
                           </div>
                           {p.modelName && (
-                            <span className="text-xs text-gray-400">{p.modelName}</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500">{p.modelName}</span>
                           )}
                         </button>
                       ))}
@@ -321,11 +321,11 @@ export default function AIChat() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900">
             {!selectedConversation ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                <Sparkles className="w-16 h-16 mb-4 text-primary-200" />
-                <h2 className="text-xl font-semibold mb-2">Welcome to AI Chat</h2>
+              <div className="h-full flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+                <Sparkles className="w-16 h-16 mb-4 text-primary-200 dark:text-primary-800" />
+                <h2 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">Welcome to AI Chat</h2>
                 <p className="text-center max-w-md mb-4">
                   Start a new conversation to ask questions about surveys, get help with data analysis,
                   or chat about anything else.
@@ -345,11 +345,11 @@ export default function AIChat() {
               </div>
             ) : loadingConversation ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary-600 dark:text-primary-400" />
               </div>
             ) : conversation?.messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                <MessageSquare className="w-12 h-12 mb-4 text-gray-300" />
+              <div className="h-full flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+                <MessageSquare className="w-12 h-12 mb-4 text-slate-300 dark:text-slate-600" />
                 <p>Send a message to start the conversation</p>
               </div>
             ) : (
@@ -363,14 +363,14 @@ export default function AIChat() {
                       className={`max-w-[80%] p-4 rounded-2xl ${
                         msg.role === 'user'
                           ? 'bg-primary-600 text-white rounded-br-md'
-                          : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                          : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-bl-md border border-slate-200 dark:border-slate-700'
                       }`}
                     >
                       <div className="whitespace-pre-wrap text-sm">{msg.content}</div>
                       {msg.tokensUsed && (
                         <div
                           className={`text-xs mt-2 ${
-                            msg.role === 'user' ? 'text-primary-200' : 'text-gray-400'
+                            msg.role === 'user' ? 'text-primary-200' : 'text-slate-400 dark:text-slate-500'
                           }`}
                         >
                           {msg.tokensUsed} tokens
@@ -381,8 +381,8 @@ export default function AIChat() {
                 ))}
                 {sendMutation.isPending && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 p-4 rounded-2xl rounded-bl-md">
-                      <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl rounded-bl-md">
+                      <Loader2 className="w-5 h-5 animate-spin text-slate-500 dark:text-slate-400" />
                     </div>
                   </div>
                 )}
@@ -393,7 +393,7 @@ export default function AIChat() {
 
           {/* Input */}
           {selectedConversation && (
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
               <div className="max-w-3xl mx-auto flex gap-2">
                 <textarea
                   value={message}
@@ -417,7 +417,7 @@ export default function AIChat() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 text-center mt-2">
+              <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-2">
                 Press Enter to send, Shift+Enter for new line
               </p>
             </div>

@@ -223,8 +223,8 @@ export default function CreateWithAI() {
           <div className="inline-flex w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl items-center justify-center mb-4">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-3">Create Survey with AI</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className="text-4xl font-bold mb-3 text-slate-900 dark:text-white">Create Survey with AI</h1>
+          <p className="text-lg text-slate-600 dark:text-slate-300">
             Choose how you'd like to create your survey
           </p>
         </div>
@@ -235,25 +235,25 @@ export default function CreateWithAI() {
             onClick={() => setMode('quick')}
             className="card hover:shadow-xl transition-all p-8 text-left group cursor-pointer border-2 border-transparent hover:border-primary-500"
           >
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
-              <Zap className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-200 dark:group-hover:bg-purple-800/40 transition-colors">
+              <Zap className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
-            <h2 className="text-2xl font-bold mb-3">Quick Generate</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-2xl font-bold mb-3 text-slate-900 dark:text-white">Quick Generate</h2>
+            <p className="text-slate-600 dark:text-slate-300 mb-4">
               Describe your survey idea and get a complete survey instantly. Perfect when you
               know exactly what you need.
             </p>
-            <ul className="space-y-2 text-sm text-gray-500">
+            <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li className="flex items-start">
-                <span className="text-purple-500 mr-2">✓</span>
+                <span className="text-purple-600 dark:text-purple-400 mr-2">✓</span>
                 One-click generation from description
               </li>
               <li className="flex items-start">
-                <span className="text-purple-500 mr-2">✓</span>
+                <span className="text-purple-600 dark:text-purple-400 mr-2">✓</span>
                 Customize question count and logic
               </li>
               <li className="flex items-start">
-                <span className="text-purple-500 mr-2">✓</span>
+                <span className="text-purple-600 dark:text-purple-400 mr-2">✓</span>
                 Preview and edit before saving
               </li>
             </ul>
@@ -269,25 +269,25 @@ export default function CreateWithAI() {
             disabled={startMutation.isPending}
             className="card hover:shadow-xl transition-all p-8 text-left group cursor-pointer border-2 border-transparent hover:border-primary-500 disabled:opacity-50"
           >
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
-              <MessageSquare className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40 transition-colors">
+              <MessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-2xl font-bold mb-3">Guided Wizard</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-2xl font-bold mb-3 text-slate-900 dark:text-white">Guided Wizard</h2>
+            <p className="text-slate-600 dark:text-slate-300 mb-4">
               Have a conversation with AI to build your survey step by step. Great for
               exploring ideas and iterating.
             </p>
-            <ul className="space-y-2 text-sm text-gray-500">
+            <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li className="flex items-start">
-                <span className="text-blue-500 mr-2">✓</span>
+                <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                 Interactive conversation interface
               </li>
               <li className="flex items-start">
-                <span className="text-blue-500 mr-2">✓</span>
+                <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                 Iterative refinement with feedback
               </li>
               <li className="flex items-start">
-                <span className="text-blue-500 mr-2">✓</span>
+                <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                 AI helps define survey structure
               </li>
             </ul>
@@ -321,16 +321,16 @@ export default function CreateWithAI() {
                 setMode('selection');
                 setGeneratedSurvey(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             >
               ← Back
             </button>
             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold">Quick Generate</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Quick Generate</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-slate-600 dark:text-slate-300">
             Describe your survey idea and let AI create a complete survey for you.
           </p>
         </div>
@@ -348,7 +348,7 @@ export default function CreateWithAI() {
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="E.g., A customer satisfaction survey for an e-commerce website that asks about shopping experience, product quality, delivery service, and likelihood to recommend..."
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Be specific about the topic, target audience, and what insights you want to
                     gather.
                   </p>
@@ -392,16 +392,16 @@ export default function CreateWithAI() {
                         onChange={(e) => setIncludeLogic(e.target.checked)}
                         className="mr-2"
                       />
-                      <span className="text-sm">Add conditional question logic</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Add conditional question logic</span>
                     </label>
                   </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-blue-800 mb-2">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
                     Tips for better results:
                   </h3>
-                  <ul className="text-sm text-blue-700 space-y-1">
+                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                     <li>• Specify your target audience (customers, employees, students, etc.)</li>
                     <li>• Mention specific topics you want to cover</li>
                     <li>• Include the purpose of the survey (feedback, research, evaluation)</li>
@@ -473,11 +473,11 @@ export default function CreateWithAI() {
                       />
                     </div>
                   ) : (
-                    <h2 className="text-xl font-bold">{generatedSurvey.title}</h2>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{generatedSurvey.title}</h2>
                   )}
                   <button
                     onClick={() => setEditingTitle(!editingTitle)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
@@ -494,7 +494,7 @@ export default function CreateWithAI() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-4">
+                <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
                   Questions ({generatedSurvey.questions.length})
                 </h3>
                 <div className="space-y-3">
@@ -507,13 +507,13 @@ export default function CreateWithAI() {
                           onClick={() => toggleQuestionExpanded(index)}
                         >
                           <div className="flex items-center gap-3 flex-1">
-                            <span className="text-sm font-medium text-gray-500 w-8">
+                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400 w-8">
                               Q{index + 1}
                             </span>
-                            <span className="text-xs font-medium px-2 py-0.5 bg-gray-100 rounded">
+                            <span className="text-xs font-medium px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded">
                               {question.type.replace('_', ' ')}
                             </span>
-                            <span className="font-medium truncate">{question.text}</span>
+                            <span className="font-medium text-slate-900 dark:text-white truncate">{question.text}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -526,9 +526,9 @@ export default function CreateWithAI() {
                               <Minus className="w-4 h-4" />
                             </button>
                             {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-gray-400" />
+                              <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                             ) : (
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                             )}
                           </div>
                         </div>
@@ -610,8 +610,8 @@ export default function CreateWithAI() {
   return (
     <div className="h-[calc(100vh-64px)] flex">
       {/* Chat Panel */}
-      <div className="flex-1 flex flex-col bg-gray-50">
-        <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
+        <div className="bg-white dark:bg-slate-800 border-b dark:border-slate-700 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
@@ -619,12 +619,12 @@ export default function CreateWithAI() {
                 setMessages([]);
                 setSurveyDraft(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             >
               ← Back
             </button>
             <MessageSquare className="w-5 h-5 text-primary-600" />
-            <h1 className="text-xl font-bold">AI Survey Wizard</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">AI Survey Wizard</h1>
           </div>
           {surveyDraft && (
             <button
@@ -649,60 +649,60 @@ export default function CreateWithAI() {
                 </div>
 
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
                     Welcome to AI Survey Wizard
                   </h2>
-                  <p className="text-lg text-gray-600">
+                  <p className="text-lg text-slate-600 dark:text-slate-300">
                     I'm your AI assistant, ready to help you build the perfect survey through conversation.
                   </p>
                 </div>
 
-                <div className="bg-white rounded-xl border shadow-sm p-6 text-left">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                <div className="bg-white dark:bg-slate-800 rounded-xl border dark:border-slate-700 shadow-sm p-6 text-left">
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
                     <Sparkles className="w-5 h-5 text-blue-600 mr-2" />
                     How it works
                   </h3>
                   <div className="space-y-4">
                     <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
                         1
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900">Tell me about your survey</h4>
-                        <p className="text-sm text-gray-600">Share what you want to learn and who you're surveying</p>
+                        <h4 className="font-medium text-slate-900 dark:text-white">Tell me about your survey</h4>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Share what you want to learn and who you're surveying</p>
                       </div>
                     </div>
                     <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-semibold text-sm">
+                      <div className="flex-shrink-0 w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-400 font-semibold text-sm">
                         2
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900">Review and refine</h4>
-                        <p className="text-sm text-gray-600">I'll create a draft and we'll iterate together</p>
+                        <h4 className="font-medium text-slate-900 dark:text-white">Review and refine</h4>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">I'll create a draft and we'll iterate together</p>
                       </div>
                     </div>
                     <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-semibold text-sm">
+                      <div className="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 font-semibold text-sm">
                         3
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900">Create your survey</h4>
-                        <p className="text-sm text-gray-600">When you're happy, I'll create it and you can edit further</p>
+                        <h4 className="font-medium text-slate-900 dark:text-white">Create your survey</h4>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">When you're happy, I'll create it and you can edit further</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-blue-900 mb-2">Example prompts to get started:</h4>
-                  <div className="space-y-2 text-sm text-blue-800">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">Example prompts to get started:</h4>
+                  <div className="space-y-2 text-sm text-blue-800 dark:text-blue-400">
                     <p className="italic">"Create a customer satisfaction survey for my online store"</p>
                     <p className="italic">"I need an employee engagement survey with 15 questions"</p>
                     <p className="italic">"Build a product feedback survey for our mobile app"</p>
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Type your message below to begin...
                 </p>
               </div>
@@ -718,17 +718,17 @@ export default function CreateWithAI() {
                     className={`max-w-2xl rounded-lg px-4 py-3 ${
                       msg.role === 'user'
                         ? 'bg-primary-600 text-white'
-                        : 'bg-white border shadow-sm'
+                        : 'bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-sm'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <p className={`whitespace-pre-wrap ${msg.role === 'assistant' ? 'text-slate-900 dark:text-white' : ''}`}>{msg.content}</p>
                   </div>
                 </div>
               ))}
               {sendMutation.isPending && (
                 <div className="flex justify-start">
-                  <div className="bg-white border shadow-sm rounded-lg px-4 py-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                  <div className="bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-sm rounded-lg px-4 py-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
                   </div>
                 </div>
               )}
@@ -737,7 +737,7 @@ export default function CreateWithAI() {
         </div>
 
         {/* Input */}
-        <div className="bg-white border-t px-6 py-4">
+        <div className="bg-white dark:bg-slate-800 border-t dark:border-slate-700 px-6 py-4">
           <form onSubmit={handleSendMessage} className="flex gap-3">
             <input
               type="text"
@@ -760,33 +760,33 @@ export default function CreateWithAI() {
 
       {/* Preview Panel */}
       {surveyDraft && (
-        <div className="w-96 bg-white border-l overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b px-6 py-4 z-10">
-            <h2 className="font-semibold text-lg">Survey Preview</h2>
+        <div className="w-96 bg-white dark:bg-slate-800 border-l dark:border-slate-700 overflow-y-auto">
+          <div className="sticky top-0 bg-white dark:bg-slate-800 border-b dark:border-slate-700 px-6 py-4 z-10">
+            <h2 className="font-semibold text-lg text-slate-900 dark:text-white">Survey Preview</h2>
           </div>
           <div className="px-6 py-4 space-y-4">
             <div>
-              <h3 className="font-bold text-xl mb-1">{surveyDraft.title}</h3>
+              <h3 className="font-bold text-xl mb-1 text-slate-900 dark:text-white">{surveyDraft.title}</h3>
               {surveyDraft.description && (
-                <p className="text-sm text-gray-600">{surveyDraft.description}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{surveyDraft.description}</p>
               )}
             </div>
 
             {surveyDraft.sections?.map((section, sIdx) => (
-              <div key={sIdx} className="border-t pt-4">
-                <h4 className="font-semibold mb-3">{section.title}</h4>
+              <div key={sIdx} className="border-t dark:border-slate-700 pt-4">
+                <h4 className="font-semibold mb-3 text-slate-900 dark:text-white">{section.title}</h4>
                 <div className="space-y-3">
                   {section.questions.map((q, qIdx) => (
                     <div key={qIdx} className="text-sm">
                       <div className="flex items-start gap-2">
-                        <span className="text-gray-500 text-xs mt-0.5">Q{qIdx + 1}</span>
+                        <span className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Q{qIdx + 1}</span>
                         <div className="flex-1">
-                          <p className="font-medium">{q.text}</p>
-                          <span className="text-xs text-gray-500">{q.type}</span>
+                          <p className="font-medium text-slate-900 dark:text-white">{q.text}</p>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">{q.type}</span>
                           {q.options && q.options.length > 0 && (
                             <ul className="mt-1 space-y-1">
                               {q.options.map((opt, optIdx) => (
-                                <li key={optIdx} className="text-xs text-gray-600">
+                                <li key={optIdx} className="text-xs text-slate-600 dark:text-slate-400">
                                   • {opt}
                                 </li>
                               ))}

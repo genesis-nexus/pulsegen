@@ -176,41 +176,41 @@ export default function SurveyAnalytics() {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-3xl font-bold">{survey?.title}</h1>
-            <p className="text-gray-600">Survey Analytics</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{survey?.title}</h1>
+            <p className="text-slate-600 dark:text-slate-300">Survey Analytics</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => navigate(`/surveys/${id}/participants`)}
-              className="inline-flex items-center px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="btn btn-outline btn-sm"
             >
-              <Users className="w-4 h-4 mr-2" />
+              <Users className="w-4 h-4 mr-1.5" />
               Participants
             </button>
             <button
               onClick={() => setShowSharePanel(!showSharePanel)}
-              className={`inline-flex items-center px-4 py-2 text-sm border rounded-lg transition-colors ${
+              className={`btn btn-sm ${
                 showSharePanel
-                  ? 'bg-primary-50 text-primary-700 border-primary-300'
-                  : 'text-gray-700 hover:text-gray-900 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 border-primary-300 dark:border-primary-700'
+                  : 'btn-outline'
               }`}
             >
-              <Share2 className="w-4 h-4 mr-2" />
+              <Share2 className="w-4 h-4 mr-1.5" />
               Share
             </button>
             <button
               onClick={() => setShowLogicInfo(!showLogicInfo)}
-              className="inline-flex items-center px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="btn btn-outline btn-sm"
             >
-              <HelpCircle className="w-4 h-4 mr-2" />
+              <HelpCircle className="w-4 h-4 mr-1.5" />
               Logic Types
             </button>
             <button
               onClick={handleExportData}
               disabled={isExporting}
-              className="btn btn-primary inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4 mr-1.5" />
               {isExporting ? 'Exporting...' : 'Export Data'}
             </button>
           </div>
@@ -230,35 +230,35 @@ export default function SurveyAnalytics() {
 
         {/* Logic Info Modal */}
         {showLogicInfo && (
-          <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+          <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border border-blue-200 dark:border-blue-800 rounded-xl">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Survey Logic Types</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Survey Logic Types</h3>
               <button
                 onClick={() => setShowLogicInfo(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               >
                 ✕
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Skip Logic</h4>
-                <p className="text-sm text-gray-700">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Skip Logic</h4>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   Automatically skips questions based on previous answers. For example, if a user answers "No" to "Do you own a car?",
                   questions about car maintenance are skipped. The respondent never sees the skipped questions.
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Branching Logic</h4>
-                <p className="text-sm text-gray-700">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Branching Logic</h4>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   Routes respondents to different question paths or pages based on their answers. Similar to skip logic but operates
                   at a higher level, directing users to entirely different sections of the survey. Often used for complex surveys
                   with multiple paths.
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Display Logic</h4>
-                <p className="text-sm text-gray-700">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Display Logic</h4>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   Shows or hides questions based on conditions, but doesn't skip them entirely. The question remains in the sequence,
                   but is only displayed when conditions are met. Useful for follow-up questions or conditional fields that should maintain
                   survey structure.
@@ -271,40 +271,40 @@ export default function SurveyAnalytics() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all">
-          <p className="text-sm font-medium text-blue-700 mb-2">Total Responses</p>
-          <p className="text-4xl font-bold text-blue-900">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all">
+          <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Total Responses</p>
+          <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">
             {analytics?.totalResponses || 0}
           </p>
-          <div className="mt-2 h-1 bg-blue-300 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+          <div className="mt-2 h-1 bg-blue-300 dark:bg-blue-800 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse" style={{ width: '100%' }}></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all">
-          <p className="text-sm font-medium text-green-700 mb-2">Completion Rate</p>
-          <p className="text-4xl font-bold text-green-900">
+        <div className="card bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/30 border-emerald-200 dark:border-emerald-800 hover:shadow-lg transition-all">
+          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-2">Completion Rate</p>
+          <p className="text-4xl font-bold text-emerald-900 dark:text-emerald-100">
             {analytics?.completionRate?.toFixed(1) || 0}%
           </p>
-          <div className="mt-2 h-1 bg-green-300 rounded-full overflow-hidden">
-            <div className="h-full bg-green-600 rounded-full transition-all" style={{ width: `${analytics?.completionRate || 0}%` }}></div>
+          <div className="mt-2 h-1 bg-emerald-300 dark:bg-emerald-800 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-600 dark:bg-emerald-400 rounded-full transition-all" style={{ width: `${analytics?.completionRate || 0}%` }}></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all">
-          <p className="text-sm font-medium text-purple-700 mb-2">Avg. Duration</p>
-          <p className="text-4xl font-bold text-purple-900">
+        <div className="card bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/50 dark:to-violet-900/30 border-violet-200 dark:border-violet-800 hover:shadow-lg transition-all">
+          <p className="text-sm font-medium text-violet-700 dark:text-violet-300 mb-2">Avg. Duration</p>
+          <p className="text-4xl font-bold text-violet-900 dark:text-violet-100">
             {analytics?.averageDuration ? `${Math.round(analytics.averageDuration / 60)}m` : 'N/A'}
           </p>
-          <div className="mt-2 h-1 bg-purple-300 rounded-full overflow-hidden">
-            <div className="h-full bg-purple-600 rounded-full animate-pulse" style={{ width: '75%' }}></div>
+          <div className="mt-2 h-1 bg-violet-300 dark:bg-violet-800 rounded-full overflow-hidden">
+            <div className="h-full bg-violet-600 dark:bg-violet-400 rounded-full animate-pulse" style={{ width: '75%' }}></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 hover:shadow-lg transition-all">
-          <p className="text-sm font-medium text-orange-700 mb-2">Drop-off Rate</p>
-          <p className="text-4xl font-bold text-orange-900">
+        <div className="card bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/30 border-amber-200 dark:border-amber-800 hover:shadow-lg transition-all">
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">Drop-off Rate</p>
+          <p className="text-4xl font-bold text-amber-900 dark:text-amber-100">
             {analytics?.dropoffRate?.toFixed(1) || 0}%
           </p>
-          <div className="mt-2 h-1 bg-orange-300 rounded-full overflow-hidden">
-            <div className="h-full bg-orange-600 rounded-full transition-all" style={{ width: `${analytics?.dropoffRate || 0}%` }}></div>
+          <div className="mt-2 h-1 bg-amber-300 dark:bg-amber-800 rounded-full overflow-hidden">
+            <div className="h-full bg-amber-600 dark:bg-amber-400 rounded-full transition-all" style={{ width: `${analytics?.dropoffRate || 0}%` }}></div>
           </div>
         </div>
       </div>
@@ -336,18 +336,18 @@ export default function SurveyAnalytics() {
       {insights && insights.length > 0 && (
         <div className="card mb-8">
           <div className="flex items-center mb-4">
-            <Sparkles className="w-5 h-5 text-primary-600 mr-2" />
-            <h2 className="text-xl font-bold">Previous AI Insights</h2>
+            <Sparkles className="w-5 h-5 text-primary-600 dark:text-primary-400 mr-2" />
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Previous AI Insights</h2>
           </div>
           <div className="space-y-4">
             {insights.map((insight: any) => (
               <div
                 key={insight.id}
-                className="p-4 bg-primary-50 border border-primary-200 rounded-lg"
+                className="p-4 bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 rounded-lg"
               >
-                <p className="text-gray-900">{insight.insight}</p>
+                <p className="text-slate-900 dark:text-slate-100">{insight.insight}</p>
                 {insight.confidence && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                     Confidence: {(insight.confidence * 100).toFixed(0)}%
                   </p>
                 )}
@@ -360,11 +360,11 @@ export default function SurveyAnalytics() {
       {/* Question Analytics */}
       <div className="space-y-8">
         {questionAnalytics?.map((qa, qaIndex) => (
-          <div key={qa.questionId} className="card bg-gradient-to-br from-white to-gray-50 shadow-lg hover:shadow-xl transition-shadow">
+          <div key={qa.questionId} className="card bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg hover:shadow-xl transition-shadow">
             <div className="mb-6">
               <div className="flex items-start justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex-1">{qa.questionText}</h3>
-                <span className="ml-4 px-3 py-1 bg-primary-100 text-primary-700 text-sm font-medium rounded-full">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex-1">{qa.questionText}</h3>
+                <span className="ml-4 px-3 py-1 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-sm font-medium rounded-full">
                   {qa.totalResponses} responses
                 </span>
               </div>
@@ -373,31 +373,32 @@ export default function SurveyAnalytics() {
             {qa.distribution && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Modern Bar Chart */}
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <h4 className="text-sm font-medium text-gray-700 mb-4">Response Distribution</h4>
+                <div className="bg-white dark:bg-slate-800/50 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Response Distribution</h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={qa.distribution}>
                       <defs>
                         <linearGradient id={`colorBar${qaIndex}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
-                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.3} />
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.3} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200 dark:text-slate-700" />
                       <XAxis
                         dataKey="optionText"
                         angle={-45}
                         textAnchor="end"
                         height={100}
-                        tick={{ fill: '#6B7280', fontSize: 12 }}
+                        tick={{ fill: 'currentColor', fontSize: 12 }}
+                        className="text-slate-600 dark:text-slate-400"
                       />
-                      <YAxis tick={{ fill: '#6B7280', fontSize: 12 }} />
+                      <YAxis tick={{ fill: 'currentColor', fontSize: 12 }} className="text-slate-600 dark:text-slate-400" />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#1F2937',
-                          border: 'none',
+                          backgroundColor: '#1e293b',
+                          border: '1px solid #334155',
                           borderRadius: '8px',
-                          color: '#F9FAFB'
+                          color: '#f1f5f9'
                         }}
                       />
                       <Bar
@@ -411,8 +412,8 @@ export default function SurveyAnalytics() {
                 </div>
 
                 {/* Modern Donut Chart */}
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <h4 className="text-sm font-medium text-gray-700 mb-4">Percentage Breakdown</h4>
+                <div className="bg-white dark:bg-slate-800/50 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Percentage Breakdown</h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <defs>
@@ -439,24 +440,25 @@ export default function SurveyAnalytics() {
                           <Cell
                             key={`cell-${index}`}
                             fill={`url(#gradient${qaIndex}-${index % COLORS.length})`}
-                            stroke="#fff"
+                            stroke="currentColor"
                             strokeWidth={2}
+                            className="text-white dark:text-slate-800"
                           />
                         ))}
                       </Pie>
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#1F2937',
-                          border: 'none',
+                          backgroundColor: '#1e293b',
+                          border: '1px solid #334155',
                           borderRadius: '8px',
-                          color: '#F9FAFB'
+                          color: '#f1f5f9'
                         }}
                       />
                       <Legend
                         verticalAlign="bottom"
                         height={36}
                         formatter={(_value, entry: any) => (
-                          <span className="text-sm text-gray-700">{entry.payload.optionText}</span>
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{entry.payload.optionText}</span>
                         )}
                       />
                     </PieChart>
@@ -466,28 +468,28 @@ export default function SurveyAnalytics() {
             )}
 
             {qa.average !== undefined && (
-              <div className="mt-4">
+              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Average</p>
-                    <p className="text-xl font-bold">{qa.average.toFixed(2)}</p>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Average</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{qa.average.toFixed(2)}</p>
                   </div>
                   {qa.median !== undefined && (
-                    <div>
-                      <p className="text-sm text-gray-600">Median</p>
-                      <p className="text-xl font-bold">{qa.median}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Median</p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-white">{qa.median}</p>
                     </div>
                   )}
                   {qa.min !== undefined && (
-                    <div>
-                      <p className="text-sm text-gray-600">Min</p>
-                      <p className="text-xl font-bold">{qa.min}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Min</p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-white">{qa.min}</p>
                     </div>
                   )}
                   {qa.max !== undefined && (
-                    <div>
-                      <p className="text-sm text-gray-600">Max</p>
-                      <p className="text-xl font-bold">{qa.max}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Max</p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-white">{qa.max}</p>
                     </div>
                   )}
                 </div>

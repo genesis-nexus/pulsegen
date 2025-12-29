@@ -124,4 +124,34 @@ export const participantApi = {
   },
 };
 
+// Authenticated Progress API
+export const authenticatedProgressApi = {
+  save: async (
+    surveyId: string,
+    data: {
+      answers: Record<string, any>;
+      currentPageIndex: number;
+      lastQuestionId?: string;
+    }
+  ) => {
+    const response = await api.post('/partial-responses/save-authenticated', {
+      surveyId,
+      ...data,
+    });
+    return response.data;
+  },
+
+  get: async (surveyId: string) => {
+    const response = await api.get(`/partial-responses/surveys/${surveyId}/progress`);
+    return response.data.data;
+  },
+
+  linkAnonymous: async (resumeToken: string) => {
+    const response = await api.post('/partial-responses/link-to-user', {
+      resumeToken,
+    });
+    return response.data.data;
+  },
+};
+
 export default api;

@@ -90,17 +90,17 @@ export default function Toolbox({
     const [activeTab, setActiveTab] = useState<'tools' | 'outline'>('tools');
 
     return (
-        <div className="bg-white border-r border-gray-200 w-64 flex flex-col h-full">
-            <div className="flex border-b border-gray-200">
+        <div className="bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-64 flex flex-col h-full">
+            <div className="flex border-b border-slate-200 dark:border-slate-700">
                 <button
                     onClick={() => setActiveTab('tools')}
-                    className={`flex-1 py-3 text-sm font-medium text-center ${activeTab === 'tools' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${activeTab === 'tools' ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                 >
                     Add
                 </button>
                 <button
                     onClick={() => setActiveTab('outline')}
-                    className={`flex-1 py-3 text-sm font-medium text-center ${activeTab === 'outline' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${activeTab === 'outline' ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                 >
                     Outline
                 </button>
@@ -115,7 +115,7 @@ export default function Toolbox({
 
                             return (
                                 <div key={category}>
-                                    <h3 className="text-xs font-medium text-gray-500 mb-2 px-2">{category}</h3>
+                                    <h3 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 px-2">{category}</h3>
                                     <div className="space-y-1">
                                         {categoryItems.map((item) => {
                                             const Icon = item.icon;
@@ -123,10 +123,10 @@ export default function Toolbox({
                                                 <button
                                                     key={item.type}
                                                     onClick={() => onAddQuestion(item.type)}
-                                                    className="w-full flex items-center px-3 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-50 hover:text-primary-600 transition-colors group border border-transparent hover:border-gray-200"
+                                                    className="w-full flex items-center px-3 py-2 text-sm text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary-600 dark:hover:text-primary-400 transition-colors group border border-transparent hover:border-slate-200 dark:hover:border-slate-600"
                                                 >
-                                                    <GripVertical className="w-4 h-4 text-gray-300 mr-2 group-hover:text-gray-400" />
-                                                    <Icon className="w-4 h-4 mr-3 text-gray-400 group-hover:text-primary-500" />
+                                                    <GripVertical className="w-4 h-4 text-slate-300 dark:text-slate-600 mr-2 group-hover:text-slate-400 dark:group-hover:text-slate-500" />
+                                                    <Icon className="w-4 h-4 mr-3 text-slate-400 dark:text-slate-500 group-hover:text-primary-500 dark:group-hover:text-primary-400" />
                                                     {item.label}
                                                 </button>
                                             );
@@ -139,18 +139,20 @@ export default function Toolbox({
                 ) : (
                     <div className="space-y-1">
                         {questions.length === 0 ? (
-                            <p className="text-sm text-gray-400 text-center py-4">No questions yet</p>
+                            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">No questions yet</p>
                         ) : (
                             questions.map((q, index) => (
                                 <div
                                     key={q.id}
                                     onClick={() => onSelectQuestion?.(q.id)}
                                     className={`
-                                        flex items-center px-3 py-2 text-sm rounded cursor-pointer
-                                        ${selectedQuestionId === q.id ? 'bg-primary-50 text-primary-700' : 'text-gray-700 hover:bg-gray-50'}
+                                        flex items-center px-3 py-2 text-sm rounded cursor-pointer transition-colors
+                                        ${selectedQuestionId === q.id
+                                            ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300'
+                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}
                                     `}
                                 >
-                                    <span className="text-gray-400 mr-2 font-mono text-xs">{index + 1}</span>
+                                    <span className="text-slate-400 dark:text-slate-500 mr-2 font-mono text-xs">{index + 1}</span>
                                     <span className="truncate">{q.text || 'Untitled'}</span>
                                 </div>
                             ))

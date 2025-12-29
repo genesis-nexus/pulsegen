@@ -36,28 +36,28 @@ export const AddParticipantForm: React.FC<AddParticipantFormProps> = ({ onClose,
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                        <UserPlus className="w-5 h-5 mr-2 text-blue-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 dark:bg-opacity-70">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl dark:shadow-slate-900/50 max-w-md w-full">
+                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center">
+                        <UserPlus className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                         Add Participant
                     </h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+                    <button onClick={onClose} className="text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             Email Address <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="email"
                             id="email"
                             required
-                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                            className="w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                             placeholder="participant@example.com"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -65,13 +65,13 @@ export const AddParticipantForm: React.FC<AddParticipantFormProps> = ({ onClose,
                     </div>
 
                     <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             First Name
                         </label>
                         <input
                             type="text"
                             id="firstName"
-                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                            className="w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                             placeholder="John"
                             value={formData.firstName}
                             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -79,21 +79,21 @@ export const AddParticipantForm: React.FC<AddParticipantFormProps> = ({ onClose,
                     </div>
 
                     <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             Last Name
                         </label>
                         <input
                             type="text"
                             id="lastName"
-                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                            className="w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                             placeholder="Doe"
                             value={formData.lastName}
                             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                         />
                     </div>
 
-                    <div className="bg-blue-50 p-3 rounded-md">
-                        <p className="text-xs text-blue-800">
+                    <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-md">
+                        <p className="text-xs text-blue-800 dark:text-blue-300">
                             A unique access token will be generated automatically for this participant.
                         </p>
                     </div>
@@ -102,7 +102,7 @@ export const AddParticipantForm: React.FC<AddParticipantFormProps> = ({ onClose,
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                         >
                             Cancel
                         </button>

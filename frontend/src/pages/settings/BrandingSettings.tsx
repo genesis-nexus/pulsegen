@@ -122,8 +122,8 @@ export default function BrandingSettings() {
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Platform Branding</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white">Platform Branding</h1>
+            <p className="text-slate-600 dark:text-slate-400">
               Customize the look and feel of your PulseGen instance.
             </p>
           </div>
@@ -156,7 +156,7 @@ export default function BrandingSettings() {
           {/* Logo */}
           <div>
             <label className="label">Platform Logo</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center bg-slate-50 dark:bg-slate-800/50">
               {currentData.logoUrl ? (
                 <div className="space-y-2">
                   <img
@@ -195,14 +195,14 @@ export default function BrandingSettings() {
                 className="hidden"
                 onChange={(e) => handleFileChange('logo', e.target.files?.[0] || null)}
               />
-              <p className="text-xs text-gray-500 mt-2">Max size: 5MB</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Max size: 5MB</p>
             </div>
           </div>
 
           {/* Favicon */}
           <div>
             <label className="label">Favicon</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center bg-slate-50 dark:bg-slate-800/50">
               {currentData.faviconUrl ? (
                 <div className="space-y-2">
                   <img
@@ -241,14 +241,14 @@ export default function BrandingSettings() {
                 className="hidden"
                 onChange={(e) => handleFileChange('favicon', e.target.files?.[0] || null)}
               />
-              <p className="text-xs text-gray-500 mt-2">32x32px recommended</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">32x32px recommended</p>
             </div>
           </div>
 
           {/* Login Background */}
           <div>
             <label className="label">Login Background</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center bg-slate-50 dark:bg-slate-800/50">
               {currentData.loginBgUrl ? (
                 <div className="space-y-2">
                   <img
@@ -287,7 +287,7 @@ export default function BrandingSettings() {
                 className="hidden"
                 onChange={(e) => handleFileChange('background', e.target.files?.[0] || null)}
               />
-              <p className="text-xs text-gray-500 mt-2">1920x1080px recommended</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">1920x1080px recommended</p>
             </div>
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function BrandingSettings() {
 
       {/* Basic Settings */}
       <div className="card mb-8">
-        <h2 className="text-xl font-bold mb-4">Basic Settings</h2>
+        <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Basic Settings</h2>
 
         <div className="space-y-4">
           <div>
@@ -357,12 +357,12 @@ export default function BrandingSettings() {
           </div>
 
           <div>
-            <label className="inline-flex items-center">
+            <label className="inline-flex items-center text-slate-700 dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={currentData.showPoweredBy}
                 onChange={(e) => setFormData({ ...formData, showPoweredBy: e.target.checked })}
-                className="mr-2"
+                className="mr-2 rounded text-primary-600 focus:ring-primary-500 dark:bg-slate-700 dark:border-slate-600"
               />
               <span className="text-sm">Show "Powered by PulseGen" in footer</span>
             </label>
@@ -372,7 +372,7 @@ export default function BrandingSettings() {
 
       {/* Color Theme */}
       <div className="card mb-8">
-        <h2 className="text-xl font-bold mb-4">Color Theme</h2>
+        <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Color Theme</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
@@ -380,7 +380,7 @@ export default function BrandingSettings() {
             <div className="flex gap-2">
               <input
                 type="color"
-                className="w-12 h-10 rounded border border-gray-300"
+                className="w-12 h-10 rounded border border-slate-300 dark:border-slate-600"
                 value={currentData.primaryColor}
                 onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
               />
@@ -399,7 +399,7 @@ export default function BrandingSettings() {
             <div className="flex gap-2">
               <input
                 type="color"
-                className="w-12 h-10 rounded border border-gray-300"
+                className="w-12 h-10 rounded border border-slate-300 dark:border-slate-600"
                 value={currentData.secondaryColor}
                 onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
               />
@@ -418,7 +418,7 @@ export default function BrandingSettings() {
             <div className="flex gap-2">
               <input
                 type="color"
-                className="w-12 h-10 rounded border border-gray-300"
+                className="w-12 h-10 rounded border border-slate-300 dark:border-slate-600"
                 value={currentData.accentColor}
                 onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
               />
@@ -436,7 +436,7 @@ export default function BrandingSettings() {
 
       {/* Advanced Customization */}
       <div className="card">
-        <h2 className="text-xl font-bold mb-4">Advanced Customization</h2>
+        <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Advanced Customization</h2>
 
         <div className="space-y-4">
           <div>
@@ -448,7 +448,7 @@ export default function BrandingSettings() {
               onChange={(e) => setFormData({ ...formData, customCss: e.target.value })}
               placeholder="/* Add your custom CSS here */"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Advanced users can add custom CSS to override default styles
             </p>
           </div>
@@ -462,7 +462,7 @@ export default function BrandingSettings() {
               onChange={(e) => setFormData({ ...formData, customJs: e.target.value })}
               placeholder="// Add your custom JavaScript here"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Add custom JavaScript for analytics or other functionality
             </p>
           </div>

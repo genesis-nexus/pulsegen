@@ -4,13 +4,14 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../../lib/api';
+import api, { authenticatedProgressApi } from '../../lib/api';
 import { Survey, QuestionType } from '../../types';
 import { SurveyProgressWrapper } from '../../components/survey/SurveyProgressWrapper';
 import QuestionRenderer from '../../components/questions/QuestionRenderer';
 import SocialShareButtons from '../../components/social/SocialShareButtons';
 import { getTrackingData } from '../../lib/tracking';
 import { useSwipeNavigation } from '../../hooks/useSwipeNavigation';
+import { useAuthStore } from '../../stores/authStore';
 
 // localStorage utilities
 const STORAGE_KEY_PREFIX = 'survey_response_';
@@ -49,12 +50,15 @@ const clearResponseFromStorage = (slug: string) => {
 
 export default function SurveyTake() {
   const { slug } = useParams();
+  const { user } = useAuthStore();
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isAuthenticatedMode, setIsAuthenticatedMode] = useState(false);
+  const hasLinkedAnonymous = useRef(false);
 
   const { data: survey, isLoading, error } = useQuery({
     queryKey: ['public-survey', slug],
@@ -67,44 +71,134 @@ export default function SurveyTake() {
 
   // Load saved responses on mount
   useEffect(() => {
-    if (!slug) return;
+    if (!slug || !survey) return;
 
-    const savedData = loadResponseFromStorage(slug);
-    if (savedData && savedData.answers) {
-      setAnswers(savedData.answers);
-      setLastSaved(new Date(savedData.timestamp));
-      toast.success('We restored your previous answers', {
-        icon: '💾',
-        duration: 4000,
-      });
-    }
-  }, [slug]);
+    const loadProgress = async () => {
+      if (user) {
+        // Authenticated user - load from database
+        setIsAuthenticatedMode(true);
+        try {
+          const progress = await authenticatedProgressApi.get(survey.id);
+          if (progress) {
+            setAnswers(progress.answers);
+            setCurrentPage(progress.currentPageIndex + 1);
+            setLastSaved(new Date(progress.lastSavedAt));
+            toast.success('Your progress has been restored', {
+              icon: '💾',
+              duration: 4000,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to load authenticated progress:', error);
+        }
+      } else {
+        // Anonymous user - load from localStorage
+        setIsAuthenticatedMode(false);
+        const savedData = loadResponseFromStorage(slug);
+        if (savedData && savedData.answers) {
+          setAnswers(savedData.answers);
+          setLastSaved(new Date(savedData.timestamp));
+          toast.success('We restored your previous answers', {
+            icon: '💾',
+            duration: 4000,
+          });
+        }
+      }
+    };
+
+    loadProgress();
+  }, [slug, survey, user]);
+
+  // Handle user login during survey - link anonymous progress
+  useEffect(() => {
+    if (!user || !slug || !survey || hasLinkedAnonymous.current) return;
+
+    const linkAnonymousProgress = async () => {
+      const anonymousData = loadResponseFromStorage(slug);
+      if (anonymousData && anonymousData.answers) {
+        try {
+          // Create temporary partial response to get resumeToken
+          const savedPartial = await api.post('/partial-responses/save', {
+            surveyId: survey.id,
+            answers: anonymousData.answers,
+            currentPageIndex: currentPage - 1,
+          });
+
+          // Link to authenticated user
+          const linked = await authenticatedProgressApi.linkAnonymous(
+            savedPartial.data.data.resumeToken
+          );
+
+          setAnswers(linked.answers);
+          setCurrentPage(linked.currentPageIndex + 1);
+          setLastSaved(new Date(linked.lastSavedAt));
+          clearResponseFromStorage(slug);
+          setIsAuthenticatedMode(true);
+          hasLinkedAnonymous.current = true;
+
+          toast.success('Your progress has been linked to your account!', {
+            icon: '🔗',
+            duration: 4000,
+          });
+        } catch (error) {
+          console.error('Failed to link anonymous progress:', error);
+        }
+      } else {
+        setIsAuthenticatedMode(true);
+      }
+    };
+
+    linkAnonymousProgress();
+  }, [user, slug, survey, currentPage]);
 
   // Debounced auto-save function
   const debouncedSave = useCallback((answersToSave: Record<string, any>) => {
-    if (!slug) return;
+    if (!slug || !survey) return;
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
     setIsSaving(true);
-    saveTimeoutRef.current = setTimeout(() => {
-      saveResponseToStorage(slug, answersToSave);
-      setLastSaved(new Date());
-      setIsSaving(false);
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (isAuthenticatedMode && user) {
+        // Save to database for authenticated users
+        try {
+          await authenticatedProgressApi.save(survey.id, {
+            answers: answersToSave,
+            currentPageIndex: currentPage - 1,
+          });
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error('Failed to save to database:', error);
+          // Fallback to localStorage
+          saveResponseToStorage(slug, answersToSave);
+          toast.error('Failed to save to server. Saved locally as backup.', {
+            icon: '⚠️',
+            duration: 5000
+          });
+        } finally {
+          setIsSaving(false);
+        }
+      } else {
+        // Save to localStorage for anonymous users
+        saveResponseToStorage(slug, answersToSave);
+        setLastSaved(new Date());
+        setIsSaving(false);
+      }
     }, 500); // 500ms debounce
-  }, [slug]);
+  }, [slug, survey, isAuthenticatedMode, user, currentPage]);
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
       return api.post(`/responses/surveys/${survey?.id}/submit`, data);
     },
     onSuccess: () => {
-      // Clear localStorage on successful submission
-      if (slug) {
+      // Clear storage based on mode
+      if (!isAuthenticatedMode && slug) {
         clearResponseFromStorage(slug);
       }
+      // Database cleanup happens automatically in backend for authenticated users
       setSubmitted(true);
       toast.success('Thank you for your response!');
     },

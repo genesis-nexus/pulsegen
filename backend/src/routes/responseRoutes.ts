@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import ResponseController from '../controllers/responseController';
-import { authenticate } from '../middleware/auth';
+import { authenticate, optionalAuthenticate } from '../middleware/auth';
 
 const router = Router();
 
-// Public response submission
-router.post('/surveys/:surveyId/submit', ResponseController.submit);
+// Public response submission (with optional authentication)
+router.post('/surveys/:surveyId/submit', optionalAuthenticate, ResponseController.submit);
 
 // Protected routes
 router.get('/:id', authenticate, ResponseController.getById);
