@@ -1,0 +1,377 @@
+#!/bin/bash
+
+# PulseGen Setup Script
+# This script helps you set up PulseGen quickly with Docker Compose
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Helper functions
+print_header() {
+    echo -e "\n${BLUE}========================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}========================================${NC}\n"
+}
+
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}✗ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠ $1${NC}"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ $1${NC}"
+}
+
+# Check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Generate random string
+generate_secret() {
+    if command_exists openssl; then
+        openssl rand -base64 32 | tr -d "=+/" | cut -c1-32
+    else
+        # Fallback if openssl is not available
+        cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1
+    fi
+}
+
+# Generate hex string
+generate_hex() {
+    if command_exists openssl; then
+        openssl rand -hex 32
+    else
+        # Fallback if openssl is not available
+        cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 64 | head -n 1
+    fi
+}
+
+# Banner
+clear
+echo -e "${BLUE}"
+cat << "EOF"
+  ____        _           ____
+ |  _ \ _   _| |___  ___ / ___| ___ _ __
+ | |_) | | | | / __|/ _ \ |  _ / _ \ '_ \
+ |  __/| |_| | \__ \  __/ |_| |  __/ | | |
+ |_|    \__,_|_|___/\___|\____|\___|_| |_|
+
+         Setup & Installation
+EOF
+echo -e "${NC}\n"
+
+print_info "This script will help you set up PulseGen on your system."
+echo ""
+
+# Check prerequisites
+print_header "Checking Prerequisites"
+
+MISSING_DEPS=0
+
+if command_exists docker; then
+    DOCKER_VERSION=$(docker --version | cut -d ' ' -f3 | cut -d ',' -f1)
+    print_success "Docker found (version $DOCKER_VERSION)"
+else
+    print_error "Docker is not installed"
+    MISSING_DEPS=1
+fi
+
+if command_exists docker-compose || docker compose version >/dev/null 2>&1; then
+    if command_exists docker-compose; then
+        COMPOSE_VERSION=$(docker-compose --version | cut -d ' ' -f4 | cut -d ',' -f1)
+    else
+        COMPOSE_VERSION=$(docker compose version --short)
+    fi
+    print_success "Docker Compose found (version $COMPOSE_VERSION)"
+
+    # Determine which command to use
+    if docker compose version >/dev/null 2>&1; then
+        DOCKER_COMPOSE_CMD="docker compose"
+    else
+        DOCKER_COMPOSE_CMD="docker-compose"
+    fi
+else
+    print_error "Docker Compose is not installed"
+    MISSING_DEPS=1
+fi
+
+if command_exists git; then
+    GIT_VERSION=$(git --version | cut -d ' ' -f3)
+    print_success "Git found (version $GIT_VERSION)"
+else
+    print_warning "Git is not installed (optional)"
+fi
+
+if [ $MISSING_DEPS -eq 1 ]; then
+    echo ""
+    print_error "Missing required dependencies. Please install them first:"
+    echo ""
+    echo "  Docker: https://docs.docker.com/get-docker/"
+    echo "  Docker Compose: https://docs.docker.com/compose/install/"
+    echo ""
+    exit 1
+fi
+
+# Check if .env already exists
+if [ -f .env ]; then
+    echo ""
+    print_warning "An .env file already exists."
+    read -p "Do you want to overwrite it? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Keeping existing .env file. Skipping configuration."
+        SKIP_ENV_CREATION=1
+    fi
+fi
+
+# Create .env file
+if [ -z "$SKIP_ENV_CREATION" ]; then
+    print_header "Configuring Environment"
+
+    print_info "Generating secure random secrets..."
+
+    POSTGRES_PASSWORD=$(generate_secret)
+    JWT_SECRET=$(generate_secret)
+    JWT_REFRESH_SECRET=$(generate_secret)
+    ENCRYPTION_KEY=$(generate_hex)
+
+    print_success "Secrets generated"
+
+    # Ask for configuration
+    echo ""
+    print_info "Please provide the following information (or press Enter for defaults):"
+    echo ""
+
+    read -p "Application URL [http://localhost:3001]: " APP_URL
+    APP_URL=${APP_URL:-http://localhost:3001}
+
+    read -p "API URL [http://localhost:5001]: " API_URL
+    API_URL=${API_URL:-http://localhost:5001}
+
+    read -p "Admin Email [admin@example.com]: " ADMIN_EMAIL
+    ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+
+    read -s -p "Admin Password [admin123]: " ADMIN_PASSWORD
+    echo ""
+    ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+
+    echo ""
+    read -p "Do you want to configure email settings? (y/N): " -n 1 -r CONFIGURE_EMAIL
+    echo ""
+
+    if [[ $CONFIGURE_EMAIL =~ ^[Yy]$ ]]; then
+        read -p "SMTP Host: " SMTP_HOST
+        read -p "SMTP Port [587]: " SMTP_PORT
+        SMTP_PORT=${SMTP_PORT:-587}
+        read -p "SMTP User: " SMTP_USER
+        read -s -p "SMTP Password: " SMTP_PASS
+        echo ""
+        read -p "Email From Address: " EMAIL_FROM
+    fi
+
+    # Create .env file
+    print_info "Creating .env file..."
+
+    cat > .env << EOF
+# ==============================================
+# PulseGen Environment Configuration
+# ==============================================
+# Generated by setup script on $(date)
+
+# ----------------------------------------------
+# Database Configuration
+# ----------------------------------------------
+POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+
+# ----------------------------------------------
+# Backend Configuration
+# ----------------------------------------------
+# JWT Secrets
+JWT_SECRET=$JWT_SECRET
+JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
+
+# Encryption Key
+ENCRYPTION_KEY=$ENCRYPTION_KEY
+
+# ----------------------------------------------
+# Application URLs
+# ----------------------------------------------
+APP_URL=$APP_URL
+CORS_ORIGIN=$APP_URL
+VITE_API_URL=$API_URL
+
+# ----------------------------------------------
+# Admin User
+# ----------------------------------------------
+ADMIN_EMAIL=$ADMIN_EMAIL
+ADMIN_PASSWORD=$ADMIN_PASSWORD
+
+EOF
+
+    if [[ $CONFIGURE_EMAIL =~ ^[Yy]$ ]]; then
+        cat >> .env << EOF
+# ----------------------------------------------
+# Email Configuration
+# ----------------------------------------------
+SMTP_HOST=$SMTP_HOST
+SMTP_PORT=$SMTP_PORT
+SMTP_USER=$SMTP_USER
+SMTP_PASS=$SMTP_PASS
+EMAIL_FROM=$EMAIL_FROM
+
+EOF
+    else
+        cat >> .env << EOF
+# ----------------------------------------------
+# Email Configuration (Optional - Not Configured)
+# ----------------------------------------------
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USER=your-email@gmail.com
+# SMTP_PASS=your-app-password
+# EMAIL_FROM=noreply@pulsegen.com
+
+EOF
+    fi
+
+    cat >> .env << EOF
+# ----------------------------------------------
+# AI Provider API Keys (Optional)
+# ----------------------------------------------
+# These can also be configured per-user in the UI
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+GOOGLE_API_KEY=
+EOF
+
+    print_success ".env file created"
+fi
+
+# Choose deployment mode
+print_header "Deployment Mode"
+
+echo "Choose your deployment mode:"
+echo "  1) Production (recommended for production use)"
+echo "  2) Development (for local development with hot-reload)"
+echo "  3) Production with Redis (improved performance)"
+echo ""
+read -p "Enter your choice [1]: " DEPLOY_MODE
+DEPLOY_MODE=${DEPLOY_MODE:-1}
+
+case $DEPLOY_MODE in
+    1)
+        COMPOSE_PROFILE="--profile production"
+        MODE_NAME="Production"
+        ;;
+    2)
+        COMPOSE_FILE="-f docker-compose.dev.yml"
+        COMPOSE_PROFILE=""
+        MODE_NAME="Development"
+        ;;
+    3)
+        COMPOSE_PROFILE="--profile production --profile with-redis"
+        MODE_NAME="Production with Redis"
+        ;;
+    *)
+        print_error "Invalid choice. Defaulting to Production mode."
+        COMPOSE_PROFILE="--profile production"
+        MODE_NAME="Production"
+        ;;
+esac
+
+# Start services
+print_header "Starting PulseGen ($MODE_NAME)"
+
+print_info "This may take a few minutes on first run..."
+echo ""
+
+# Pull images first
+print_info "Pulling Docker images..."
+if ! $DOCKER_COMPOSE_CMD $COMPOSE_FILE pull 2>/dev/null; then
+    print_warning "Pull failed or not needed, continuing with build..."
+fi
+
+# Build and start
+print_info "Building and starting services..."
+if $DOCKER_COMPOSE_CMD $COMPOSE_FILE $COMPOSE_PROFILE up -d --build; then
+    print_success "Services started successfully!"
+else
+    print_error "Failed to start services. Check the logs above for errors."
+    exit 1
+fi
+
+# Wait for services to be healthy
+print_header "Waiting for Services"
+
+print_info "Waiting for database to be ready..."
+sleep 5
+
+# Check if services are running
+BACKEND_RUNNING=$($DOCKER_COMPOSE_CMD $COMPOSE_FILE ps -q backend 2>/dev/null)
+FRONTEND_RUNNING=$($DOCKER_COMPOSE_CMD $COMPOSE_FILE ps -q frontend 2>/dev/null)
+
+if [ -n "$BACKEND_RUNNING" ]; then
+    print_success "Backend is running"
+else
+    print_error "Backend failed to start"
+fi
+
+if [ -n "$FRONTEND_RUNNING" ]; then
+    print_success "Frontend is running"
+else
+    print_error "Frontend failed to start"
+fi
+
+# Success message
+print_header "Setup Complete!"
+
+echo -e "${GREEN}PulseGen is now running!${NC}\n"
+
+if [ "$DEPLOY_MODE" == "2" ]; then
+    echo "Access your application at:"
+    echo -e "  ${BLUE}Frontend:${NC} http://localhost:3000"
+    echo -e "  ${BLUE}Backend API:${NC} http://localhost:5000"
+else
+    echo "Access your application at:"
+    echo -e "  ${BLUE}Application:${NC} $APP_URL"
+    if [ "$COMPOSE_PROFILE" == "--profile production" ]; then
+        echo -e "  ${BLUE}Direct Frontend:${NC} http://localhost:3001"
+        echo -e "  ${BLUE}Direct Backend:${NC} http://localhost:5001"
+    else
+        echo -e "  ${BLUE}Via Nginx:${NC} http://localhost"
+    fi
+fi
+
+echo ""
+echo "Default admin credentials:"
+echo -e "  ${BLUE}Email:${NC} $ADMIN_EMAIL"
+echo -e "  ${BLUE}Password:${NC} $ADMIN_PASSWORD"
+echo ""
+print_warning "Please change the admin password after first login!"
+
+echo ""
+echo "Useful commands:"
+echo -e "  ${BLUE}View logs:${NC} $DOCKER_COMPOSE_CMD $COMPOSE_FILE logs -f"
+echo -e "  ${BLUE}Stop services:${NC} $DOCKER_COMPOSE_CMD $COMPOSE_FILE down"
+echo -e "  ${BLUE}Restart services:${NC} $DOCKER_COMPOSE_CMD $COMPOSE_FILE restart"
+echo -e "  ${BLUE}View status:${NC} $DOCKER_COMPOSE_CMD $COMPOSE_FILE ps"
+
+echo ""
+print_info "For more information, see the documentation:"
+echo "  https://github.com/genesis-nexus/pulsegen/docs"
+
+echo ""

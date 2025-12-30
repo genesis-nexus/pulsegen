@@ -134,25 +134,61 @@ Instantly translate surveys to 12+ languages with quality review.
 
 ## Quick Start
 
-### Docker (Recommended)
+### One-Command Setup (Recommended)
 
+The easiest way to get started is with our automated setup script:
+
+**Linux/macOS:**
 ```bash
 git clone https://github.com/genesis-nexus/pulsegen.git
 cd pulsegen
-
-# Configure environment
-cp backend/.env.example backend/.env
-# Edit backend/.env with your database credentials
-
-# Start everything
-docker-compose up -d
+./setup.sh
 ```
+
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/genesis-nexus/pulsegen.git
+cd pulsegen
+.\setup.ps1
+```
+
+The script will:
+- Check prerequisites (Docker & Docker Compose)
+- Generate secure secrets automatically
+- Configure your environment
+- Start all services
+- Provide access URLs and credentials
 
 **That's it!** Open [http://localhost:3001](http://localhost:3001)
 
-### Local Development
+### Manual Docker Setup
+
+If you prefer manual configuration:
 
 ```bash
+# Clone and configure
+git clone https://github.com/genesis-nexus/pulsegen.git
+cd pulsegen
+cp .env.example .env
+
+# Edit .env with your settings (generate secure secrets!)
+nano .env
+
+# Start all services
+docker-compose --profile production up -d
+```
+
+Access the application at [http://localhost:3001](http://localhost:3001)
+
+### Development Setup
+
+For local development with hot-reload:
+
+```bash
+# Using Docker
+docker-compose -f docker-compose.dev.yml up
+
+# Or run locally without Docker
 # Backend
 cd backend
 npm install
@@ -164,6 +200,41 @@ cd frontend
 npm install
 npm run dev
 ```
+
+---
+
+## Deployment Options
+
+### Docker Compose Profiles
+
+Choose the setup that fits your needs:
+
+```bash
+# Basic setup (Postgres + Backend + Frontend)
+docker-compose up -d
+
+# Production with Nginx reverse proxy
+docker-compose --profile production up -d
+
+# Production with Redis caching
+docker-compose --profile production --profile with-redis up -d
+
+# Development mode (hot-reload enabled)
+docker-compose -f docker-compose.dev.yml up
+```
+
+### Cloud Deployment
+
+Deploy to your preferred cloud provider:
+
+| Platform | Guide |
+|----------|-------|
+| **AWS** | [AWS Deployment Guide](docs/deployment/aws/README.md) with Terraform/CloudFormation templates |
+| **Google Cloud** | [GCP Deployment Guide](docs/DEPLOYMENT.md#google-cloud-platform) |
+| **Azure** | [Azure Deployment Guide](docs/DEPLOYMENT.md#azure-deployment) |
+| **Digital Ocean** | [Generic VPS Guide](docs/DEPLOYMENT.md#production-deployment) |
+
+See the complete [Deployment Documentation](docs/DEPLOYMENT.md) for detailed instructions.
 
 ---
 
@@ -183,10 +254,17 @@ npm run dev
 
 | Guide | Description |
 |-------|-------------|
-| [Setup Guide](docs/SETUP.md) | Detailed installation instructions |
-| [Self-Hosting](docs/self-hosting.md) | Production deployment guide |
+| [Deployment Guide](docs/DEPLOYMENT.md) | Complete deployment guide for all platforms |
+| [AWS Deployment](docs/deployment/aws/README.md) | AWS-specific deployment with IaC templates |
 | [API Reference](docs/api.md) | REST API documentation |
 | [Contributing](CONTRIBUTING.md) | How to contribute |
+
+### Quick Links
+
+- **Setup Help**: Run `./setup.sh --help` (Linux/macOS) or `Get-Help .\setup.ps1` (Windows)
+- **Troubleshooting**: See [Deployment Guide](docs/DEPLOYMENT.md#troubleshooting)
+- **Environment Variables**: See [.env.example](.env.example) for all configuration options
+- **Docker Commands**: See [Deployment Guide](docs/DEPLOYMENT.md#docker-compose-profiles)
 
 ---
 

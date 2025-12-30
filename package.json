@@ -19,7 +19,15 @@
     "db:migrate": "cd backend && npx prisma migrate dev",
     "db:seed": "cd backend && npm run prisma:seed",
     "db:studio": "cd backend && npx prisma studio",
-    "db:reset": "cd backend && npx prisma migrate reset"
+    "db:reset": "cd backend && npx prisma migrate reset",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "npm run test:backend && npm run test:frontend && npm run test:e2e"
   },
   "keywords": [
     "survey",
@@ -30,6 +38,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "commander": "^14.0.2",
     "concurrently": "^8.2.2",
     "tsx": "^4.7.0"
