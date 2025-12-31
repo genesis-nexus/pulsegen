@@ -283,14 +283,14 @@ Be respectful and inclusive. We follow the [Contributor Covenant](https://www.co
 
 ## Getting Help
 
-- **Questions** — Open a [Discussion](https://github.com/your-org/pulsegen/discussions)
-- **Bugs** — Open an [Issue](https://github.com/your-org/pulsegen/issues)
-- **Security** — Email security@yourdomain.com (do not open public issues)
+- **Questions** — Open a [Discussion](https://github.com/genesis-nexus/pulsegen/discussions)
+- **Bugs** — Open an [Issue](https://github.com/genesis-nexus/pulsegen/issues)
+- **Security** — Email security@pulsegen.dev (do not open public issues)
 
 ---
 
 ## Recognition
 
-Contributors are listed in our [Contributors](https://github.com/your-org/pulsegen/graphs/contributors) page.
+Contributors are listed in our [Contributors](https://github.com/genesis-nexus/pulsegen/graphs/contributors) page.
 
 Thank you for contributing to PulseGen!
