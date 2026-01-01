@@ -17,7 +17,7 @@ Create beautiful surveys, collect responses at scale, and unlock insights with A
 
 [Features](#features) • [Quick Start](#quick-start) • [AI Features](#-supercharge-with-ai) • [Documentation](#documentation)
 
-<img src="docs/assets/hero-banner.svg" alt="PulseGen Dashboard" width="800" />
+<img src="docs/assets/hero-screenshot.png" alt="PulseGen - Create Survey with AI" width="800" />
 
 </div>
 
@@ -252,19 +252,25 @@ See the complete [Deployment Documentation](docs/DEPLOYMENT.md) for detailed ins
 
 ## Documentation
 
+**Full documentation:** [genesis-nexus.github.io/pulsegen](https://genesis-nexus.github.io/pulsegen)
+
 | Guide | Description |
 |-------|-------------|
-| [Deployment Guide](docs/DEPLOYMENT.md) | Complete deployment guide for all platforms |
-| [AWS Deployment](docs/deployment/aws/README.md) | AWS-specific deployment with IaC templates |
-| [API Reference](docs/api.md) | REST API documentation |
-| [Contributing](CONTRIBUTING.md) | How to contribute |
+| [Getting Started](https://genesis-nexus.github.io/pulsegen/getting-started) | Quick setup and first survey |
+| [Self-Hosting](https://genesis-nexus.github.io/pulsegen/self-hosting) | Deploy on your infrastructure |
+| [Deployment Guide](https://genesis-nexus.github.io/pulsegen/DEPLOYMENT) | Cloud and production deployments |
+| [API Reference](https://genesis-nexus.github.io/pulsegen/api) | REST API documentation |
+| [AI Features](https://genesis-nexus.github.io/pulsegen/ai-features) | Configure AI providers |
+| [Configuration](https://genesis-nexus.github.io/pulsegen/configuration) | Environment variables reference |
+| [Security](https://genesis-nexus.github.io/pulsegen/security) | Security best practices |
+| [FAQ](https://genesis-nexus.github.io/pulsegen/faq) | Common questions answered |
 
 ### Quick Links
 
 - **Setup Help**: Run `./setup.sh --help` (Linux/macOS) or `Get-Help .\setup.ps1` (Windows)
-- **Troubleshooting**: See [Deployment Guide](docs/DEPLOYMENT.md#troubleshooting)
-- **Environment Variables**: See [.env.example](.env.example) for all configuration options
-- **Docker Commands**: See [Deployment Guide](docs/DEPLOYMENT.md#docker-compose-profiles)
+- **Troubleshooting**: See [Deployment Guide](https://genesis-nexus.github.io/pulsegen/DEPLOYMENT#troubleshooting)
+- **Environment Variables**: See [Configuration Guide](https://genesis-nexus.github.io/pulsegen/configuration)
+- **Docker Commands**: See [Deployment Guide](https://genesis-nexus.github.io/pulsegen/DEPLOYMENT#docker-compose-profiles)
 
 ---
 

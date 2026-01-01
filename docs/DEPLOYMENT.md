@@ -1,8 +1,27 @@
-# PulseGen Deployment Guide
+---
+layout: default
+title: Deployment Guide
+nav_order: 7
+description: "Deploy PulseGen to production with Docker, cloud providers, and Kubernetes."
+---
+
+# Deployment Guide
+{: .no_toc }
+
+Deploy PulseGen to production with confidence.
+{: .fs-6 .fw-300 }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
 
 This guide covers different deployment options for PulseGen, from simple Docker Compose setups to cloud deployments.
 
-## Table of Contents
+## Overview
 
 - [Quick Start with Docker Compose](#quick-start-with-docker-compose)
 - [Individual Container Setup](#individual-container-setup)

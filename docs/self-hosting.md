@@ -1,4 +1,23 @@
+---
+layout: default
+title: Self-Hosting
+nav_order: 3
+description: "Deploy PulseGen on your own infrastructure for complete data ownership and control."
+---
+
 # Self-Hosting Guide
+{: .no_toc }
+
+Deploy PulseGen on your own infrastructure.
+{: .fs-6 .fw-300 }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
 
 Deploy PulseGen on your own infrastructure for complete data ownership and control.
 

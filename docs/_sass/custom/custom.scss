@@ -1,0 +1,174 @@
+// Custom styles for PulseGen documentation
+
+// Dark theme adjustments
+$body-background-color: #0d1117;
+$sidebar-color: #161b22;
+$body-text-color: #c9d1d9;
+$body-heading-color: #ffffff;
+$link-color: #8b5cf6;
+$code-background-color: #161b22;
+$table-background-color: #161b22;
+$border-color: #30363d;
+
+// Primary brand color (purple)
+$purple-300: #a78bfa;
+$purple-400: #8b5cf6;
+$purple-500: #7c3aed;
+
+// Override just-the-docs colors
+:root {
+  --color-scheme: dark;
+}
+
+// Hero section styling
+.fs-9 {
+  font-size: 2.5rem !important;
+  background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Button styling
+.btn-primary {
+  background-color: $purple-500 !important;
+  border-color: $purple-500 !important;
+
+  &:hover {
+    background-color: $purple-400 !important;
+    border-color: $purple-400 !important;
+  }
+}
+
+// Code blocks
+.highlight {
+  background-color: $code-background-color;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+
+  pre {
+    background-color: transparent;
+  }
+}
+
+// Tables
+table {
+  background-color: $table-background-color;
+  border-radius: 8px;
+  overflow: hidden;
+
+  th {
+    background-color: darken($table-background-color, 3%);
+    border-bottom: 2px solid $border-color;
+  }
+
+  td, th {
+    border-color: $border-color;
+  }
+}
+
+// Callouts
+.callout {
+  border-radius: 8px;
+  border-left-width: 4px;
+}
+
+// Navigation
+.side-bar {
+  background-color: $sidebar-color;
+  border-right: 1px solid $border-color;
+}
+
+.nav-list-link {
+  &:hover {
+    background-color: rgba($purple-500, 0.1);
+  }
+
+  &.active {
+    background-color: rgba($purple-500, 0.2);
+    border-left: 3px solid $purple-500;
+  }
+}
+
+// Search
+.search-input {
+  background-color: $code-background-color;
+  border-color: $border-color;
+
+  &:focus {
+    border-color: $purple-500;
+    box-shadow: 0 0 0 3px rgba($purple-500, 0.2);
+  }
+}
+
+// Hero image styling
+.main-content img {
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  margin: 2rem 0;
+}
+
+// Links
+a {
+  color: $purple-400;
+
+  &:hover {
+    color: $purple-300;
+  }
+}
+
+// Footer
+.site-footer {
+  border-top: 1px solid $border-color;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .fs-9 {
+    font-size: 1.75rem !important;
+  }
+}
+
+// Copy button for code blocks
+.code-example-copy {
+  background-color: $purple-500;
+
+  &:hover {
+    background-color: $purple-400;
+  }
+}
+
+// API endpoint styling
+.language-http {
+  .highlight {
+    border-left: 3px solid $purple-500;
+  }
+}
+
+// Badge styling for status indicators
+.label {
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.label-green {
+    background-color: rgba(#22c55e, 0.2);
+    color: #22c55e;
+  }
+
+  &.label-yellow {
+    background-color: rgba(#eab308, 0.2);
+    color: #eab308;
+  }
+
+  &.label-red {
+    background-color: rgba(#ef4444, 0.2);
+    color: #ef4444;
+  }
+
+  &.label-purple {
+    background-color: rgba($purple-500, 0.2);
+    color: $purple-400;
+  }
+}
