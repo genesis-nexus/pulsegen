@@ -156,6 +156,9 @@ if [ -z "$SKIP_ENV_CREATION" ]; then
     print_info "Please provide the following information (or press Enter for defaults):"
     echo ""
 
+    read -p "Domain name (e.g., surveys.example.com) [localhost]: " DOMAIN_NAME
+    DOMAIN_NAME=${DOMAIN_NAME:-localhost}
+
     read -p "HTTP Port (for Nginx) [80]: " HTTP_PORT
     HTTP_PORT=${HTTP_PORT:-80}
 
@@ -168,11 +171,24 @@ if [ -z "$SKIP_ENV_CREATION" ]; then
     read -p "Backend Port [5001]: " BACKEND_PORT
     BACKEND_PORT=${BACKEND_PORT:-5001}
 
-    read -p "Application URL [http://localhost:$FRONTEND_PORT]: " APP_URL
-    APP_URL=${APP_URL:-http://localhost:$FRONTEND_PORT}
+    # Set default URLs based on domain
+    if [ "$DOMAIN_NAME" != "localhost" ]; then
+        if [ "$HTTP_PORT" == "80" ]; then
+            DEFAULT_APP_URL="http://$DOMAIN_NAME"
+        else
+            DEFAULT_APP_URL="http://$DOMAIN_NAME:$HTTP_PORT"
+        fi
+        DEFAULT_API_URL="$DEFAULT_APP_URL/api"
+    else
+        DEFAULT_APP_URL="http://localhost:$FRONTEND_PORT"
+        DEFAULT_API_URL="http://localhost:$BACKEND_PORT"
+    fi
 
-    read -p "API URL [http://localhost:$BACKEND_PORT]: " API_URL
-    API_URL=${API_URL:-http://localhost:$BACKEND_PORT}
+    read -p "Application URL [$DEFAULT_APP_URL]: " APP_URL
+    APP_URL=${APP_URL:-$DEFAULT_APP_URL}
+
+    read -p "API URL [$DEFAULT_API_URL]: " API_URL
+    API_URL=${API_URL:-$DEFAULT_API_URL}
 
     read -p "Admin Email [admin@example.com]: " ADMIN_EMAIL
     ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
@@ -220,8 +236,9 @@ JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
 ENCRYPTION_KEY=$ENCRYPTION_KEY
 
 # ----------------------------------------------
-# Port Configuration
+# Domain & Port Configuration
 # ----------------------------------------------
+DOMAIN_NAME=$DOMAIN_NAME
 HTTP_PORT=$HTTP_PORT
 HTTPS_PORT=$HTTPS_PORT
 FRONTEND_PORT=$FRONTEND_PORT
@@ -279,6 +296,123 @@ GOOGLE_API_KEY=
 EOF
 
     print_success ".env file created"
+
+    # Generate nginx.conf with the domain name
+    print_info "Generating nginx.conf..."
+
+    cat > nginx.conf << 'NGINX_EOF'
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Performance
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;
+
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=general_limit:10m rate=30r/s;
+
+    # Upstream servers
+    upstream backend {
+        server backend:5000;
+    }
+
+    upstream frontend {
+        server frontend:80;
+    }
+
+NGINX_EOF
+
+    # Add server block with configured domain
+    cat >> nginx.conf << NGINX_SERVER
+    server {
+        listen 80;
+        server_name $DOMAIN_NAME;
+
+        # Increase client body size for file uploads
+        client_max_body_size 10M;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+        # API requests
+        location /api/ {
+            limit_req zone=api_limit burst=20 nodelay;
+
+            proxy_pass http://backend/api/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_cache_bypass \$http_upgrade;
+
+            # Timeouts for long-running requests
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # File uploads
+        location /uploads/ {
+            proxy_pass http://backend/uploads/;
+            proxy_http_version 1.1;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }
+
+        # Frontend application
+        location / {
+            limit_req zone=general_limit burst=50 nodelay;
+
+            proxy_pass http://frontend/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_cache_bypass \$http_upgrade;
+        }
+
+        # Health check endpoint
+        location /health {
+            access_log off;
+            return 200 "OK";
+            add_header Content-Type text/plain;
+        }
+    }
+}
+NGINX_SERVER
+
+    print_success "nginx.conf generated for domain: $DOMAIN_NAME"
 fi
 
 # Choose deployment mode
@@ -361,7 +495,11 @@ print_header "Setup Complete!"
 
 echo -e "${GREEN}PulseGen is now running!${NC}\n"
 
-# Load ports from .env if not set
+# Load config from .env if not set
+if [ -z "$DOMAIN_NAME" ]; then
+    DOMAIN_NAME=$(grep "^DOMAIN_NAME=" .env 2>/dev/null | cut -d'=' -f2)
+    DOMAIN_NAME=${DOMAIN_NAME:-localhost}
+fi
 if [ -z "$FRONTEND_PORT" ]; then
     FRONTEND_PORT=$(grep "^FRONTEND_PORT=" .env 2>/dev/null | cut -d'=' -f2)
     FRONTEND_PORT=${FRONTEND_PORT:-3001}
@@ -374,6 +512,9 @@ if [ -z "$HTTP_PORT" ]; then
     HTTP_PORT=$(grep "^HTTP_PORT=" .env 2>/dev/null | cut -d'=' -f2)
     HTTP_PORT=${HTTP_PORT:-80}
 fi
+if [ -z "$APP_URL" ]; then
+    APP_URL=$(grep "^APP_URL=" .env 2>/dev/null | cut -d'=' -f2)
+fi
 
 if [ "$DEPLOY_MODE" == "2" ]; then
     echo "Access your application at:"
@@ -381,16 +522,21 @@ if [ "$DEPLOY_MODE" == "2" ]; then
     echo -e "  ${BLUE}Backend API:${NC} http://localhost:5000"
 else
     echo "Access your application at:"
-    echo -e "  ${BLUE}Application:${NC} $APP_URL"
-    if [ "$COMPOSE_PROFILE" == "--profile production" ]; then
-        echo -e "  ${BLUE}Direct Frontend:${NC} http://localhost:$FRONTEND_PORT"
-        echo -e "  ${BLUE}Direct Backend:${NC} http://localhost:$BACKEND_PORT"
-    else
+    if [ "$DOMAIN_NAME" != "localhost" ]; then
         if [ "$HTTP_PORT" == "80" ]; then
-            echo -e "  ${BLUE}Via Nginx:${NC} http://localhost"
+            echo -e "  ${BLUE}Via Domain:${NC} http://$DOMAIN_NAME"
         else
-            echo -e "  ${BLUE}Via Nginx:${NC} http://localhost:$HTTP_PORT"
+            echo -e "  ${BLUE}Via Domain:${NC} http://$DOMAIN_NAME:$HTTP_PORT"
         fi
+        echo ""
+        print_info "Make sure your DNS is configured to point $DOMAIN_NAME to this server's IP"
+    else
+        echo -e "  ${BLUE}Application:${NC} $APP_URL"
+    fi
+    echo -e "  ${BLUE}Direct Frontend:${NC} http://localhost:$FRONTEND_PORT"
+    echo -e "  ${BLUE}Direct Backend:${NC} http://localhost:$BACKEND_PORT"
+    if [ "$HTTP_PORT" != "80" ]; then
+        echo -e "  ${BLUE}Via Nginx:${NC} http://localhost:$HTTP_PORT"
     fi
 fi
 
