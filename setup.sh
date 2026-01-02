@@ -156,11 +156,23 @@ if [ -z "$SKIP_ENV_CREATION" ]; then
     print_info "Please provide the following information (or press Enter for defaults):"
     echo ""
 
-    read -p "Application URL [http://localhost:3001]: " APP_URL
-    APP_URL=${APP_URL:-http://localhost:3001}
+    read -p "HTTP Port (for Nginx) [80]: " HTTP_PORT
+    HTTP_PORT=${HTTP_PORT:-80}
 
-    read -p "API URL [http://localhost:5001]: " API_URL
-    API_URL=${API_URL:-http://localhost:5001}
+    read -p "HTTPS Port (for Nginx) [443]: " HTTPS_PORT
+    HTTPS_PORT=${HTTPS_PORT:-443}
+
+    read -p "Frontend Port [3001]: " FRONTEND_PORT
+    FRONTEND_PORT=${FRONTEND_PORT:-3001}
+
+    read -p "Backend Port [5001]: " BACKEND_PORT
+    BACKEND_PORT=${BACKEND_PORT:-5001}
+
+    read -p "Application URL [http://localhost:$FRONTEND_PORT]: " APP_URL
+    APP_URL=${APP_URL:-http://localhost:$FRONTEND_PORT}
+
+    read -p "API URL [http://localhost:$BACKEND_PORT]: " API_URL
+    API_URL=${API_URL:-http://localhost:$BACKEND_PORT}
 
     read -p "Admin Email [admin@example.com]: " ADMIN_EMAIL
     ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
@@ -206,6 +218,14 @@ JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
 
 # Encryption Key
 ENCRYPTION_KEY=$ENCRYPTION_KEY
+
+# ----------------------------------------------
+# Port Configuration
+# ----------------------------------------------
+HTTP_PORT=$HTTP_PORT
+HTTPS_PORT=$HTTPS_PORT
+FRONTEND_PORT=$FRONTEND_PORT
+BACKEND_PORT=$BACKEND_PORT
 
 # ----------------------------------------------
 # Application URLs
@@ -341,6 +361,20 @@ print_header "Setup Complete!"
 
 echo -e "${GREEN}PulseGen is now running!${NC}\n"
 
+# Load ports from .env if not set
+if [ -z "$FRONTEND_PORT" ]; then
+    FRONTEND_PORT=$(grep "^FRONTEND_PORT=" .env 2>/dev/null | cut -d'=' -f2)
+    FRONTEND_PORT=${FRONTEND_PORT:-3001}
+fi
+if [ -z "$BACKEND_PORT" ]; then
+    BACKEND_PORT=$(grep "^BACKEND_PORT=" .env 2>/dev/null | cut -d'=' -f2)
+    BACKEND_PORT=${BACKEND_PORT:-5001}
+fi
+if [ -z "$HTTP_PORT" ]; then
+    HTTP_PORT=$(grep "^HTTP_PORT=" .env 2>/dev/null | cut -d'=' -f2)
+    HTTP_PORT=${HTTP_PORT:-80}
+fi
+
 if [ "$DEPLOY_MODE" == "2" ]; then
     echo "Access your application at:"
     echo -e "  ${BLUE}Frontend:${NC} http://localhost:3000"
@@ -349,10 +383,14 @@ else
     echo "Access your application at:"
     echo -e "  ${BLUE}Application:${NC} $APP_URL"
     if [ "$COMPOSE_PROFILE" == "--profile production" ]; then
-        echo -e "  ${BLUE}Direct Frontend:${NC} http://localhost:3001"
-        echo -e "  ${BLUE}Direct Backend:${NC} http://localhost:5001"
+        echo -e "  ${BLUE}Direct Frontend:${NC} http://localhost:$FRONTEND_PORT"
+        echo -e "  ${BLUE}Direct Backend:${NC} http://localhost:$BACKEND_PORT"
     else
-        echo -e "  ${BLUE}Via Nginx:${NC} http://localhost"
+        if [ "$HTTP_PORT" == "80" ]; then
+            echo -e "  ${BLUE}Via Nginx:${NC} http://localhost"
+        else
+            echo -e "  ${BLUE}Via Nginx:${NC} http://localhost:$HTTP_PORT"
+        fi
     fi
 fi
 
