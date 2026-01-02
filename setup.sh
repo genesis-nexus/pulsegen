@@ -490,6 +490,228 @@ else
     print_error "Frontend failed to start"
 fi
 
+# SSL Setup with Let's Encrypt
+if [ -z "$DOMAIN_NAME" ]; then
+    DOMAIN_NAME=$(grep "^DOMAIN_NAME=" .env 2>/dev/null | cut -d'=' -f2)
+    DOMAIN_NAME=${DOMAIN_NAME:-localhost}
+fi
+
+if [ "$DOMAIN_NAME" != "localhost" ] && [ "$DEPLOY_MODE" != "2" ]; then
+    echo ""
+    read -p "Do you want to set up SSL with Let's Encrypt for $DOMAIN_NAME? (y/N): " -n 1 -r SETUP_SSL
+    echo ""
+
+    if [[ $SETUP_SSL =~ ^[Yy]$ ]]; then
+        print_header "Setting up SSL Certificate"
+
+        # Check if certbot is installed
+        if ! command_exists certbot; then
+            print_info "Installing Certbot..."
+            if command_exists apt-get; then
+                sudo apt-get update && sudo apt-get install -y certbot
+            elif command_exists yum; then
+                sudo yum install -y certbot
+            elif command_exists dnf; then
+                sudo dnf install -y certbot
+            elif command_exists snap; then
+                sudo snap install --classic certbot
+                sudo ln -sf /snap/bin/certbot /usr/bin/certbot
+            else
+                print_error "Could not install Certbot. Please install it manually."
+                SETUP_SSL="n"
+            fi
+        fi
+
+        if [[ $SETUP_SSL =~ ^[Yy]$ ]] && command_exists certbot; then
+            print_info "Stopping Nginx temporarily for certificate generation..."
+            $DOCKER_COMPOSE_CMD $COMPOSE_FILE stop nginx 2>/dev/null || true
+
+            print_info "Requesting SSL certificate for $DOMAIN_NAME..."
+            read -p "Enter email for Let's Encrypt notifications: " SSL_EMAIL
+
+            if sudo certbot certonly --standalone -d "$DOMAIN_NAME" --non-interactive --agree-tos --email "$SSL_EMAIL"; then
+                print_success "SSL certificate obtained!"
+
+                # Create ssl directory and copy certificates
+                mkdir -p ssl
+                sudo cp "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" ssl/
+                sudo cp "/etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem" ssl/
+                sudo chown -R $USER:$USER ssl/
+                chmod 600 ssl/*.pem
+
+                print_info "Updating nginx.conf for HTTPS..."
+
+                # Generate new nginx.conf with SSL
+                cat > nginx.conf << 'NGINX_SSL_EOF'
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Performance
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;
+
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=general_limit:10m rate=30r/s;
+
+    # Upstream servers
+    upstream backend {
+        server backend:5000;
+    }
+
+    upstream frontend {
+        server frontend:80;
+    }
+
+NGINX_SSL_EOF
+
+                # Add HTTP to HTTPS redirect
+                cat >> nginx.conf << NGINX_REDIRECT
+    # Redirect HTTP to HTTPS
+    server {
+        listen 80;
+        server_name $DOMAIN_NAME;
+        return 301 https://\$server_name\$request_uri;
+    }
+
+NGINX_REDIRECT
+
+                # Add HTTPS server block
+                cat >> nginx.conf << NGINX_HTTPS
+    # HTTPS Server
+    server {
+        listen 443 ssl http2;
+        server_name $DOMAIN_NAME;
+
+        # SSL Configuration
+        ssl_certificate /etc/nginx/ssl/fullchain.pem;
+        ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+        ssl_prefer_server_ciphers off;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        # HSTS
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+        # Increase client body size for file uploads
+        client_max_body_size 10M;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+        # API requests
+        location /api/ {
+            limit_req zone=api_limit burst=20 nodelay;
+
+            proxy_pass http://backend/api/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_cache_bypass \$http_upgrade;
+
+            # Timeouts for long-running requests
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # File uploads
+        location /uploads/ {
+            proxy_pass http://backend/uploads/;
+            proxy_http_version 1.1;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }
+
+        # Frontend application
+        location / {
+            limit_req zone=general_limit burst=50 nodelay;
+
+            proxy_pass http://frontend/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_cache_bypass \$http_upgrade;
+        }
+
+        # Health check endpoint
+        location /health {
+            access_log off;
+            return 200 "OK";
+            add_header Content-Type text/plain;
+        }
+    }
+}
+NGINX_HTTPS
+
+                print_success "nginx.conf updated with SSL configuration"
+
+                # Update .env with HTTPS URLs
+                sed -i.bak "s|APP_URL=http://$DOMAIN_NAME|APP_URL=https://$DOMAIN_NAME|g" .env
+                sed -i.bak "s|CORS_ORIGIN=http://$DOMAIN_NAME|CORS_ORIGIN=https://$DOMAIN_NAME|g" .env
+                sed -i.bak "s|VITE_API_URL=http://$DOMAIN_NAME|VITE_API_URL=https://$DOMAIN_NAME|g" .env
+                rm -f .env.bak
+
+                # Restart nginx with new config
+                print_info "Restarting Nginx with SSL..."
+                $DOCKER_COMPOSE_CMD $COMPOSE_FILE up -d nginx
+
+                print_success "SSL setup complete!"
+                SSL_ENABLED=true
+
+                # Setup auto-renewal cron job
+                print_info "Setting up automatic certificate renewal..."
+                CRON_CMD="0 3 * * * certbot renew --quiet --post-hook 'docker restart pulsegen_nginx'"
+                (crontab -l 2>/dev/null | grep -v "certbot renew"; echo "$CRON_CMD") | crontab -
+                print_success "Auto-renewal configured (runs daily at 3 AM)"
+
+            else
+                print_error "Failed to obtain SSL certificate. Check that:"
+                echo "  1. DNS is correctly pointing $DOMAIN_NAME to this server"
+                echo "  2. Ports 80 and 443 are open in your firewall"
+                echo "  3. No other service is using port 80"
+
+                # Restart nginx without SSL
+                $DOCKER_COMPOSE_CMD $COMPOSE_FILE up -d nginx
+            fi
+        fi
+    fi
+fi
+
 # Success message
 print_header "Setup Complete!"
 
@@ -523,13 +745,18 @@ if [ "$DEPLOY_MODE" == "2" ]; then
 else
     echo "Access your application at:"
     if [ "$DOMAIN_NAME" != "localhost" ]; then
-        if [ "$HTTP_PORT" == "80" ]; then
+        if [ "$SSL_ENABLED" == "true" ]; then
+            echo -e "  ${BLUE}Via Domain:${NC} ${GREEN}https://$DOMAIN_NAME${NC} (SSL enabled)"
+        elif [ "$HTTP_PORT" == "80" ]; then
             echo -e "  ${BLUE}Via Domain:${NC} http://$DOMAIN_NAME"
         else
             echo -e "  ${BLUE}Via Domain:${NC} http://$DOMAIN_NAME:$HTTP_PORT"
         fi
         echo ""
-        print_info "Make sure your DNS is configured to point $DOMAIN_NAME to this server's IP"
+        if [ "$SSL_ENABLED" != "true" ]; then
+            print_info "Make sure your DNS is configured to point $DOMAIN_NAME to this server's IP"
+            print_info "Run this script again to set up SSL after DNS is configured"
+        fi
     else
         echo -e "  ${BLUE}Application:${NC} $APP_URL"
     fi
