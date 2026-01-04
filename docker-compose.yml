@@ -60,6 +60,7 @@ services:
       EMAIL_FROM: ${EMAIL_FROM}
       APP_URL: ${APP_URL:-http://localhost:3001}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
     ports:
       - "${BACKEND_PORT:-5001}:5000"
     depends_on:

@@ -20,6 +20,13 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy setting - enable when behind a reverse proxy (Nginx, load balancer, etc.)
+// This is required for rate limiting and getting correct client IPs
+if (process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1') {
+  app.set('trust proxy', 1);
+  logger.info('Trust proxy enabled - running behind reverse proxy');
+}
+
 // Middleware
 app.use(helmet());
 app.use(cors({

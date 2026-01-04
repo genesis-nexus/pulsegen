@@ -198,6 +198,15 @@ if [ -z "$SKIP_ENV_CREATION" ]; then
     ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
 
     echo ""
+    read -p "Is the backend behind a reverse proxy (Nginx, load balancer)? (Y/n): " -n 1 -r BEHIND_PROXY
+    echo ""
+    if [[ ! $BEHIND_PROXY =~ ^[Nn]$ ]]; then
+        TRUST_PROXY="true"
+    else
+        TRUST_PROXY="false"
+    fi
+
+    echo ""
     read -p "Do you want to configure email settings? (y/N): " -n 1 -r CONFIGURE_EMAIL
     echo ""
 
@@ -243,6 +252,12 @@ HTTP_PORT=$HTTP_PORT
 HTTPS_PORT=$HTTPS_PORT
 FRONTEND_PORT=$FRONTEND_PORT
 BACKEND_PORT=$BACKEND_PORT
+
+# ----------------------------------------------
+# Proxy Configuration
+# ----------------------------------------------
+# Set to true if backend is behind a reverse proxy (Nginx, load balancer)
+TRUST_PROXY=$TRUST_PROXY
 
 # ----------------------------------------------
 # Application URLs
