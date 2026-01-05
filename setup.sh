@@ -135,6 +135,36 @@ if [ -f .env ]; then
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         print_info "Keeping existing .env file. Skipping configuration."
         SKIP_ENV_CREATION=1
+    else
+        # User wants to overwrite .env - check for existing postgres volume
+        EXISTING_POSTGRES_PASSWORD=$(grep "^POSTGRES_PASSWORD=" .env 2>/dev/null | cut -d'=' -f2)
+
+        # Check if postgres volume exists
+        POSTGRES_VOLUME_EXISTS=0
+        if docker volume ls -q 2>/dev/null | grep -q "pulsegen_postgres_data\|postgres_data"; then
+            POSTGRES_VOLUME_EXISTS=1
+        fi
+
+        if [ "$POSTGRES_VOLUME_EXISTS" -eq 1 ] && [ -n "$EXISTING_POSTGRES_PASSWORD" ]; then
+            echo ""
+            print_warning "A PostgreSQL database volume already exists with the previous password."
+            echo "Options:"
+            echo "  1) Keep existing database password (recommended - preserves data)"
+            echo "  2) Delete database volume and start fresh (WARNING: deletes all data!)"
+            echo ""
+            read -p "Enter your choice [1]: " DB_CHOICE
+            DB_CHOICE=${DB_CHOICE:-1}
+
+            if [ "$DB_CHOICE" == "2" ]; then
+                print_warning "Stopping containers and deleting database volume..."
+                $DOCKER_COMPOSE_CMD down -v 2>/dev/null || docker-compose down -v 2>/dev/null || true
+                print_success "Database volume deleted. A fresh database will be created."
+                REUSE_DB_PASSWORD=""
+            else
+                print_info "Will reuse existing database password."
+                REUSE_DB_PASSWORD="$EXISTING_POSTGRES_PASSWORD"
+            fi
+        fi
     fi
 fi
 
@@ -144,7 +174,13 @@ if [ -z "$SKIP_ENV_CREATION" ]; then
 
     print_info "Generating secure random secrets..."
 
-    POSTGRES_PASSWORD=$(generate_secret)
+    # Use existing database password if we're reusing it, otherwise generate new one
+    if [ -n "$REUSE_DB_PASSWORD" ]; then
+        POSTGRES_PASSWORD="$REUSE_DB_PASSWORD"
+        print_info "Reusing existing database password"
+    else
+        POSTGRES_PASSWORD=$(generate_secret)
+    fi
     JWT_SECRET=$(generate_secret)
     JWT_REFRESH_SECRET=$(generate_secret)
     ENCRYPTION_KEY=$(generate_hex)
