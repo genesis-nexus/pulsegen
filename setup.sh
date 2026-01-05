@@ -207,10 +207,35 @@ if [ -z "$SKIP_ENV_CREATION" ]; then
     read -p "Backend Port [5001]: " BACKEND_PORT
     BACKEND_PORT=${BACKEND_PORT:-5001}
 
-    # Set default URLs based on domain
+    # Ask about HTTPS for non-localhost deployments
+    USE_HTTPS="n"
     if [ "$DOMAIN_NAME" != "localhost" ]; then
-        if [ "$HTTP_PORT" == "80" ]; then
+        echo ""
+        print_info "Will this application be accessed via HTTPS?"
+        print_info "(Select yes if using SSL certificates, Cloudflare, or any SSL-terminating proxy)"
+        read -p "Use HTTPS? (Y/n): " -n 1 -r USE_HTTPS_REPLY
+        echo ""
+        if [[ ! $USE_HTTPS_REPLY =~ ^[Nn]$ ]]; then
+            USE_HTTPS="y"
+        fi
+    fi
+
+    # Set default URLs based on domain and protocol
+    if [ "$DOMAIN_NAME" != "localhost" ]; then
+        if [ "$USE_HTTPS" == "y" ]; then
+            PROTOCOL="https"
+            DEFAULT_PORT="443"
+        else
+            PROTOCOL="http"
+            DEFAULT_PORT="80"
+        fi
+
+        if [ "$USE_HTTPS" == "y" ] && [ "$HTTPS_PORT" == "443" ]; then
+            DEFAULT_APP_URL="https://$DOMAIN_NAME"
+        elif [ "$USE_HTTPS" != "y" ] && [ "$HTTP_PORT" == "80" ]; then
             DEFAULT_APP_URL="http://$DOMAIN_NAME"
+        elif [ "$USE_HTTPS" == "y" ]; then
+            DEFAULT_APP_URL="https://$DOMAIN_NAME:$HTTPS_PORT"
         else
             DEFAULT_APP_URL="http://$DOMAIN_NAME:$HTTP_PORT"
         fi
