@@ -29,24 +29,30 @@ if (process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1') {
 
 // Middleware
 app.use(helmet());
+// Build allowed origins list
+const allowedOrigins = [
+  process.env.CORS_ORIGIN || 'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:3000',
+].filter(Boolean);
+
+// Log configured CORS origin for debugging
+logger.info(`CORS configured with origin: ${process.env.CORS_ORIGIN || 'http://localhost:3000'}`);
+
 app.use(cors({
   origin: (origin, callback) => {
-    const allowedOrigins = [
-      process.env.CORS_ORIGIN || 'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3000',
-      'http://127.0.0.1:3001',
-      'http://127.0.0.1:3000',
-    ];
-
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps or curl requests without Origin header)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      logger.warn(`CORS blocked request from origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      // Log the mismatch for debugging
+      logger.warn(`CORS blocked request from origin: ${origin}. Allowed origins: ${allowedOrigins.join(', ')}`);
+      // Return false instead of throwing an error - this lets the browser handle CORS rejection properly
+      callback(null, false);
     }
   },
   credentials: true,
