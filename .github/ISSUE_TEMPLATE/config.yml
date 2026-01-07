@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/genesis-nexus/pulsegen/discussions
+    about: Ask questions and discuss PulseGen with the community before opening an issue
+  - name: Documentation
+    url: https://genesis-nexus.github.io/pulsegen
+    about: Check our documentation for setup guides, configuration, and troubleshooting
+  - name: Security Vulnerabilities
+    url: https://github.com/genesis-nexus/pulsegen/security/advisories/new
+    about: Report security vulnerabilities privately (do not create public issues)

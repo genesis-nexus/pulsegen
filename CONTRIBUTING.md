@@ -107,6 +107,8 @@ type(scope): description
 [optional body]
 
 [optional footer]
+
+Signed-off-by: Your Name <your.email@example.com>
 ```
 
 **Types:**
@@ -120,10 +122,66 @@ type(scope): description
 
 **Examples:**
 ```bash
-git commit -m "feat(surveys): add drag-and-drop reordering"
-git commit -m "fix(auth): resolve token refresh race condition"
-git commit -m "docs: update API reference with new endpoints"
+git commit -s -m "feat(surveys): add drag-and-drop reordering"
+git commit -s -m "fix(auth): resolve token refresh race condition"
+git commit -s -m "docs: update API reference with new endpoints"
 ```
+
+---
+
+## Developer Certificate of Origin (DCO)
+
+All contributions to PulseGen must include a DCO sign-off. This certifies that you have the right to submit the contribution under the project's open-source license.
+
+### What is DCO?
+
+The [Developer Certificate of Origin](https://developercertificate.org/) is a lightweight way for contributors to certify that they wrote or otherwise have the right to submit the code they are contributing.
+
+### How to Sign Off
+
+Add the `-s` flag when committing:
+
+```bash
+git commit -s -m "Your commit message"
+```
+
+This adds a `Signed-off-by` line to your commit message:
+
+```
+feat(surveys): add new question type
+
+Signed-off-by: Jane Doe <jane.doe@example.com>
+```
+
+### Configure Git for Automatic Sign-Off
+
+Set your name and email in Git (used for sign-off):
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
+
+### Fixing Unsigned Commits
+
+If you forgot to sign off, you can amend your last commit:
+
+```bash
+git commit --amend -s --no-edit
+```
+
+For multiple commits, use interactive rebase:
+
+```bash
+git rebase -i HEAD~n  # n = number of commits
+# Change 'pick' to 'edit' for commits to fix
+git commit --amend -s --no-edit
+git rebase --continue
+```
+
+### DCO Check in CI
+
+All pull requests are automatically checked for DCO sign-off. PRs without proper sign-off will fail the DCO check and cannot be merged
 
 ---
 
