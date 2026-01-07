@@ -40,7 +40,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "commander": "^14.0.2",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.1",
     "tsx": "^4.7.0"
   }
 }
