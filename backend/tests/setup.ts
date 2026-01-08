@@ -35,32 +35,36 @@ afterAll(async () => {
 
 // Helper function to clean database
 async function cleanDatabase() {
-  const tables = [
-    'Session',
-    'ApiKey',
-    'Answer',
-    'Response',
-    'PartialResponse',
-    'QuotaResponse',
-    'Quota',
-    'SurveyLogic',
-    'QuestionOption',
-    'Question',
-    'SurveyTheme',
-    'SurveyAnalytics',
-    'Survey',
-    'WorkspaceMember',
-    'Workspace',
-    'User',
-  ];
+  // Use deleteMany in reverse dependency order to avoid foreign key issues
+  // This is slower than TRUNCATE but safer and avoids deadlocks
+  try {
+    await prisma.$transaction([
+      // Session & Auth related
+      prisma.session.deleteMany({}),
+      prisma.apiKey.deleteMany({}),
 
-  for (const table of tables) {
-    try {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`);
-    } catch (error) {
-      // Table might not exist or be empty
-      console.warn(`Could not truncate ${table}:`, error);
-    }
+      // Response & Survey data
+      prisma.answer.deleteMany({}),
+      prisma.response.deleteMany({}),
+      prisma.partialResponse.deleteMany({}),
+      prisma.quotaResponse.deleteMany({}),
+      prisma.quota.deleteMany({}),
+
+      // Survey structure
+      prisma.surveyLogic.deleteMany({}),
+      prisma.questionOption.deleteMany({}),
+      prisma.question.deleteMany({}),
+      prisma.surveyTheme.deleteMany({}),
+      prisma.surveyAnalytics.deleteMany({}),
+      prisma.survey.deleteMany({}),
+
+      // Workspace & Users
+      prisma.workspaceMember.deleteMany({}),
+      prisma.workspace.deleteMany({}),
+      prisma.user.deleteMany({}),
+    ]);
+  } catch (error) {
+    console.warn('Could not clean database:', error);
   }
 }
 
@@ -83,4 +87,28 @@ export const testUtils = {
    * Sleep for testing async operations
    */
   sleep: (ms: number) => new Promise(resolve => setTimeout(resolve, ms)),
+
+  /**
+   * Generate a JWT access token for testing
+   */
+  generateAccessToken: async (userId: string): Promise<string> => {
+    const jwt = await import('../src/utils/jwt');
+    return jwt.generateAccessToken(userId);
+  },
+
+  /**
+   * Generate a JWT refresh token for testing
+   */
+  generateRefreshToken: async (userId: string): Promise<string> => {
+    const jwt = await import('../src/utils/jwt');
+    return jwt.generateRefreshToken(userId);
+  },
+
+  /**
+   * Create an authorization header for authenticated requests
+   */
+  authHeader: async (userId: string): Promise<{ Authorization: string }> => {
+    const token = await testUtils.generateAccessToken(userId);
+    return { Authorization: `Bearer ${token}` };
+  },
 };
