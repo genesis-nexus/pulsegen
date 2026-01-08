@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 
-// Test database setup
+// Test database setup with single connection to avoid hanging
 const prisma = new PrismaClient({
   datasources: {
     db: {
       url: process.env.DATABASE_URL_TEST || process.env.DATABASE_URL,
     },
   },
+  log: [], // Disable logging in tests
 });
 
 // Global test setup
@@ -29,8 +30,14 @@ afterEach(async () => {
 
 // Global teardown
 afterAll(async () => {
-  await cleanDatabase();
-  await prisma.$disconnect();
+  try {
+    await cleanDatabase();
+  } catch (error) {
+    console.warn('Error during cleanup:', error);
+  } finally {
+    // Ensure Prisma disconnects even if cleanup fails
+    await prisma.$disconnect();
+  }
 });
 
 // Helper function to clean database
