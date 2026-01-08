@@ -1,6 +1,5 @@
-import { PrismaClient, QuestionType } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { QuestionType } from '@prisma/client';
+import { prisma } from '../setup';
 
 export const questionFixtures = {
   /**
