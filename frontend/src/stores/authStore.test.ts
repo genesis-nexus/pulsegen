@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { useAuthStore } from './authStore';
 import { act } from '@testing-library/react';
+import { UserRole } from '../types';
 
 // Reset store state before each test
 beforeEach(() => {
@@ -33,11 +34,8 @@ describe('authStore', () => {
         email: 'test@example.com',
         firstName: 'Test',
         lastName: 'User',
-        role: 'MANAGER' as const,
-        isActive: true,
-        emailVerified: true,
+        role: UserRole.MANAGER,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
       act(() => {
@@ -56,11 +54,8 @@ describe('authStore', () => {
         email: 'test@example.com',
         firstName: 'Test',
         lastName: 'User',
-        role: 'MANAGER' as const,
-        isActive: true,
-        emailVerified: true,
+        role: UserRole.MANAGER,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
       act(() => {

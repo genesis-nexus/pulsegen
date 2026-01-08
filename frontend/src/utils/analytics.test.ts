@@ -18,7 +18,7 @@ describe('Analytics', () => {
   beforeEach(() => {
     // Setup mock gtag
     mockGtag = vi.fn();
-    window.gtag = mockGtag;
+    window.gtag = mockGtag as typeof window.gtag;
     window.dataLayer = [];
 
     // Simulate initialized state by setting up window.gtag

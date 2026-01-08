@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { api, automationApi, participantApi, authenticatedProgressApi } from './api';
 import { server } from '../tests/mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -132,9 +132,9 @@ describe('automationApi', () => {
       localStorage.setItem('accessToken', 'valid-token');
 
       const result = await automationApi.runAutomation({
-        surveyId: 'survey-1',
         personaId: 'persona-1',
-        count: 10,
+        surveyTitle: 'Test Survey',
+        scenarioCount: 10,
       });
 
       expect(result).toHaveProperty('success', true);

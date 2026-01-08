@@ -87,8 +87,8 @@ describe('cn (classNames utility)', () => {
     });
 
     it('handles component variant pattern', () => {
-      const variant = 'destructive';
-      const size = 'lg';
+      const variant: string = 'destructive';
+      const size: string = 'lg';
 
       const result = cn(
         'btn',

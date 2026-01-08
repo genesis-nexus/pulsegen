@@ -13,7 +13,7 @@ const createTouchEvent = (
   clientX: number,
   clientY: number
 ): Partial<TouchEvent<Element>> => ({
-  targetTouches: [{ clientX, clientY }] as unknown as TouchList,
+  targetTouches: [{ clientX, clientY }] as unknown as React.TouchList,
 });
 
 describe('useSwipeNavigation', () => {
@@ -231,9 +231,6 @@ describe('useIsMobile', () => {
 
   it('updates on window resize', () => {
     const { result } = renderHook(() => useIsMobile());
-
-    // Initial value
-    const initialValue = result.current;
 
     // Simulate resize
     act(() => {
