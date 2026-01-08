@@ -36,5 +36,5 @@
     "prefer-const": "warn",
     "prefer-rest-params": "warn"
   },
-  "ignorePatterns": ["dist", "node_modules", "*.cjs", "vite.config.ts"]
+  "ignorePatterns": ["dist", "node_modules", "*.cjs", "vite.config.ts", "vitest.config.ts"]
 }
