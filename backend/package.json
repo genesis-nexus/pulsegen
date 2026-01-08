@@ -29,8 +29,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.3",
-    "@google/generative-ai": "^0.18.0",
+    "@anthropic-ai/sdk": "^0.71.2",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.20.0",
     "axios": "^1.6.5",
     "bcrypt": "^6.0.0",
@@ -42,8 +42,8 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "helmet": "^7.1.0",
-    "ioredis": "^5.3.2",
-    "jsonwebtoken": "^9.0.2",
+    "ioredis": "^5.9.1",
+    "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.11",
@@ -54,8 +54,8 @@
     "passport-microsoft": "^1.0.0",
     "passport-saml": "^3.2.4",
     "qrcode": "^1.5.3",
-    "sharp": "^0.33.2",
-    "winston": "^3.11.0",
+    "sharp": "^0.34.5",
+    "winston": "^3.19.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -83,9 +83,9 @@
     "jest": "^30.2.0",
     "prettier": "^3.1.1",
     "prisma": "^5.20.0",
-    "supertest": "^7.1.4",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
-    "tsx": "^4.7.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   }
 }
