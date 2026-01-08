@@ -9,11 +9,14 @@
 Create beautiful surveys, collect responses at scale, and unlock insights with AI—all self-hosted on your infrastructure.
 
 [![CI](https://github.com/genesis-nexus/pulsegen/actions/workflows/ci.yml/badge.svg)](https://github.com/genesis-nexus/pulsegen/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/genesis-nexus/pulsegen/actions/workflows/codeql.yml/badge.svg)](https://github.com/genesis-nexus/pulsegen/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/genesis-nexus/pulsegen/badge)](https://securityscorecards.dev/viewer/?uri=github.com/genesis-nexus/pulsegen)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20-339933)](https://nodejs.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 [Features](#features) • [Quick Start](#quick-start) • [AI Features](#-supercharge-with-ai) • [Documentation](#documentation)
 

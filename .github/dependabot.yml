@@ -1,0 +1,77 @@
+version: 2
+updates:
+  # npm dependencies for backend
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "automated", "backend"]
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      production-dependencies:
+        patterns: ["*"]
+        exclude-patterns: ["@types/*", "eslint*", "prettier*", "typescript", "vitest", "jest"]
+        update-types: ["minor", "patch"]
+      dev-dependencies:
+        patterns: ["@types/*", "eslint*", "prettier*", "typescript", "vitest", "jest"]
+        update-types: ["minor", "patch"]
+
+  # npm dependencies for frontend
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "automated", "frontend"]
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      production-dependencies:
+        patterns: ["*"]
+        exclude-patterns: ["@types/*", "eslint*", "prettier*", "typescript", "vitest"]
+        update-types: ["minor", "patch"]
+      dev-dependencies:
+        patterns: ["@types/*", "eslint*", "prettier*", "typescript", "vitest"]
+        update-types: ["minor", "patch"]
+
+  # npm dependencies for root (monorepo scripts)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "automated"]
+    commit-message:
+      prefix: "chore(deps):"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "automated", "ci"]
+    commit-message:
+      prefix: "chore(ci):"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "automated", "docker"]
+    commit-message:
+      prefix: "chore(docker):"
+
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "automated", "docker"]
+    commit-message:
+      prefix: "chore(docker):"
