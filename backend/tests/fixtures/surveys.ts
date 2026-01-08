@@ -1,16 +1,17 @@
-import { PrismaClient, SurveyStatus, SurveyVisibility } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { SurveyStatus, SurveyVisibility } from '@prisma/client';
+import { prisma } from '../setup';
 
 export const surveyFixtures = {
   /**
    * Create a basic survey
    */
   createSurvey: async (userId: string, overrides: any = {}) => {
+    // Generate a unique slug with timestamp + random string
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const defaultData = {
-      title: `Test Survey ${Date.now()}`,
+      title: `Test Survey ${uniqueId}`,
       description: 'This is a test survey',
-      slug: `test-survey-${Date.now()}`,
+      slug: `test-survey-${uniqueId}`,
       createdBy: userId,
       status: SurveyStatus.DRAFT,
       visibility: SurveyVisibility.PUBLIC,
