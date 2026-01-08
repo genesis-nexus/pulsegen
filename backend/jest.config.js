@@ -21,4 +21,8 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 30000,
+  // Run tests sequentially to avoid database deadlocks
+  maxWorkers: 1,
+  // Force exit after tests complete to avoid hanging on open handles
+  forceExit: true,
 };

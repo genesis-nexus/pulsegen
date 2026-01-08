@@ -2,14 +2,6 @@
 
 ## Supported Versions
 
-We provide security updates for the following versions of PulseGen:
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 2.x.x   | :white_check_mark: |
-| 1.x.x   | :x:                |
-| < 1.0   | :x:                |
-
 ## Reporting a Vulnerability
 
 We take security vulnerabilities seriously. If you discover a security issue, please report it responsibly.
