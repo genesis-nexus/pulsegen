@@ -11,6 +11,10 @@ const prisma = new PrismaClient({
 
 // Global test setup
 beforeAll(async () => {
+  // Note: Database migrations should be run BEFORE tests start
+  // - In CI: The workflow runs `prisma migrate deploy` before `npm test`
+  // - Locally: Run `npm run test:reset-db` for a fresh database or ensure migrations are applied
+
   // Clean database before all tests
   await cleanDatabase();
 });

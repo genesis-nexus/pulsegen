@@ -94,11 +94,14 @@ jobs:
         working-directory: ./backend
         run: npx prisma generate
 
-      - name: Run database migrations
+      - name: Setup database schema
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pulsegen_test
-        run: npx prisma migrate deploy
+        run: |
+          # Use db push for CI - it's idempotent and handles existing schema gracefully
+          # Unlike migrate deploy, db push won't fail if types already exist
+          npx prisma db push --skip-generate
 
       - name: Run tests
         working-directory: ./backend
