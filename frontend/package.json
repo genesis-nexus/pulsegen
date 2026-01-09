@@ -27,7 +27,7 @@
     "react-helmet-async": "^2.0.4",
     "react-hook-form": "^7.70.0",
     "react-hot-toast": "^2.4.1",
-    "react-i18next": "^14.0.0",
+    "react-i18next": "^16.5.1",
     "react-router-dom": "^6.30.3",
     "recharts": "^2.10.3",
     "zod": "^3.22.4",
