@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 import { Strategy as GitHubStrategy } from 'passport-github2';
-import { Strategy as SamlStrategy } from 'passport-saml';
+import { Strategy as SamlStrategy } from '@node-saml/passport-saml';
 import { PrismaClient, IdentityProvider } from '@prisma/client';
 import { identityProviderService } from '../services/identityProviderService';
 
