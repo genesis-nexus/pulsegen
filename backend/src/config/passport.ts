@@ -186,7 +186,7 @@ export async function configurePassport() {
           entryPoint: samlConfig.authUrl || '',
           issuer: samlConfig.issuer || '',
           callbackUrl: samlConfig.callbackUrl || '/api/auth/saml/callback',
-          cert: metadata?.cert || '',
+          idpCert: metadata?.cert || '',
           identifierFormat: metadata?.identifierFormat,
           passReqToCallback: false,
         },
