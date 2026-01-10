@@ -3,6 +3,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { Strategy as SamlStrategy, type VerifyWithoutRequest } from '@node-saml/passport-saml';
+import type { Profile as SamlProfile } from '@node-saml/node-saml';
 import { PrismaClient, IdentityProvider } from '@prisma/client';
 import { identityProviderService } from '../services/identityProviderService';
 
@@ -154,20 +155,29 @@ export async function configurePassport() {
   if (samlConfig && samlConfig.isEnabled) {
     const metadata = samlConfig.metadata as { cert?: string; identifierFormat?: string } | null | undefined;
 
-    const verifyCallback: VerifyWithoutRequest = async (profile, done) => {
+    const verifyCallback: VerifyWithoutRequest = async (profile: SamlProfile | null, done) => {
       try {
+        if (!profile) {
+          return done(new Error('No profile provided'));
+        }
+
         const user = await findOrCreateUser({
           provider: IdentityProvider.SAML,
-          providerId: profile.nameID || profile.id,
-          email: profile.email || profile.nameID,
-          firstName: profile.firstName || profile.givenName,
-          lastName: profile.lastName || profile.surname,
-          avatar: profile.avatar,
+          providerId: (profile.nameID as string) || (profile.id as string),
+          email: (profile.email as string) || (profile.nameID as string),
+          firstName: (profile.firstName as string) || (profile.givenName as string),
+          lastName: (profile.lastName as string) || (profile.surname as string),
+          avatar: profile.avatar as string | undefined,
         });
         done(null, user);
       } catch (error) {
         done(error as Error);
       }
+    };
+
+    const logoutCallback: VerifyWithoutRequest = async (profile: SamlProfile | null, done) => {
+      // For logout, we just need to acknowledge it
+      done(null, {});
     };
 
     passport.use(
@@ -180,7 +190,8 @@ export async function configurePassport() {
           identifierFormat: metadata?.identifierFormat,
           passReqToCallback: false,
         },
-        verifyCallback
+        verifyCallback,
+        logoutCallback
       )
     );
   }
