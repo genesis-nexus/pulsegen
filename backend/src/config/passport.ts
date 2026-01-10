@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 import { Strategy as GitHubStrategy } from 'passport-github2';
-import { Strategy as SamlStrategy } from '@node-saml/passport-saml';
+import { Strategy as SamlStrategy, type VerifyWithoutRequest } from '@node-saml/passport-saml';
 import { PrismaClient, IdentityProvider } from '@prisma/client';
 import { identityProviderService } from '../services/identityProviderService';
 
@@ -153,6 +153,23 @@ export async function configurePassport() {
   const samlConfig = await identityProviderService.getConfig(IdentityProvider.SAML);
   if (samlConfig && samlConfig.isEnabled) {
     const metadata = samlConfig.metadata as { cert?: string; identifierFormat?: string } | null | undefined;
+
+    const verifyCallback: VerifyWithoutRequest = async (profile, done) => {
+      try {
+        const user = await findOrCreateUser({
+          provider: IdentityProvider.SAML,
+          providerId: profile.nameID || profile.id,
+          email: profile.email || profile.nameID,
+          firstName: profile.firstName || profile.givenName,
+          lastName: profile.lastName || profile.surname,
+          avatar: profile.avatar,
+        });
+        done(null, user);
+      } catch (error) {
+        done(error as Error);
+      }
+    };
+
     passport.use(
       new SamlStrategy(
         {
@@ -163,21 +180,7 @@ export async function configurePassport() {
           identifierFormat: metadata?.identifierFormat,
           passReqToCallback: false,
         },
-        async (profile: any, done: any) => {
-          try {
-            const user = await findOrCreateUser({
-              provider: IdentityProvider.SAML,
-              providerId: profile.nameID || profile.id,
-              email: profile.email || profile.nameID,
-              firstName: profile.firstName || profile.givenName,
-              lastName: profile.lastName || profile.surname,
-              avatar: profile.avatar,
-            });
-            done(null, user);
-          } catch (error) {
-            done(error as Error);
-          }
-        }
+        verifyCallback
       )
     );
   }
