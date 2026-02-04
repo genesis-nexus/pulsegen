@@ -34,7 +34,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@google/generative-ai": "^0.24.1",
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@node-saml/passport-saml": "^5.1.0",
     "@prisma/client": "^5.20.0",
     "axios": "^1.6.5",
