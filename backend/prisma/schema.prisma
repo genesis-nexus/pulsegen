@@ -7,6 +7,11 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Used for schema pushes/migrations. Required when DATABASE_URL goes through
+  // a connection pooler (e.g. Supabase pgbouncer on port 6543) that can't run
+  // DDL. Set it equal to DATABASE_URL for direct connections — the Docker
+  // entrypoint and .env.example default it that way.
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 enum UserRole {

@@ -137,32 +137,55 @@ Instantly translate surveys to 12+ languages with quality review.
 
 ## Quick Start
 
-### One-Command Setup (Recommended)
+### One-Command Deployment (Recommended)
 
-The easiest way to get started is with our automated setup script:
+Zero configuration required — this clones, configures, and launches a fully working app:
 
-**Linux/macOS:**
 ```bash
 git clone https://github.com/genesis-nexus/pulsegen.git
 cd pulsegen
-./setup.sh
+./deploy.sh
 ```
 
-**Windows (PowerShell):**
+That's it. The script checks Docker, generates all secrets, starts a bundled
+PostgreSQL, waits until the app is healthy, and prints your login credentials.
+Open [http://localhost:3001](http://localhost:3001) and sign in.
+
+**Bring your own database** (Supabase, Neon, RDS, or any PostgreSQL):
+
+```bash
+./deploy.sh --db-url "postgresql://postgres.xxxx:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
+```
+
+Supabase pooled connections are detected automatically (`pgbouncer=true` and a
+direct connection for schema changes are configured for you).
+
+**More options:**
+
+```bash
+./deploy.sh --domain surveys.example.com   # production domain (enables nginx)
+./deploy.sh --with-redis                   # add Redis caching
+./deploy.sh --admin-email you@co.com --admin-password 'S3cure!'
+./deploy.sh status | logs | update | down  # manage a running deployment
+./deploy.sh --help                         # everything else
+```
+
+Re-running `./deploy.sh` is safe — it keeps your secrets and data.
+
+<details>
+<summary><strong>Windows / guided setup</strong></summary>
+
+On Windows, run `deploy.sh` inside WSL or Git Bash, or use the guided
+PowerShell installer:
+
 ```powershell
-git clone https://github.com/genesis-nexus/pulsegen.git
-cd pulsegen
 .\setup.ps1
 ```
 
-The script will:
-- Check prerequisites (Docker & Docker Compose)
-- Generate secure secrets automatically
-- Configure your environment
-- Start all services
-- Provide access URLs and credentials
+On Linux/macOS, `./setup.sh` offers a step-by-step interactive setup with
+Let's Encrypt SSL provisioning.
 
-**That's it!** Open [http://localhost:3001](http://localhost:3001)
+</details>
 
 ### Manual Docker Setup
 

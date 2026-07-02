@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+# Schema pushes need a direct (non-pooled) connection; default to DATABASE_URL
+# when no separate direct URL is configured.
+export DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL:-$DATABASE_URL}"
+
 echo "Syncing database schema..."
 npx prisma db push --skip-generate --accept-data-loss
 

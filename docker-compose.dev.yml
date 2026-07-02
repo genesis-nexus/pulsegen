@@ -55,6 +55,7 @@ services:
       NODE_ENV: development
       PORT: 5000
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/pulsegen
+      DIRECT_DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/pulsegen
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-in-production}

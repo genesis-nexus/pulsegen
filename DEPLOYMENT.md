@@ -11,9 +11,34 @@ This guide covers deploying PulseGen survey platform in various environments.
 5. [Database Migration](#database-migration)
 6. [Troubleshooting](#troubleshooting)
 
+## One-Command Deployment
+
+The fastest path is the automated deployer — it generates secrets, writes the
+configuration, starts everything, and waits until the app is healthy:
+
+```bash
+./deploy.sh                     # bundled PostgreSQL, sane defaults
+./deploy.sh --db-url "<url>"    # use an existing database (Supabase, Neon, RDS, ...)
+./deploy.sh --domain surveys.example.com   # production domain behind nginx
+./deploy.sh --help              # all options and management subcommands
+```
+
+Notes on external databases:
+
+- Any reachable PostgreSQL 14+ works. The connection is verified before
+  anything is built.
+- **Supabase**: paste the connection string from *Project Settings → Database*.
+  Transaction-pooler URLs (port 6543) are detected automatically: the script
+  appends `pgbouncer=true` for the app and derives a session-mode
+  (`DIRECT_DATABASE_URL`, port 5432) connection for schema pushes.
+- The equivalent manual setup is `docker compose -f docker-compose.external-db.yml up -d`
+  with `DATABASE_URL` (and optionally `DIRECT_DATABASE_URL`) in `.env`.
+
+Manage a running deployment with `./deploy.sh status | logs | update | down | reset`.
+
 ## Quick Start with Docker
 
-The fastest way to get PulseGen running is with Docker Compose.
+Prefer manual control? PulseGen also runs with plain Docker Compose.
 
 ### Prerequisites
 
