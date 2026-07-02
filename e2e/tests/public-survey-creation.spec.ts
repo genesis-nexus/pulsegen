@@ -44,8 +44,10 @@ test.describe('Public Survey Creation and Completion Flow', () => {
 
     // Step 2: Navigate to survey builder
     await test.step('Navigate to Survey Builder', async () => {
-      // Click "Blank Survey" link to create a new survey
-      await page.click('a:has-text("Blank Survey")');
+      // Open the create hub, then choose "Start from scratch"
+      await page.click('a:has-text("New Survey")');
+      await page.waitForURL('**/surveys/create', { timeout: 10000 });
+      await page.click('a:has-text("Start from scratch")');
 
       // Wait for survey builder page
       await page.waitForURL('**/surveys/new', { timeout: 10000 });
@@ -53,12 +55,12 @@ test.describe('Public Survey Creation and Completion Flow', () => {
 
     // Step 3: Create a simple survey
     await test.step('Create Survey with Title', async () => {
-      // The survey builder has a title input at the top with placeholder "Survey Title"
-      const titleInput = page.locator('input[placeholder="Survey Title"]');
+      // The survey builder has a title input at the top with placeholder "Untitled Survey"
+      const titleInput = page.locator('input[placeholder="Untitled Survey"]');
       await titleInput.fill('Comprehensive Test Survey');
 
-      // Save the survey by clicking "Save Survey" button
-      await page.click('button:has-text("Save Survey")');
+      // Save the survey by clicking "Create Survey" button
+      await page.click('button:has-text("Create Survey")');
 
       // Wait for the survey to be created and redirected to edit page
       await page.waitForURL('**/surveys/**/edit', { timeout: 10000 });

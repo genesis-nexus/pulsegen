@@ -17,6 +17,8 @@ import SurveyParticipants from './pages/surveys/SurveyParticipants';
 import AIBuilder from './pages/surveys/AIBuilder';
 import SurveyWizard from './pages/surveys/SurveyWizard';
 import CreateWithAI from './pages/surveys/CreateWithAI';
+import CreateSurvey from './pages/surveys/CreateSurvey';
+import SurveyTemplates from './pages/surveys/SurveyTemplates';
 import SurveyTake from './pages/public/SurveyTake';
 import AISettings from './pages/settings/AISettings';
 import AIToolsSettings from './pages/settings/AIToolsSettings';
@@ -71,6 +73,8 @@ function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/surveys" element={<SurveyList />} />
+        <Route path="/surveys/create" element={<CreateSurvey />} />
+        <Route path="/surveys/templates" element={<SurveyTemplates />} />
         <Route path="/surveys/create-ai" element={<CreateWithAI />} />
         <Route path="/surveys/ai-builder" element={<AIBuilder />} />
         <Route path="/surveys/ai-wizard" element={<SurveyWizard />} />

@@ -75,13 +75,9 @@ export default function SurveyList() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">My Surveys</h1>
         <div className="flex gap-3">
-          <Link to="/surveys/create-ai" className="btn btn-primary">
-            <Sparkles className="w-5 h-5 mr-2" />
-            Create with AI
-          </Link>
-          <Link to="/surveys/new" className="btn btn-secondary">
+          <Link to="/surveys/create" className="btn btn-primary">
             <Plus className="w-5 h-5 mr-2" />
-            Blank Survey
+            New Survey
           </Link>
         </div>
       </div>
@@ -376,6 +372,10 @@ export default function SurveyList() {
             <Link to="/surveys/create-ai" className="btn btn-primary">
               <Sparkles className="w-4 h-4 mr-2" />
               Create with AI
+            </Link>
+            <Link to="/surveys/templates" className="btn btn-secondary">
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Use a Template
             </Link>
             <Link to="/surveys/new" className="btn btn-secondary">
               <Plus className="w-4 h-4 mr-2" />

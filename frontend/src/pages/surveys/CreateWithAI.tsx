@@ -21,6 +21,34 @@ import { AIProviderCheck, AILoadingState, AIErrorState } from '../../components/
 
 type Mode = 'selection' | 'quick' | 'guided';
 
+const EXAMPLE_PROMPTS = [
+  {
+    label: 'Customer satisfaction',
+    prompt:
+      'A customer satisfaction survey for an online store covering shopping experience, product quality, delivery, support, and likelihood to recommend.',
+  },
+  {
+    label: 'Employee engagement',
+    prompt:
+      'An anonymous employee engagement survey measuring job satisfaction, recognition, career growth, leadership trust, and work-life balance.',
+  },
+  {
+    label: 'Product feedback',
+    prompt:
+      'A product feedback survey for a mobile app asking about ease of use, favorite and missing features, bugs encountered, and overall satisfaction.',
+  },
+  {
+    label: 'Event feedback',
+    prompt:
+      'A post-event feedback survey for a tech conference covering session quality, speakers, venue, networking opportunities, and intent to return.',
+  },
+  {
+    label: 'Market research',
+    prompt:
+      'A market research survey to validate demand for a new productivity tool, exploring current solutions, pain points, and willingness to pay.',
+  },
+];
+
 interface GeneratedQuestion {
   type: string;
   text: string;
@@ -352,6 +380,18 @@ export default function CreateWithAI() {
                     Be specific about the topic, target audience, and what insights you want to
                     gather.
                   </p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {EXAMPLE_PROMPTS.map((example) => (
+                      <button
+                        key={example.label}
+                        type="button"
+                        onClick={() => setPrompt(example.prompt)}
+                        className="px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-900/40 dark:hover:text-primary-300 transition-colors"
+                      >
+                        {example.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

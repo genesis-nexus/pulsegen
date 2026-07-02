@@ -88,6 +88,11 @@ export default function Toolbox({
     selectedQuestionId
 }: ToolboxProps) {
     const [activeTab, setActiveTab] = useState<'tools' | 'outline'>('tools');
+    const [search, setSearch] = useState('');
+
+    const visibleItems = TOOLBOX_ITEMS.filter(
+        (item) => !search.trim() || item.label.toLowerCase().includes(search.toLowerCase())
+    );
 
     return (
         <div className="bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-64 flex flex-col h-full">
@@ -106,11 +111,28 @@ export default function Toolbox({
                 </button>
             </div>
 
+            {activeTab === 'tools' && (
+                <div className="px-4 pt-3">
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search question types..."
+                        className="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-4">
                 {activeTab === 'tools' ? (
                     <div className="space-y-4">
+                        {visibleItems.length === 0 && (
+                            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">
+                                No question types match "{search}"
+                            </p>
+                        )}
                         {['Input', 'Choice', 'Rating', 'Matrix', 'Advanced', 'Special'].map(category => {
-                            const categoryItems = TOOLBOX_ITEMS.filter(item => item.category === category);
+                            const categoryItems = visibleItems.filter(item => item.category === category);
                             if (categoryItems.length === 0) return null;
 
                             return (

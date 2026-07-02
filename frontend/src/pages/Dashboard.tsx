@@ -26,16 +26,9 @@ export default function Dashboard() {
           <p className="text-slate-500 dark:text-slate-400 mt-1">Welcome back! Here's an overview of your surveys.</p>
         </div>
         <div className="flex gap-3">
-          <Link
-            to="/surveys/create-ai"
-            className="btn btn-primary"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Create with AI
-          </Link>
-          <Link to="/surveys/new" className="btn btn-secondary">
+          <Link to="/surveys/create" className="btn btn-primary">
             <Plus className="w-5 h-5 mr-2" />
-            Blank Survey
+            New Survey
           </Link>
         </div>
       </div>
@@ -150,9 +143,9 @@ export default function Dashboard() {
                 <Sparkles className="w-4 h-4 mr-2" />
                 Create with AI
               </Link>
-              <Link to="/surveys/new" className="btn btn-secondary">
+              <Link to="/surveys/create" className="btn btn-secondary">
                 <Plus className="w-4 h-4 mr-2" />
-                Blank Survey
+                New Survey
               </Link>
             </div>
           </div>
