@@ -16,8 +16,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../../lib/api';
-import { AIProviderCheck, AILoadingState, AIErrorState } from '../../components/ai';
+import api, { streamSurveyGeneration, StreamUnavailableError } from '../../lib/api';
+import { AIProviderCheck, AIErrorState } from '../../components/ai';
 
 type Mode = 'selection' | 'quick' | 'guided';
 
@@ -93,29 +93,79 @@ export default function CreateWithAI() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set());
 
+  // Streaming generation state
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [genMessage, setGenMessage] = useState('');
+  const [streamPreview, setStreamPreview] = useState<GeneratedSurvey | null>(null);
+  const [genError, setGenError] = useState<string | null>(null);
+
   // Guided mode state
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [surveyDraft, setSurveyDraft] = useState<SurveyDraft | null>(null);
 
-  // Quick mode: Generate survey
-  const generateMutation = useMutation({
-    mutationFn: async () => {
-      const response = await api.post('/ai/generate-survey', {
-        prompt,
-        questionCount,
-        includeLogic,
-      });
-      return response.data.data;
-    },
-    onSuccess: (data) => {
-      setGeneratedSurvey(data);
+  // Quick mode: stream the generation so questions appear live as the AI writes them,
+  // with a fallback to the plain endpoint if streaming isn't available.
+  const runGeneration = async () => {
+    setIsGenerating(true);
+    setGenError(null);
+    setStreamPreview(null);
+    setGeneratedSurvey(null);
+    setGenMessage('Contacting your AI provider...');
+
+    const partial: GeneratedSurvey = { title: '', description: '', questions: [] };
+    let serverError: string | null = null;
+    let finished = false;
+
+    try {
+      try {
+        await streamSurveyGeneration(
+          { prompt, questionCount, includeLogic },
+          (event) => {
+            if (event.type === 'status') {
+              setGenMessage(event.message || 'Generating...');
+            } else if (event.type === 'survey') {
+              partial.title = event.title || 'Untitled Survey';
+              partial.description = event.description || '';
+              setStreamPreview({ ...partial });
+              setGenMessage('Writing questions...');
+            } else if (event.type === 'question' && event.question) {
+              partial.questions = [...partial.questions, event.question as GeneratedQuestion];
+              setStreamPreview({ ...partial, questions: partial.questions });
+            } else if (event.type === 'error') {
+              serverError = event.message || 'Failed to generate survey';
+            } else if (event.type === 'done') {
+              finished = true;
+            }
+          }
+        );
+
+        if (serverError) throw new Error(serverError);
+        if (!finished || partial.questions.length === 0) {
+          throw new Error('Generation ended before any questions arrived');
+        }
+        setGeneratedSurvey(partial);
+      } catch (error) {
+        // Only fall back when the stream itself was unreachable, not on AI errors
+        if (!(error instanceof StreamUnavailableError)) throw error;
+        setGenMessage('Generating your survey...');
+        const response = await api.post('/ai/generate-survey', {
+          prompt,
+          questionCount,
+          includeLogic,
+        });
+        setGeneratedSurvey(response.data.data);
+      }
       toast.success('Survey generated successfully!');
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to generate survey');
-    },
-  });
+    } catch (error: any) {
+      setGenError(
+        error?.response?.data?.message || error?.message || 'Failed to generate survey'
+      );
+    } finally {
+      setIsGenerating(false);
+      setStreamPreview(null);
+    }
+  };
 
   // Quick mode: Save survey
   const saveMutation = useMutation({
@@ -203,7 +253,7 @@ export default function CreateWithAI() {
       toast.error('Please describe your survey');
       return;
     }
-    generateMutation.mutate();
+    runGeneration();
   };
 
   const handleGuidedStart = () => {
@@ -364,7 +414,7 @@ export default function CreateWithAI() {
         </div>
 
         <AIProviderCheck>
-          {!generatedSurvey && !generateMutation.isPending && (
+          {!generatedSurvey && !isGenerating && (
             <div className="card">
               <div className="space-y-6">
                 <div>
@@ -460,21 +510,64 @@ export default function CreateWithAI() {
             </div>
           )}
 
-          {generateMutation.isPending && (
+          {isGenerating && (
             <div className="card">
-              <AILoadingState
-                message="Creating your survey..."
-                subMessage="AI is designing questions based on your description"
-              />
+              {/* Live generation preview */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shrink-0">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">{genMessage}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Questions appear below as they're written
+                  </p>
+                </div>
+              </div>
+
+              {streamPreview && (
+                <div className="space-y-3">
+                  {streamPreview.title && (
+                    <div className="pb-3 border-b border-slate-200 dark:border-slate-700">
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                        {streamPreview.title}
+                      </h2>
+                      {streamPreview.description && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                          {streamPreview.description}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {streamPreview.questions.map((question, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"
+                    >
+                      <span className="text-sm font-medium text-slate-500 dark:text-slate-400 w-8 shrink-0">
+                        Q{index + 1}
+                      </span>
+                      <span className="text-xs font-medium px-2 py-0.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded shrink-0">
+                        {question.type.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-sm text-slate-900 dark:text-white truncate">
+                        {question.text}
+                      </span>
+                    </div>
+                  ))}
+                  {/* Skeleton row hinting the next question is being written */}
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
+                    <span className="w-8 h-4 bg-slate-100 dark:bg-slate-700 rounded animate-pulse shrink-0" />
+                    <span className="flex-1 h-4 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {generateMutation.isError && !generatedSurvey && (
-            <div className="card">
-              <AIErrorState
-                message="Failed to generate survey. Please try again."
-                onRetry={() => generateMutation.mutate()}
-              />
+          {genError && !generatedSurvey && !isGenerating && (
+            <div className="card mt-6">
+              <AIErrorState message={genError} onRetry={runGeneration} />
             </div>
           )}
 

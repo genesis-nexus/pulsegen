@@ -12,6 +12,17 @@ export default defineConfig({
       'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Keep heavyweight vendors in their own long-cacheable chunks
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+        },
+      },
+    },
+  },
   server: {
     port: 3000,
     proxy: {

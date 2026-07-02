@@ -58,6 +58,91 @@ api.interceptors.response.use(
   }
 );
 
+// ----- AI streaming -----
+
+export interface AIGenerationEvent {
+  type: 'status' | 'survey' | 'question' | 'done' | 'error';
+  stage?: string;
+  message?: string;
+  title?: string;
+  description?: string;
+  questionCount?: number;
+  index?: number;
+  total?: number;
+  question?: {
+    type: string;
+    text: string;
+    isRequired?: boolean;
+    options?: { text: string; value: string }[];
+  };
+}
+
+/** Thrown when the streaming endpoint itself is unreachable (fall back to the plain POST). */
+export class StreamUnavailableError extends Error {
+  constructor(status?: number) {
+    super(`Streaming endpoint unavailable${status ? ` (${status})` : ''}`);
+    this.name = 'StreamUnavailableError';
+  }
+}
+
+/**
+ * POST-based server-sent-events client for AI survey generation.
+ * Calls onEvent for each event as it arrives so the UI can render a live preview.
+ */
+export async function streamSurveyGeneration(
+  body: { prompt: string; questionCount?: number; includeLogic?: boolean },
+  onEvent: (event: AIGenerationEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const token = localStorage.getItem('accessToken');
+  let response: globalThis.Response;
+  try {
+    response = await fetch(`${API_URL}/api/ai/generate-survey/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: 'include',
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') throw error;
+    throw new StreamUnavailableError();
+  }
+
+  if (!response.ok || !response.body) {
+    throw new StreamUnavailableError(response.status);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE events are separated by blank lines
+    const events = buffer.split('\n\n');
+    buffer = events.pop() || '';
+    for (const rawEvent of events) {
+      const dataLine = rawEvent
+        .split('\n')
+        .find((line) => line.startsWith('data: '));
+      if (!dataLine) continue; // comments / keep-alives
+      try {
+        onEvent(JSON.parse(dataLine.slice(6)) as AIGenerationEvent);
+      } catch {
+        // Ignore malformed events
+      }
+    }
+  }
+}
+
 // Automation API
 export const automationApi = {
   getPersonas: async (): Promise<IndustryPersona[]> => {

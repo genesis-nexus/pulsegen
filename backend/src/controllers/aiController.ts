@@ -30,6 +30,73 @@ export class AIController {
     }
   }
 
+  /**
+   * Server-sent events variant of generateSurvey. Streams progress stages while
+   * the provider works (keeping proxies from timing out on long generations),
+   * then emits the survey header and each question as separate events so the
+   * client can render a live preview as results arrive.
+   */
+  static async generateSurveyStream(req: AuthRequest, res: Response, next: NextFunction) {
+    let data;
+    try {
+      data = generateSurveySchema.parse(req.body);
+    } catch (error) {
+      return next(error);
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // disable nginx buffering
+    res.flushHeaders();
+
+    const send = (event: Record<string, unknown>) => {
+      if (!res.writableEnded) {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+    };
+
+    // Keep the connection alive while the provider is thinking
+    const heartbeat = setInterval(() => {
+      if (!res.writableEnded) res.write(': keep-alive\n\n');
+    }, 10000);
+
+    // Stop heartbeats if the client goes away mid-generation
+    req.on('close', () => clearInterval(heartbeat));
+
+    try {
+      send({ type: 'status', stage: 'generating', message: 'Designing your survey with AI...' });
+
+      const generated = await AIService.generateSurvey({
+        userId: req.user!.id,
+        prompt: data.prompt,
+        questionCount: data.questionCount,
+        includeLogic: data.includeLogic,
+      });
+
+      send({
+        type: 'survey',
+        title: generated.title,
+        description: generated.description,
+        questionCount: generated.questions?.length ?? 0,
+      });
+
+      const questions = generated.questions || [];
+      for (let i = 0; i < questions.length; i++) {
+        send({ type: 'question', index: i, total: questions.length, question: questions[i] });
+        // Small delay so the client preview builds up progressively
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      send({ type: 'done' });
+    } catch (error: any) {
+      send({ type: 'error', message: error?.message || 'Failed to generate survey' });
+    } finally {
+      clearInterval(heartbeat);
+      res.end();
+    }
+  }
+
   static async suggestQuestions(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { surveyId } = req.params;

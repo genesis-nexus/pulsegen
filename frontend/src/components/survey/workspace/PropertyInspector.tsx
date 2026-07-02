@@ -1,7 +1,8 @@
 
 import { useState } from 'react';
-import { Question, QuestionType } from '../../../types';
-import { Sliders, Type, List, Trash2, Plus, Smartphone, Share2 } from 'lucide-react';
+import { Question, QuestionType, SurveyLogic } from '../../../types';
+import { Sliders, GitBranch, List, Trash2, Plus, Smartphone, Share2 } from 'lucide-react';
+import LogicRulesPanel from './LogicRulesPanel';
 
 interface SurveySettingsData {
   title: string;
@@ -27,6 +28,10 @@ interface PropertyInspectorProps {
   onUpdate: (data: Partial<Question>) => void;
   surveySettings: SurveySettingsData;
   onUpdateSurveySettings: (data: Partial<SurveySettingsData>) => void;
+  /** Needed for the logic tab; undefined while the survey hasn't been created yet. */
+  surveyId?: string;
+  questions?: Question[];
+  onLogicChanged?: (questionId: string, logic: SurveyLogic[]) => void;
 }
 
 type Tab = 'properties' | 'options' | 'logic' | 'survey';
@@ -35,7 +40,10 @@ export default function PropertyInspector({
   question,
   onUpdate,
   surveySettings,
-  onUpdateSurveySettings
+  onUpdateSurveySettings,
+  surveyId,
+  questions = [],
+  onLogicChanged,
 }: PropertyInspectorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('properties');
 
@@ -318,7 +326,7 @@ export default function PropertyInspector({
           <TabButton
             active={activeTab === 'logic'}
             onClick={() => setActiveTab('logic')}
-            icon={Type} // Placeholder icon for logic
+            icon={GitBranch}
             label="Logic"
           />
         </div>
@@ -420,13 +428,19 @@ export default function PropertyInspector({
         )}
 
         {activeTab === 'logic' && (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
-            <p className="mb-2">Advanced Skip Logic</p>
-            <p className="text-xs">Configure where the user goes next based on their answer.</p>
-            <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-100 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs">
-              Coming soon: Visual logic builder
+          surveyId && onLogicChanged ? (
+            <LogicRulesPanel
+              surveyId={surveyId}
+              question={question}
+              questions={questions}
+              onLogicChanged={onLogicChanged}
+              compact
+            />
+          ) : (
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
+              Save the survey first to add logic rules.
             </div>
-          </div>
+          )
         )}
       </div>
     </div>

@@ -1,41 +1,52 @@
+import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { useAuthStore } from './stores/authStore';
 import { UserRole } from './types';
 
-// Layouts
+// Layouts (kept eager — needed on first paint for every page)
 import DashboardLayout from './layouts/DashboardLayout';
 import PublicLayout from './layouts/PublicLayout';
 
-// Pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import Dashboard from './pages/Dashboard';
-import SurveyList from './pages/surveys/SurveyList';
-import SurveyBuilder from './pages/surveys/SurveyBuilder';
-import SurveyAnalytics from './pages/surveys/SurveyAnalytics';
-import SurveyParticipants from './pages/surveys/SurveyParticipants';
-import AIBuilder from './pages/surveys/AIBuilder';
-import SurveyWizard from './pages/surveys/SurveyWizard';
-import CreateWithAI from './pages/surveys/CreateWithAI';
-import CreateSurvey from './pages/surveys/CreateSurvey';
-import SurveyTemplates from './pages/surveys/SurveyTemplates';
-import SurveyTake from './pages/public/SurveyTake';
-import AISettings from './pages/settings/AISettings';
-import AIToolsSettings from './pages/settings/AIToolsSettings';
-import AIUsage from './pages/settings/AIUsage';
-import MLFeaturesSettings from './pages/settings/MLFeaturesSettings';
-import SSOSettings from './pages/settings/SSOSettings';
-import SMTPSettings from './pages/settings/SMTPSettings';
-import BrandingSettings from './pages/settings/BrandingSettings';
-import MLModels from './pages/ml/MLModels';
-import UserManagement from './pages/admin/UserManagement';
-import AIChat from './pages/AIChat';
-import NotFound from './pages/NotFound';
+// Pages are lazy-loaded so each route ships as its own chunk instead of one
+// monolithic bundle (recharts alone is several hundred KB and only analytics needs it).
+const Login = lazy(() => import('./pages/auth/Login'));
+const Register = lazy(() => import('./pages/auth/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const SurveyList = lazy(() => import('./pages/surveys/SurveyList'));
+const SurveyBuilder = lazy(() => import('./pages/surveys/SurveyBuilder'));
+const SurveyAnalytics = lazy(() => import('./pages/surveys/SurveyAnalytics'));
+const SurveyParticipants = lazy(() => import('./pages/surveys/SurveyParticipants'));
+const AIBuilder = lazy(() => import('./pages/surveys/AIBuilder'));
+const SurveyWizard = lazy(() => import('./pages/surveys/SurveyWizard'));
+const CreateWithAI = lazy(() => import('./pages/surveys/CreateWithAI'));
+const CreateSurvey = lazy(() => import('./pages/surveys/CreateSurvey'));
+const SurveyTemplates = lazy(() => import('./pages/surveys/SurveyTemplates'));
+const SurveyTake = lazy(() => import('./pages/public/SurveyTake'));
+const AISettings = lazy(() => import('./pages/settings/AISettings'));
+const AIToolsSettings = lazy(() => import('./pages/settings/AIToolsSettings'));
+const AIUsage = lazy(() => import('./pages/settings/AIUsage'));
+const MLFeaturesSettings = lazy(() => import('./pages/settings/MLFeaturesSettings'));
+const SSOSettings = lazy(() => import('./pages/settings/SSOSettings'));
+const SMTPSettings = lazy(() => import('./pages/settings/SMTPSettings'));
+const BrandingSettings = lazy(() => import('./pages/settings/BrandingSettings'));
+const MLModels = lazy(() => import('./pages/ml/MLModels'));
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
+const AIChat = lazy(() => import('./pages/AIChat'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin Pages
-import AutomationDashboard from './pages/automation/AutomationDashboard';
-import AutomationRunner from './pages/automation/AutomationRunner';
-import AutomationResults from './pages/automation/AutomationResults';
+const AutomationDashboard = lazy(() => import('./pages/automation/AutomationDashboard'));
+const AutomationRunner = lazy(() => import('./pages/automation/AutomationRunner'));
+const AutomationResults = lazy(() => import('./pages/automation/AutomationResults'));
+
+function RouteFallback() {
+  return (
+    <div className="flex items-center justify-center py-24 text-slate-400 dark:text-slate-500">
+      <Loader2 className="w-6 h-6 animate-spin" />
+    </div>
+  );
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
@@ -55,6 +66,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
+    <Suspense fallback={<RouteFallback />}>
     <Routes>
       {/* Public routes */}
       <Route element={<PublicLayout />}>
@@ -122,8 +134,9 @@ function App() {
       </Route >
 
       {/* 404 */}
-      < Route path="*" element={< NotFound />} />
-    </Routes >
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+    </Suspense>
   );
 }
 

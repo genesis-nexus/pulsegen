@@ -11,5 +11,6 @@ router.get('/surveys/:surveyId/questions', authenticate, AnalyticsController.get
 router.get('/surveys/:surveyId/insights', authenticate, AnalyticsController.getInsights);
 router.get('/surveys/:surveyId/crosstab', authenticate, AnalyticsController.getCrossTabulation);
 router.get('/surveys/:surveyId/sources', authenticate, AnalyticsController.getSourceAnalytics);
+router.get('/surveys/:surveyId/trends', authenticate, AnalyticsController.getResponseTrends);
 
 export default router;

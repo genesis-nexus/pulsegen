@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Download, Sparkles, HelpCircle, Users, Share2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from 'recharts';
+import { Download, Sparkles, HelpCircle, Users, Share2, TrendingUp } from 'lucide-react';
 import api from '../../lib/api';
-import { Survey, Analytics, QuestionAnalytics } from '../../types';
+import { Survey, Analytics, QuestionAnalytics, QuestionType } from '../../types';
 import { SmartAnalyzer } from '../../components/ai';
 import { SourceAnalytics, SocialLinkGenerator } from '../../components/social';
 import toast from 'react-hot-toast';
@@ -56,6 +56,15 @@ export default function SurveyAnalytics() {
     queryFn: async () => {
       const response = await api.get(`/analytics/surveys/${id}/sources`);
       return response.data.data;
+    },
+  });
+
+  // Daily response trends (last 30 days)
+  const { data: trends } = useQuery({
+    queryKey: ['response-trends', id],
+    queryFn: async () => {
+      const response = await api.get(`/analytics/surveys/${id}/trends?days=30`);
+      return response.data.data as Array<{ date: string; responses: number; completed: number }>;
     },
   });
 
@@ -309,6 +318,64 @@ export default function SurveyAnalytics() {
         </div>
       </div>
 
+      {/* Response Trends */}
+      {trends && trends.some((t) => t.responses > 0) && (
+        <div className="card mb-8">
+          <div className="flex items-center mb-4">
+            <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400 mr-2" />
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Responses Over Time</h2>
+            <span className="ml-auto text-sm text-slate-500 dark:text-slate-400">Last 30 days</span>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={trends}>
+              <defs>
+                <linearGradient id="trendResponses" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="trendCompleted" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-slate-200 dark:text-slate-700" />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: 'currentColor', fontSize: 11 }}
+                className="text-slate-600 dark:text-slate-400"
+                tickFormatter={(date: string) => date.slice(5)}
+              />
+              <YAxis allowDecimals={false} tick={{ fill: 'currentColor', fontSize: 11 }} className="text-slate-600 dark:text-slate-400" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: '8px',
+                  color: '#f1f5f9',
+                }}
+              />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="responses"
+                name="Started"
+                stroke="#6366f1"
+                strokeWidth={2}
+                fill="url(#trendResponses)"
+              />
+              <Area
+                type="monotone"
+                dataKey="completed"
+                name="Completed"
+                stroke="#10b981"
+                strokeWidth={2}
+                fill="url(#trendCompleted)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {/* Source Analytics */}
       {sourceAnalytics && (
         <div className="mb-8">
@@ -359,7 +426,17 @@ export default function SurveyAnalytics() {
 
       {/* Question Analytics */}
       <div className="space-y-8">
-        {questionAnalytics?.map((qa, qaIndex) => (
+        {questionAnalytics?.map((rawQa, qaIndex) => {
+          // Scale questions (NPS, rating, slider) have numeric `value` buckets
+          // instead of option labels — normalize so the charts have axis labels.
+          const qa = {
+            ...rawQa,
+            distribution: rawQa.distribution?.map((d) => ({
+              ...d,
+              optionText: d.optionText ?? String(d.value ?? ''),
+            })),
+          };
+          return (
           <div key={qa.questionId} className="card bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg hover:shadow-xl transition-shadow">
             <div className="mb-6">
               <div className="flex items-start justify-between">
@@ -369,6 +446,10 @@ export default function SurveyAnalytics() {
                 </span>
               </div>
             </div>
+
+            {qa.questionType === QuestionType.NPS && qa.distribution && qa.distribution.length > 0 && (
+              <NPSBreakdown distribution={qa.distribution} />
+            )}
 
             {qa.distribution && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -496,7 +577,83 @@ export default function SurveyAnalytics() {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Promoter/passive/detractor breakdown with the overall NPS score (-100 to 100). */
+function NPSBreakdown({
+  distribution,
+}: {
+  distribution: Array<{ value?: number; count: number; percentage: number }>;
+}) {
+  const total = distribution.reduce((sum, d) => sum + d.count, 0);
+  if (total === 0) return null;
+
+  const countIn = (min: number, max: number) =>
+    distribution
+      .filter((d) => d.value !== undefined && d.value >= min && d.value <= max)
+      .reduce((sum, d) => sum + d.count, 0);
+
+  const detractors = countIn(0, 6);
+  const passives = countIn(7, 8);
+  const promoters = countIn(9, 10);
+  const npsScore = Math.round(((promoters - detractors) / total) * 100);
+
+  const segments = [
+    { label: 'Detractors (0–6)', count: detractors, color: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
+    { label: 'Passives (7–8)', count: passives, color: 'bg-amber-400', text: 'text-amber-600 dark:text-amber-400' },
+    { label: 'Promoters (9–10)', count: promoters, color: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+  ];
+
+  return (
+    <div className="mb-6 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+        <div className="text-center sm:text-left shrink-0">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">NPS Score</p>
+          <p
+            className={`text-5xl font-bold ${
+              npsScore >= 30
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : npsScore >= 0
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-red-600 dark:text-red-400'
+            }`}
+          >
+            {npsScore > 0 ? `+${npsScore}` : npsScore}
+          </p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">% promoters − % detractors</p>
+        </div>
+
+        <div className="flex-1 space-y-3">
+          {/* Stacked ratio bar */}
+          <div className="flex h-3 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+            {segments.map(
+              (segment) =>
+                segment.count > 0 && (
+                  <div
+                    key={segment.label}
+                    className={segment.color}
+                    style={{ width: `${(segment.count / total) * 100}%` }}
+                  />
+                )
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {segments.map((segment) => (
+              <div key={segment.label}>
+                <p className={`text-lg font-bold ${segment.text}`}>
+                  {((segment.count / total) * 100).toFixed(0)}%
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{segment.label}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{segment.count} responses</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

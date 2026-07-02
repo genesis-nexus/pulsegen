@@ -308,6 +308,13 @@ export default function SurveyBuilder() {
     scheduleQuestionSave(questionId);
   };
 
+  // Logic rules persist themselves inside LogicRulesPanel; just mirror them locally.
+  const handleLogicChanged = (questionId: string, logic: SurveyLogic[]) => {
+    setLocalQuestions((questions) =>
+      questions.map((q) => (q.id === questionId ? { ...q, logic } : q))
+    );
+  };
+
   const handleUpdateSurveySettings = (settings: Partial<SurveySettingsData>) => {
     if (settings.title !== undefined) setTitle(settings.title);
     if (settings.description !== undefined) setDescription(settings.description);
@@ -500,7 +507,8 @@ export default function SurveyBuilder() {
           <SaveIndicator status={saveStatus} isNew={isNew} onRetry={flushPendingSaves} />
         </div>
 
-        {/* View Toggle */}
+        {/* View Toggle (logic needs a persisted survey) */}
+        {!isNew && (
         <div className="hidden md:flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1 shrink-0">
           <ViewToggleButton
             active={currentView === 'design'}
@@ -515,6 +523,7 @@ export default function SurveyBuilder() {
             label="Logic"
           />
         </div>
+        )}
 
         <div className="flex items-center gap-2 shrink-0">
           {/* AI Assist menu */}
@@ -638,14 +647,11 @@ export default function SurveyBuilder() {
             </DragDropContext>
           ) : (
             <LogicEditor
+              surveyId={id!}
               questions={localQuestions}
               selectedQuestionId={selectedQuestionId}
               onSelectQuestion={setSelectedQuestionId}
-              onUpdateLogic={(questionId, logic) => {
-                setLocalQuestions((questions) =>
-                  questions.map((q) => (q.id === questionId ? { ...q, logic } : q))
-                );
-              }}
+              onUpdateLogic={handleLogicChanged}
             />
           )}
         </div>
@@ -653,6 +659,9 @@ export default function SurveyBuilder() {
         {currentView === 'design' && (
           <PropertyInspector
             question={localQuestions.find((q) => q.id === selectedQuestionId) || null}
+            surveyId={isNew ? undefined : id}
+            questions={localQuestions}
+            onLogicChanged={handleLogicChanged}
             onUpdate={(data) => {
               if (selectedQuestionId) handleUpdateQuestion(selectedQuestionId, data);
             }}

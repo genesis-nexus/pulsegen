@@ -45,6 +45,54 @@ export class AnalyticsService {
     return result;
   }
 
+  /** Daily response counts for the trend chart. */
+  static async getResponseTrends(surveyId: string, userId: string, days = 30) {
+    const survey = await prisma.survey.findUnique({
+      where: { id: surveyId },
+    });
+
+    if (!survey || survey.createdBy !== userId) {
+      throw new AppError(403, 'Access denied');
+    }
+
+    const cacheKey = `survey:${surveyId}:analytics:trends:${days}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - (days - 1));
+
+    const responses = await prisma.response.findMany({
+      where: { surveyId, startedAt: { gte: since } },
+      select: { startedAt: true, isComplete: true },
+    });
+
+    // Bucket by calendar day, filling gaps so the chart has a continuous axis
+    const buckets = new Map<string, { date: string; responses: number; completed: number }>();
+    for (let i = 0; i < days; i++) {
+      const day = new Date(since);
+      day.setDate(since.getDate() + i);
+      const key = day.toISOString().slice(0, 10);
+      buckets.set(key, { date: key, responses: 0, completed: 0 });
+    }
+
+    for (const response of responses) {
+      const key = response.startedAt.toISOString().slice(0, 10);
+      const bucket = buckets.get(key);
+      if (bucket) {
+        bucket.responses += 1;
+        if (response.isComplete) bucket.completed += 1;
+      }
+    }
+
+    const result = Array.from(buckets.values());
+    await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(result));
+    return result;
+  }
+
   static async getQuestionAnalytics(
     surveyId: string,
     userId: string,

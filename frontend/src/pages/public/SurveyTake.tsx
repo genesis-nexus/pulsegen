@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -10,6 +10,7 @@ import { SurveyProgressWrapper } from '../../components/survey/SurveyProgressWra
 import QuestionRenderer from '../../components/questions/QuestionRenderer';
 import SocialShareButtons from '../../components/social/SocialShareButtons';
 import { getTrackingData } from '../../lib/tracking';
+import { getActiveQuestions } from '../../lib/surveyLogic';
 import { useSwipeNavigation } from '../../hooks/useSwipeNavigation';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -216,11 +217,21 @@ export default function SurveyTake() {
     });
   };
 
+  // Questions the respondent should currently see, after applying skip/show/hide logic
+  const activeQuestions = useMemo(
+    () => (survey ? getActiveQuestions(survey.questions || [], answers) : []),
+    [survey, answers]
+  );
+  const activeQuestionIds = useMemo(
+    () => new Set(activeQuestions.map((q) => q.id)),
+    [activeQuestions]
+  );
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required questions
-    const requiredQuestions = survey?.questions.filter((q) => q.isRequired) || [];
+    // Validate required questions (skipped/hidden questions are exempt)
+    const requiredQuestions = activeQuestions.filter((q) => q.isRequired);
     const missingRequired = requiredQuestions.find((q) => !answers[q.id]);
 
     if (missingRequired) {
@@ -228,8 +239,10 @@ export default function SurveyTake() {
       return;
     }
 
-    // Format answers for API
-    const formattedAnswers = Object.entries(answers).map(([questionId, value]) => {
+    // Format answers for API, dropping answers to questions that logic has hidden
+    const formattedAnswers = Object.entries(answers)
+      .filter(([questionId]) => activeQuestionIds.has(questionId))
+      .map(([questionId, value]) => {
       const question = survey?.questions.find((q) => q.id === questionId);
       const answer: any = { questionId };
 
@@ -258,43 +271,52 @@ export default function SurveyTake() {
     });
   };
 
-  // Pagination helpers
+  // Pagination helpers (operate on logic-filtered questions)
   const calculateTotalPages = () => {
-    if (!survey || !survey.questions) return 1;
+    if (!survey || activeQuestions.length === 0) return 1;
 
     const { paginationMode = 'all', questionsPerPage = 1 } = survey;
 
     if (paginationMode === 'all') return 1;
-    if (paginationMode === 'single') return survey.questions.length;
+    if (paginationMode === 'single') return activeQuestions.length;
     if (paginationMode === 'custom') {
-      return Math.ceil(survey.questions.length / questionsPerPage);
+      return Math.ceil(activeQuestions.length / questionsPerPage);
     }
 
     return 1;
   };
 
   const getVisibleQuestions = () => {
-    if (!survey || !survey.questions) return [];
+    if (!survey) return [];
 
     const { paginationMode = 'all', questionsPerPage = 1 } = survey;
 
     if (paginationMode === 'all') {
-      return survey.questions;
+      return activeQuestions;
     }
 
     if (paginationMode === 'single') {
       const startIndex = currentPage - 1;
-      return survey.questions.slice(startIndex, startIndex + 1);
+      return activeQuestions.slice(startIndex, startIndex + 1);
     }
 
     if (paginationMode === 'custom') {
       const startIndex = (currentPage - 1) * questionsPerPage;
       const endIndex = startIndex + questionsPerPage;
-      return survey.questions.slice(startIndex, endIndex);
+      return activeQuestions.slice(startIndex, endIndex);
     }
 
-    return survey.questions;
+    return activeQuestions;
   };
+
+  // Keep the current page in range when answers hide questions and pages disappear
+  useEffect(() => {
+    const totalPages = calculateTotalPages();
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeQuestions.length]);
 
   const canGoNext = () => {
     const visibleQuestions = getVisibleQuestions();
@@ -322,7 +344,7 @@ export default function SurveyTake() {
 
   const canSubmit = () => {
     if (!survey) return false;
-    const requiredQuestions = survey.questions.filter(q => q.isRequired);
+    const requiredQuestions = activeQuestions.filter(q => q.isRequired);
     return requiredQuestions.every(q => {
       const answer = answers[q.id];
       return answer !== undefined && answer !== '' && answer !== null;
@@ -425,8 +447,8 @@ export default function SurveyTake() {
       survey={survey}
       currentPage={currentPage}
       totalPages={calculateTotalPages()}
-      currentQuestion={Object.keys(answers).length}
-      totalQuestions={survey.questions.length}
+      currentQuestion={Object.keys(answers).filter((qid) => activeQuestionIds.has(qid)).length}
+      totalQuestions={activeQuestions.length}
     >
       {/* OpenGraph and Twitter Card Meta Tags */}
       <Helmet>

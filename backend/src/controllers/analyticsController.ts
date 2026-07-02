@@ -85,6 +85,21 @@ export class AnalyticsController {
     }
   }
 
+  static async getResponseTrends(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { surveyId } = req.params;
+      const days = Math.min(365, Math.max(7, parseInt(req.query.days as string) || 30));
+      const trends = await AnalyticsService.getResponseTrends(surveyId, req.user!.id, days);
+
+      res.json({
+        success: true,
+        data: trends,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getSourceAnalytics(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { surveyId } = req.params;

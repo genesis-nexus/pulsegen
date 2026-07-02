@@ -6,6 +6,7 @@ const router = Router();
 
 // All AI routes require authentication
 router.post('/generate-survey', authenticate, AIController.generateSurvey);
+router.post('/generate-survey/stream', authenticate, AIController.generateSurveyStream);
 router.post('/surveys/:surveyId/suggest-questions', authenticate, AIController.suggestQuestions);
 router.post('/questions/:questionId/optimize', authenticate, AIController.optimizeQuestion);
 router.post('/sentiment', authenticate, AIController.analyzeSentiment);
